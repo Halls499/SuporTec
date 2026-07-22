@@ -1,0 +1,55 @@
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1A2236;
+  padding: 80px 40px;
+  gap: 30px;
+}
+
+/* Texto */
+.hero-text {
+  max-width: 550px;
+}
+
+.hero-text h1 {
+  font-size: 48px;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.hero-text p {
+  font-size: 30px;
+  color: #d1d5db;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+/* Botão */
+.btn-main {
+  display: inline-block;
+
+  background: #3b82f6;
+  color: white;
+
+  text-decoration: none;
+
+  padding: 12px 28px;
+  border-radius: 8px;
+
+  font-size: 30px;
+  transition: 0.2s;
+}
+
+.btn-main:hover {
+  background: #2563eb;
+}
+
+
+/* Imagem */
+.hero-image img {
+  width: 400px;
+  max-width: 100%;
+  border-radius: 12px;
+  opacity: 0.7;
+}

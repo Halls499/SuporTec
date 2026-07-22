@@ -1,0 +1,122 @@
+.chamados-tecnico-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.chamados-tecnico-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.chamados-tecnico-container h1 {
+  color: #fff;
+  font-size: 38px;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  color: #d1d5db;
+  font-size: 18px;
+  margin-bottom: 40px;
+}
+
+/* Lista de chamados */
+.chamados-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+/* Card */
+.chamado-card {
+  background-color: #111827;
+  border-radius: 14px;
+  padding: 25px;
+  border-left: 6px solid #3b82f6;
+  transition: 0.25s;
+  display: flex;
+  flex-direction: column;
+}
+
+.chamado-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.35);
+}
+
+.chamado-card h2 {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 18px;
+}
+
+.chamado-card p {
+  color: #d1d5db;
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 4px 0;
+}
+
+.chamado-card strong {
+  color: #fff;
+}
+
+/* Botão */
+.btn-atender {
+  margin-top: 25px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background-color: #3b82f6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-atender:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* Mensagem sem chamados */
+.sem-chamados {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #d1d5db;
+  font-size: 18px;
+  background-color: #111827;
+  padding: 30px;
+  border-radius: 14px;
+}
+
+/* Responsividade */
+
+@media (max-width: 768px) {
+  .chamados-tecnico-page {
+    padding: 20px;
+  }
+
+  .chamados-tecnico-container h1 {
+    font-size: 30px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    margin-bottom: 30px;
+  }
+
+  .chamados-list {
+    grid-template-columns: 1fr;
+  }
+
+  .chamado-card {
+    padding: 20px;
+  }
+
+  .btn-atender {
+    width: 100%;
+  }
+}

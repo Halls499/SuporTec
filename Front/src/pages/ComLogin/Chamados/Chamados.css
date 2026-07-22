@@ -1,0 +1,100 @@
+.chamados-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.chamados-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Título */
+.chamados-container h1 {
+  color: #fff;
+  font-size: 38px;
+  margin-bottom: 8px;
+}
+
+.chamados-container h4 {
+  color: #d1d5db;
+  font-size: 18px;
+  font-weight: normal;
+  margin-bottom: 35px;
+}
+
+/* Lista de chamados */
+.chamados-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Remove aparência de link dos cards */
+.chamados-list a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* Card do chamado */
+.chamado-card {
+  background-color: #111827;
+  padding: 25px;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+/* Conteúdo do card */
+.chamado-card h2 {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.chamado-card p {
+  color: #d1d5db;
+  font-size: 16px;
+  margin: 12px 0;
+}
+
+/* Botão abrir chamado */
+.new-ticket {
+  display: block;
+  width: fit-content;
+  margin: 35px auto 0;
+  padding: 15px 35px;
+  background-color: #3b82f6;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.new-ticket:hover {
+  background-color: #2563eb;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .chamados-page {
+    padding: 20px;
+  }
+
+  .chamados-container h1 {
+    font-size: 30px;
+  }
+
+  .chamado-card {
+    padding: 20px;
+  }
+
+  .new-ticket {
+    width: 100%;
+    text-align: center;
+  }
+}

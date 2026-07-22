@@ -1,0 +1,76 @@
+.abrir-chamado-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.chamado-container {
+  width: 100%;
+  max-width: 700px;
+  background-color: #111827;
+  padding: 35px;
+  border-radius: 16px;
+}
+
+.chamado-container h1 {
+  color: white;
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.chamado-container p {
+  color: #d1d5db;
+  margin-bottom: 30px;
+}
+
+.chamado-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chamado-form label {
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.chamado-form input,
+.chamado-form select,
+.chamado-form textarea {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background-color: #1a2236;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.chamado-form textarea {
+  height: 140px;
+  resize: none;
+}
+
+.chamado-form button {
+  margin-top: 25px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background-color: #3b82f6;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.chamado-form button:hover {
+  background-color: #2563eb;
+}

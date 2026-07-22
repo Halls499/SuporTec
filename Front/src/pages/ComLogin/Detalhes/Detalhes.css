@@ -1,0 +1,101 @@
+.detalhes-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.detalhes-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Título */
+.detalhes-container > h1 {
+  color: #fff;
+  font-size: 38px;
+  margin-bottom: 35px;
+}
+
+/* Cards */
+.info-chamado,
+.chat-chamado {
+  background-color: #111827;
+  padding: 30px;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  transition: 0.2s;
+}
+
+.info-chamado:hover,
+.chat-chamado:hover {
+  transform: translateY(-3px);
+}
+
+/* Títulos dos cards */
+.info-chamado h2,
+.chat-chamado h2 {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 25px;
+}
+
+/* Textos */
+
+.info-chamado p,
+.chat-chamado p {
+  color: #d1d5db;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+/* Separação do histórico */
+.chat-chamado p:nth-child(2),
+.chat-chamado p:nth-child(5) {
+  color: #fff;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+/* Botão voltar */
+.new-ticket {
+  display: block;
+  width: fit-content;
+  margin: 35px auto 0;
+  padding: 14px 30px;
+  background-color: #3b82f6;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.new-ticket:hover {
+  background-color: #2563eb;
+  transform: translateY(-3px);
+}
+
+/* Responsivo */
+@media (max-width: 600px) {
+  .detalhes-page {
+    padding: 20px;
+  }
+
+  .detalhes-container > h1 {
+    font-size: 30px;
+  }
+
+  .info-chamado,
+  .chat-chamado {
+    padding: 20px;
+  }
+
+  .new-ticket {
+    width: 100%;
+
+    text-align: center;
+  }
+}

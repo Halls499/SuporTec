@@ -1,0 +1,253 @@
+.home-login-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.DashboardTecnico-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ==========================
+   Boas-vindas
+========================== */
+
+.welcome {
+  margin-bottom: 40px;
+}
+
+.welcome h1 {
+  color: #fff;
+  font-size: 38px;
+  margin-bottom: 12px;
+}
+
+.welcome p {
+  color: #d1d5db;
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 8px 0;
+}
+
+.welcome p:last-child {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background-color: #111827;
+  border-left: 5px solid #f59e0b;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* ==========================
+   Barra de XP
+========================== */
+
+.xp-bar {
+  width: 100%;
+  height: 55px;
+  background-color: #e5e7eb;
+  border-radius: 30px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.xp-progress {
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  font-weight: bold;
+  font-size: 15px;
+  line-height: 1.3;
+  border-radius: 30px;
+  transition: width 0.4s ease;
+}
+
+/* ==========================
+   Cards Resumo
+========================== */
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  margin-bottom: 45px;
+}
+
+.summary-card {
+  background-color: #111827;
+  border-radius: 14px;
+  padding: 30px 20px;
+  text-align: center;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+}
+
+.summary-card span {
+  display: block;
+  font-size: 42px;
+  margin-bottom: 18px;
+}
+
+.summary-card p {
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ==========================
+   Conquistas
+========================== */
+
+.conquistas {
+  margin-bottom: 45px;
+}
+
+.conquistas h2 {
+  color: #fff;
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.conquistas h3 {
+  color: #9ca3af;
+  font-size: 17px;
+  margin-bottom: 30px;
+}
+
+.conquistas h4 {
+  color: #fff;
+  font-size: 22px;
+  margin: 35px 0 20px;
+}
+
+.conquistas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.conquista-card {
+  background-color: #111827;
+  border-radius: 14px;
+  padding: 22px;
+  transition: 0.2s;
+  border: 2px solid transparent;
+}
+
+.conquista-card:hover {
+  transform: translateY(-5px);
+}
+
+.conquista-card span {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.conquista-card h5 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.conquista-card p {
+  color: #d1d5db;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Conquistas desbloqueadas */
+
+.conquista-card.desbloqueada {
+  border-color: #3b82f6;
+  background-color: #16233f;
+}
+
+.conquista-card.desbloqueada span {
+  filter: none;
+}
+
+/* Conquistas bloqueadas */
+
+.conquista-card.bloqueada {
+  opacity: 0.55;
+  background-color: #0f172a;
+}
+
+.conquista-card.bloqueada span {
+  filter: grayscale(100%);
+}
+
+/* ==========================
+   Botão
+========================== */
+
+.new-ticket {
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 15px 35px;
+  background-color: #3b82f6;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.new-ticket:hover {
+  background-color: #2563eb;
+  transform: translateY(-3px);
+}
+
+/* ==========================
+   Responsividade
+========================== */
+
+@media (max-width: 900px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .conquistas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .home-login-page {
+    padding: 20px;
+  }
+
+  .welcome h1 {
+    font-size: 30px;
+  }
+
+  .welcome p {
+    font-size: 16px;
+  }
+
+  .summary-cards,
+  .conquistas-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .new-ticket {
+    width: 100%;
+    text-align: center;
+  }
+}

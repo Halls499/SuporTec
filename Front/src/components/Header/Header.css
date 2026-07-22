@@ -1,0 +1,75 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 40px;
+  background-color: #111827;
+}
+
+/* Logo + Nome */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Menu */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.topbar-actions a {
+  text-decoration: none;
+  color: #d1d5db;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.topbar-actions a:hover {
+  color: #fff;
+  transform: scale(1.02);
+}
+
+.btn-entrar {
+  background: #3b82f6;
+  color: #fff !important;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.btn-entrar:hover {
+  background: #2563eb;
+}
+
+/* Link da home */
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.logo-area:hover {
+  color: inherit;
+  transform: scale(1.02);
+}
+ 
