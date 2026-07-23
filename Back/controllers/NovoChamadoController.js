@@ -17,6 +17,7 @@ export async function AbrirNovoChamado(req, res) {
 
   // Pegando o id do usuário do middleware JWT
   const fk_cliente = req.usuario.id_usuario;
+  console.log("👉 ID DO CLIENTE EXTRAÍDO DO TOKEN:", fk_cliente);
 
   try {
     // 1. Validação dos campos obrigatórios
