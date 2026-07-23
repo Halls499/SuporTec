@@ -201,6 +201,10 @@ function AbrirChamado() {
             <option value="alta">Alta</option>
           </select>
 
+          {/* Formulário horário */}
+          <label>Melhor horário para contato</label>
+          <input placeholder="Ex: Segunda-feira, 9h às 18h" />
+
           {/* Descrição */}
           <label>Descrição</label>
           <textarea
