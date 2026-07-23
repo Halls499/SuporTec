@@ -16,14 +16,14 @@ interface Chamado {
   data_abertura: string;
 }
 
-// Interface para tipar as mensagens
+{/*  Interface para tipar as mensagens
 interface Mensagem {
   id_mensagem: number;
   mensagem: string;
   data_envio: string;
   nome_usuario?: string;
   tipo_usuario?: string;
-}
+}*/}
 
 function Detalhes() {
   const { id } = useParams<{ id: string }>();
