@@ -1,5 +1,4 @@
-CREATE DATABASE BD_SuporTec;
-USE BD_SuporTec;
+USE railway;
 
 CREATE TABLE Usuario (
     id_usuario INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -10,96 +9,85 @@ CREATE TABLE Usuario (
     data_cadastro DATETIME NOT NULL
 );
 
-CREATE TABLE Conquista (
-    id_conquista INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE conquista (
+    id_conquista INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(100) NOT NULL,
     descricao TEXT NOT NULL
 );
 
-CREATE TABLE Chamado (
-    id_chamado INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE chamado (
+    id_chamado INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(100) NOT NULL,
     descricao TEXT NOT NULL,
     categoria ENUM('Hardware', 'Software', 'Rede', 'Acesso') NOT NULL,
-    prioridade ENUM('Baixa', 'Media', 'Alta') NOT NULL,
-    situacao ENUM(
-        'Novo',
-        'Em andamento',
-        'Aguardando cliente',
-        'Resolvido',
-        'Cancelado'
-    ) NOT NULL,
+    prioridade ENUM('Baixa', 'Media Alta') NOT NULL,
+    situacao ENUM('Novo', 'Em andamento', 'Aguardando cliente', 'Resolvido', 'Cancelado') NOT NULL DEFAULT 'Novo',
     tipo_atendimento ENUM('Presencial', 'Remoto') NOT NULL,
     endereco VARCHAR(255),
     empresa VARCHAR(100),
     setor VARCHAR(100),
     sala VARCHAR(50),
-    tipo_contato ENUM(
-        'WhatsApp',
-        'Telefone',
-        'Email',
-        'Teams',
-        'LinkedIn'
-    ) NOT NULL,
+    tipo_contato ENUM('WhatsApp', 'Telefone', 'Email', 'Teams', 'LinkedIn') NOT NULL,
     contato VARCHAR(100) NOT NULL,
-    data_abertura DATETIME NOT NULL,
-    data_fechamento DATETIME,
+    data_abertura DATETIME DEFAULT CURRENT_TIMESTAMP,
+    data_fechamento DATETIME DEFAULT NULL,
+    ultima_atualizacao DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     fk_cliente INT NOT NULL,
-    fk_tecnico INT,
-
-    FOREIGN KEY (fk_cliente)
-        REFERENCES Usuario(id_usuario),
-
-    FOREIGN KEY (fk_tecnico)
-        REFERENCES Usuario(id_usuario)
+    fk_tecnico INT DEFAULT NULL,
+    CONSTRAINT fk_chamado_cliente
+        FOREIGN KEY (fk_cliente)
+        REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_chamado_tecnico
+        FOREIGN KEY (fk_tecnico)
+        REFERENCES usuario(id_usuario)
 );
 
-CREATE TABLE Mensagem (
-    id_mensagem INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE mensagem (
+    id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
     mensagem TEXT NOT NULL,
-    data_envio DATETIME NOT NULL,
+    data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
     fk_usuario INT NOT NULL,
     fk_chamado INT NOT NULL,
-
-    FOREIGN KEY (fk_usuario)
-        REFERENCES Usuario(id_usuario),
-
-    FOREIGN KEY (fk_chamado)
-        REFERENCES Chamado(id_chamado)
+    CONSTRAINT fk_mensagem_usuario
+        FOREIGN KEY (fk_usuario)
+        REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_mensagem_chamado
+        FOREIGN KEY (fk_chamado)
+        REFERENCES chamado(id_chamado)
 );
 
-CREATE TABLE HistoricoChamado (
-    id_historico INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+
+CREATE TABLE historico_chamado (
+    id_historico INT AUTO_INCREMENT PRIMARY KEY,
     situacao VARCHAR(50) NOT NULL,
     descricao TEXT NOT NULL,
-    data_hora DATETIME NOT NULL,
+    data_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
     fk_chamado INT NOT NULL,
-
-    FOREIGN KEY (fk_chamado)
-        REFERENCES Chamado(id_chamado)
+    CONSTRAINT fk_historico
+        FOREIGN KEY (fk_chamado)
+        REFERENCES chamado(id_chamado)
 );
 
-CREATE TABLE Avaliacao (
-    id_avaliacao INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE avaliacao (
+    id_avaliacao INT AUTO_INCREMENT PRIMARY KEY,
     nota INT NOT NULL CHECK (nota BETWEEN 1 AND 5),
-    comentario TEXT,
-    data DATETIME NOT NULL,
+    comentario TEXT, data DATETIME
+        DEFAULT CURRENT_TIMESTAMP,
     fk_chamado INT NOT NULL UNIQUE,
-
-    FOREIGN KEY (fk_chamado)
-        REFERENCES Chamado(id_chamado)
+    CONSTRAINT fk_avaliacao
+        FOREIGN KEY (fk_chamado)
+        REFERENCES chamado(id_chamado)
 );
 
-CREATE TABLE Usuario_Conquista (
+CREATE TABLE usuario_conquista (
     fk_usuario INT NOT NULL,
     fk_conquista INT NOT NULL,
-    data_desbloqueio DATETIME NOT NULL,
-
+    data_desbloqueio DATETIME DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (fk_usuario, fk_conquista),
-
-    FOREIGN KEY (fk_usuario)
-        REFERENCES Usuario(id_usuario),
-
-    FOREIGN KEY (fk_conquista)
-        REFERENCES Conquista(id_conquista)
+    CONSTRAINT fk_uc_usuario
+        FOREIGN KEY (fk_usuario)
+        REFERENCES usuario(id_usuario),
+    CONSTRAINT fk_uc_conquista
+        FOREIGN KEY (fk_conquista)
+        REFERENCES conquista(id_conquista)
 );

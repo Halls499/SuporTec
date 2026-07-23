@@ -1,7 +1,7 @@
 import pool from "../config/database.js";
 
 export async function listarUsuarios() {
-  const [rows] = await pool.query("SELECT * FROM Usuario");
+  const [rows] = await pool.query("SELECT * FROM usuario");
 
   return rows;
 }
@@ -10,7 +10,7 @@ export async function criarUsuario(nome, email, senha, tipo_usuario) {
 
   await pool.query(
     `
-        INSERT INTO Usuario
+        INSERT INTO usuario
         (
             nome,
             email,
@@ -48,8 +48,6 @@ export async function buscarUsuarioPorEmail(email) {
     "SELECT * FROM usuario WHERE email = ?",
     [email]
   );
-
-  
 
   return rows;
 };
