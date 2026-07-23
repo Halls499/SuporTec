@@ -80,3 +80,39 @@ export async function listarMeusChamados(req, res) {
     });
   }
 }
+
+buscarChamadoPorId: async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Busca o chamado pelo id_chamado no MySQL
+    const [rows] = await db.query(
+      `SELECT 
+        id_chamado, 
+        titulo, 
+        descricao, 
+        categoria, 
+        prioridade, 
+        situacao, 
+        data_abertura 
+       FROM chamado 
+       WHERE id_chamado = ?`,
+      [id]
+    );
+
+    // Se não encontrar nenhum registro com esse ID
+    if (rows.length === 0) {
+      return res.status(404).json({ mensagem: "Chamado não encontrado." });
+    }
+
+    // Retorna o objeto do chamado
+    return res.status(200).json(rows[0]);
+
+  } catch (error) {
+    console.error("Erro ao buscar detalhes do chamado:", error);
+    return res.status(500).json({ 
+      mensagem: "Erro interno no servidor ao buscar chamado.", 
+      erro: error.message 
+    });
+  }
+}

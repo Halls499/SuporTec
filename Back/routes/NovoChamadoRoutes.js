@@ -6,5 +6,6 @@ const router = Router();
 
 router.post("/chamados", verificarToken, chamadoController.AbrirNovoChamado);
 router.get("/chamados", verificarToken, chamadoController.listarMeusChamados);
+router.get("/chamados/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
 export default router;

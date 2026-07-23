@@ -122,13 +122,26 @@ function Chamados() {
                 variants={cardVariants}
                 whileHover={{ scale: 1.03, y: -5 }}
                 style={{ textDecoration: "none", color: "inherit" }}
+                onClick={() => {
+                  // Exibe o ID do chamado no console ao clicar
+                  console.log("ID do chamado clicado:", chamado.id_chamado);
+                }}
               >
                 <div className="chamado-card">
                   <h2>Chamado #{chamado.id_chamado}</h2>
-                  <p><strong>Problema:</strong> {chamado.titulo}</p>
-                  <p><strong>Status:</strong> {chamado.situacao}</p>
-                  <p><strong>Prioridade:</strong> {chamado.prioridade}</p>
-                  <p><strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}</p>
+                  <p>
+                    <strong>Problema:</strong> {chamado.titulo}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {chamado.situacao}
+                  </p>
+                  <p>
+                    <strong>Prioridade:</strong> {chamado.prioridade}
+                  </p>
+                  <p>
+                    <strong>Aberto em:</strong>{" "}
+                    {formatarData(chamado.data_abertura)}
+                  </p>
                 </div>
               </MotionLink>
             ))
