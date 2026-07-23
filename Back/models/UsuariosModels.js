@@ -27,7 +27,7 @@ export async function criarUsuario(nome, email, senha, tipo_usuario) {
 
 export async function verificarEmailExistente(email) {
   const [resultado] = await pool.query(
-    "SELECT email FROM Usuario WHERE email = ?",
+    "SELECT email FROM usuario WHERE email = ?",
     [email],
   );
 
