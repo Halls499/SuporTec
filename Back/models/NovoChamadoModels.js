@@ -44,10 +44,28 @@ export async function abrirChamado(chamado) {
 }
 
 export async function listarChamadosPorCliente(fk_cliente){
-    const [rows] = await pool.query(
-        "SELECT * FROM chamado WHERE fk_cliente =?",
-        [fk_cliente]
-    );
+  const [rows] = await pool.query(
+    "SELECT * FROM chamado WHERE fk_cliente = ?",
+    [fk_cliente]
+  );
 
   return rows;
+}
+
+export async function buscarChamadoPorId(id) {
+  const [rows] = await pool.query(
+    `SELECT 
+      id_chamado, 
+      titulo, 
+      descricao, 
+      categoria, 
+      prioridade, 
+      situacao, 
+      data_abertura 
+     FROM chamado 
+     WHERE id_chamado = ?`,
+    [id]
+  );
+
+  return rows[0]; // Retorna o chamado encontrado ou undefined
 }
