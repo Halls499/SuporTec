@@ -97,10 +97,15 @@ function AbrirChamado() {
           )}
 
           {/* Tipo de Contato */}
+
           <label>Tipo de Contato</label>
+
           <select
             value={tipoContato}
-            onChange={(e) => setTipoContato(e.target.value)}
+            onChange={(e) => {
+              setTipoContato(e.target.value);
+              setTipoLocal("");
+            }}
           >
             <option value="" disabled>
               Selecione o tipo de Contato
@@ -111,6 +116,49 @@ function AbrirChamado() {
             <option value="teams">Teams</option>
             <option value="linkedin">LinkedIn</option>
           </select>
+
+          {/* Formulário whatsapp */}
+          {tipoContato === "whatsapp" && (
+            <>
+              <label>Número do WhatsApp</label>
+              <input type="text" placeholder="Ex: (11) 99999-9999" />
+            </>
+          )}
+
+          {/* Formulário email */}
+          {tipoContato === "email" && (
+            <>
+              <label>Email</label>
+              <input type="email" placeholder="Ex: joao.silva@empresa.com" />
+            </>
+          )}
+
+          {/* Formulário telefone */}
+          {tipoContato === "telefone" && (
+            <>
+              <label>Telefone</label>
+              <input type="text" placeholder="Ex: (11) 3333-3333" />
+            </>
+          )}
+
+          {/* Formulário teams */}
+          {tipoContato === "teams" && (
+            <>
+              <label>Conta do Teams</label>
+              <input type="text" placeholder="Ex: joao.silva@empresa.com" />
+            </>
+          )}
+
+          {/* Formulário linkedin */}
+          {tipoContato === "linkedin" && (
+            <>
+              <label>Perfil do LinkedIn</label>
+              <input
+                type="text"
+                placeholder="Ex: linkedin.com/in/joaodasilva"
+              />
+            </>
+          )}
 
           {/* Título do problema */}
           <label>Título do problema</label>
