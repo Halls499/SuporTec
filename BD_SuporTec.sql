@@ -1,12 +1,13 @@
+CREATE DATABASE railway;
 USE railway;
 
-CREATE TABLE Usuario (
+CREATE TABLE usuario (
     id_usuario INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
     tipo_usuario ENUM('cliente', 'tecnico') NOT NULL,
-    data_cadastro DATETIME NOT NULL
+    data_cadastro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE conquista (
@@ -20,13 +21,13 @@ CREATE TABLE chamado (
     titulo VARCHAR(100) NOT NULL,
     descricao TEXT NOT NULL,
     categoria ENUM('Hardware', 'Software', 'Rede', 'Acesso') NOT NULL,
-    prioridade ENUM('Baixa', 'Media Alta') NOT NULL,
+    prioridade ENUM('Baixa', 'Media', 'Alta') NOT NULL,
     situacao ENUM('Novo', 'Em andamento', 'Aguardando cliente', 'Resolvido', 'Cancelado') NOT NULL DEFAULT 'Novo',
     tipo_atendimento ENUM('Presencial', 'Remoto') NOT NULL,
-    endereco VARCHAR(255),
-    empresa VARCHAR(100),
-    setor VARCHAR(100),
-    sala VARCHAR(50),
+    endereco VARCHAR(255) DEFAULT NULL,
+    empresa VARCHAR(100) DEFAULT NULL,
+    setor VARCHAR(100) DEFAULT NULL,
+    sala VARCHAR(50) DEFAULT NULL,
     tipo_contato ENUM('WhatsApp', 'Telefone', 'Email', 'Teams', 'LinkedIn') NOT NULL,
     contato VARCHAR(100) NOT NULL,
     data_abertura DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +57,6 @@ CREATE TABLE mensagem (
         REFERENCES chamado(id_chamado)
 );
 
-
 CREATE TABLE historico_chamado (
     id_historico INT AUTO_INCREMENT PRIMARY KEY,
     situacao VARCHAR(50) NOT NULL,
@@ -71,8 +71,8 @@ CREATE TABLE historico_chamado (
 CREATE TABLE avaliacao (
     id_avaliacao INT AUTO_INCREMENT PRIMARY KEY,
     nota INT NOT NULL CHECK (nota BETWEEN 1 AND 5),
-    comentario TEXT, data DATETIME
-        DEFAULT CURRENT_TIMESTAMP,
+    comentario TEXT, 
+    data DATETIME DEFAULT CURRENT_TIMESTAMP,
     fk_chamado INT NOT NULL UNIQUE,
     CONSTRAINT fk_avaliacao
         FOREIGN KEY (fk_chamado)
@@ -91,3 +91,5 @@ CREATE TABLE usuario_conquista (
         FOREIGN KEY (fk_conquista)
         REFERENCES conquista(id_conquista)
 );
+
+SHOW TABLES;
