@@ -7,7 +7,6 @@ const MotionLink = motion(Link);
 
 const containerVariants = {
   hidden: {},
-
   visible: {
     transition: {
       staggerChildren: 0.15,
@@ -20,7 +19,6 @@ const cardVariants = {
     opacity: 0,
     y: 40,
   },
-
   visible: {
     opacity: 1,
     y: 0,
@@ -39,52 +37,52 @@ interface Chamado {
 }
 
 function Chamados() {
-  // 1. Criar o estado
   const [chamados, setChamados] = useState<Chamado[]>([]);
 
-  // 2. Buscar os dados assim que o componente carrega
   useEffect(() => {
     async function carregarChamados() {
       const token = localStorage.getItem("token");
-      //banco local
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
       try {
-        //banco online
         const resposta = await fetch(`${baseUrl}/chamados`, {
-        method: "GET",
-        headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        },
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         });
-
-        //banco local
-        //const resposta = await fetch("http://localhost:3000/chamados", {
-        //method: "GET",
-        //headers: {
-        //"Content-Type": "application/json",
-        // Authorization: `Bearer ${token}`,
-        //},
-        // });
 
         const dados = await resposta.json();
 
         if (resposta.ok) {
-          setChamados(dados); // Guarda a lista no estado
+          // Garante que 'dados' é um array antes de salvar no estado
+          setChamados(Array.isArray(dados) ? dados : []);
         }
       } catch (erro) {
         console.error("Erro ao buscar chamados:", erro);
       }
     }
 
-    carregarChamados(); // Chama a função para executar a busca
+    carregarChamados();
   }, []);
+
+  // Função auxiliar para formatar datas (Ex: 23/07/2026)
+  const formatarData = (dataIso: string) => {
+    if (!dataIso) return "Data indisponível";
+    return new Date(dataIso).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <main className="chamados-page">
       <div className="chamados-container">
-        {/* titulo */}
+        {/* Título */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,7 +91,7 @@ function Chamados() {
           Meus chamados
         </motion.h1>
 
-        {/* subtitulo */}
+        {/* Subtítulo */}
         <motion.h4
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -111,26 +109,30 @@ function Chamados() {
           initial="hidden"
           animate="visible"
         >
-          {/*cards mostrando chamados */}
-
-          {chamados.map((chamado) => (
-            <MotionLink
-              key={chamado.id_chamado}
-              to={`/detalhes/${chamado.id_chamado}`}
-            >
-              <motion.div
-                className="chamado-card"
+          {/* Caso não tenha chamados cadastrados */}
+          {chamados.length === 0 ? (
+            <motion.p variants={cardVariants} style={{ marginTop: "20px" }}>
+              Você ainda não abriu um chamado.
+            </motion.p>
+          ) : (
+            chamados.map((chamado) => (
+              <MotionLink
+                key={chamado.id_chamado}
+                to={`/detalhes/${chamado.id_chamado}`}
                 variants={cardVariants}
                 whileHover={{ scale: 1.03, y: -5 }}
+                style={{ textDecoration: "none", color: "inherit" }}
               >
-                <h2>Chamado #{chamado.id_chamado}</h2>
-                <p>Problema: {chamado.titulo}</p>
-                <p>Status: {chamado.situacao}</p>
-                <p>Prioridade: {chamado.prioridade}</p>
-                <p>Aberto em: {chamado.data_abertura}</p>
-              </motion.div>
-            </MotionLink>
-          ))}
+                <div className="chamado-card">
+                  <h2>Chamado #{chamado.id_chamado}</h2>
+                  <p><strong>Problema:</strong> {chamado.titulo}</p>
+                  <p><strong>Status:</strong> {chamado.situacao}</p>
+                  <p><strong>Prioridade:</strong> {chamado.prioridade}</p>
+                  <p><strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}</p>
+                </div>
+              </MotionLink>
+            ))
+          )}
         </motion.div>
 
         <MotionLink
