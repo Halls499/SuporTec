@@ -2,6 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import pool from "./config/database.js";
 import usuarioRoutes from "./routes/UsuariosRoutes.js";
+import chamadosRoutes from "./routes/NovoChamadoRoutes.js"
 import cors from "cors";
 
 dotenv.config();
@@ -14,6 +15,7 @@ app.use(express.json());
 
 // Rotas
 app.use(usuarioRoutes);
+app.use(chamadosRoutes);
 
 // Teste de conexão com o banco
 pool
