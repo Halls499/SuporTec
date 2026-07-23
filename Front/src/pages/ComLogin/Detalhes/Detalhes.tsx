@@ -16,14 +16,16 @@ interface Chamado {
   data_abertura: string;
 }
 
-{/*  Interface para tipar as mensagens
+{
+  /*  Interface para tipar as mensagens
 interface Mensagem {
   id_mensagem: number;
   mensagem: string;
   data_envio: string;
   nome_usuario?: string;
   tipo_usuario?: string;
-}*/}
+}*/
+}
 
 function Detalhes() {
   const { id } = useParams<{ id: string }>();
@@ -53,7 +55,7 @@ function Detalhes() {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!responseChamado.ok) {
@@ -96,7 +98,7 @@ function Detalhes() {
   // Função para cancelar o chamado com animação e tratamento de estado
   const handleCancelarChamado = async () => {
     const confirmacao = window.confirm(
-      "Tem certeza que deseja cancelar este chamado?"
+      "Tem certeza que deseja cancelar este chamado?",
     );
     if (!confirmacao) return;
 
@@ -112,12 +114,14 @@ function Detalhes() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (response.ok) {
         alert("Chamado cancelado com sucesso!");
-        setChamado((prev) => (prev ? { ...prev, situacao: "Cancelado" } : null));
+        setChamado((prev) =>
+          prev ? { ...prev, situacao: "Cancelado" } : null,
+        );
       } else {
         const data = await response.json();
         alert(data.mensagem || "Erro ao cancelar chamado.");
@@ -245,21 +249,41 @@ function Detalhes() {
           )}
         </motion.div>*/}
 
-        <div style={{ display: "flex", gap: "15px", marginTop: "20px", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            gap: "15px",
+            marginTop: "20px",
+            alignItems: "center",
+          }}
+        >
+          {/* Botão Azul - Voltar */}
           <MotionLink
             to="/Chamados"
-            className="new-ticket"
-            whileInView={{ opacity: 1, y: 0 }}
-            initial={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-            whileHover={{ scale: 1.05 }}
+            style={{
+              backgroundColor: "#2563eb",
+              color: "#ffffff",
+              padding: "10px 18px",
+              borderRadius: "6px",
+              border: "none",
+              fontWeight: "600",
+              fontSize: "14px",
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "42px",
+              boxSizing: "border-box",
+              cursor: "pointer",
+            }}
+            whileHover={{ scale: 1.05, backgroundColor: "#1d4ed8" }}
             whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
           >
             Voltar aos chamados
           </MotionLink>
 
-          {/* Botão de Cancelar Chamado com Framer Motion */}
+          {/* Botão Vermelho - Cancelar Chamado */}
           <AnimatePresence>
             {chamado.situacao !== "Cancelado" &&
               chamado.situacao !== "Resolvido" && (
@@ -274,21 +298,29 @@ function Detalhes() {
                   transition={{ duration: 0.2 }}
                   style={{
                     backgroundColor: "#dc2626",
-                    color: "#fff",
+                    color: "#ffffff",
                     padding: "10px 18px",
                     borderRadius: "6px",
                     border: "none",
                     fontWeight: "600",
-                    cursor: isCanceling ? "not-allowed" : "pointer",
-                    display: "flex",
+                    fontSize: "14px",
+                    display: "inline-flex",
                     alignItems: "center",
+                    justifyContent: "center",
+                    height: "42px",
+                    boxSizing: "border-box",
+                    cursor: isCanceling ? "not-allowed" : "pointer",
                     gap: "8px",
                   }}
                 >
                   {isCanceling ? (
                     <motion.span
                       animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1,
+                        ease: "linear",
+                      }}
                       style={{ display: "inline-block" }}
                     >
                       ⏳
