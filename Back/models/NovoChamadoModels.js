@@ -69,3 +69,14 @@ export async function buscarChamadoPorId(id) {
 
   return rows[0]; // Retorna o chamado encontrado ou undefined
 }
+
+export async function cancelarChamado(id_chamado, fk_cliente) {
+  const [resultado] = await pool.query(
+    `UPDATE chamado 
+     SET situacao = 'Cancelado' 
+     WHERE id_chamado = ? AND fk_cliente = ? AND situacao NOT IN ('Resolvido', 'Cancelado')`,
+    [id_chamado, fk_cliente]
+  );
+
+  return resultado.affectedRows > 0; // Retorna true se alterou alguma linha
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./Detalhes.css";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MotionLink = motion(Link);
 
@@ -30,6 +30,7 @@ function Detalhes() {
   const [chamado, setChamado] = useState<Chamado | null>(null);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,13 +45,16 @@ function Detalhes() {
 
       try {
         // 1. Busca os detalhes do chamado
-        const responseChamado = await fetch(`https://suportec.onrender.com/chamados/${id}`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
+        const responseChamado = await fetch(
+          `https://suportec.onrender.com/chamados/${id}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (!responseChamado.ok) {
           throw new Error("Não foi possível carregar os detalhes do chamado.");
@@ -59,20 +63,24 @@ function Detalhes() {
         const dataChamado = await responseChamado.json();
         setChamado(dataChamado);
 
-        // 2. Busca o histórico de mensagens do chamado (se houver essa rota de chat)
-        const responseMensagens = await fetch(`https://suportec.onrender.com/chamados/${id}/mensagens`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
+        // 2. Busca o histórico de mensagens (Descomentar após criar a rota no backend)
+        /*
+        const responseMensagens = await fetch(
+          `https://suportec.onrender.com/chamados/${id}/mensagens`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        });
+        );
 
         if (responseMensagens.ok) {
           const dataMensagens = await responseMensagens.json();
           setMensagens(dataMensagens);
         }
-
+        */
       } catch (err: any) {
         setErro(err.message || "Erro ao buscar dados do chamado.");
       } finally {
@@ -85,6 +93,43 @@ function Detalhes() {
     }
   }, [id]);
 
+  // Função para cancelar o chamado com animação e tratamento de estado
+  const handleCancelarChamado = async () => {
+    const confirmacao = window.confirm(
+      "Tem certeza que deseja cancelar este chamado?"
+    );
+    if (!confirmacao) return;
+
+    setIsCanceling(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `https://suportec.onrender.com/chamados/${id}/cancelar`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        alert("Chamado cancelado com sucesso!");
+        setChamado((prev) => (prev ? { ...prev, situacao: "Cancelado" } : null));
+      } else {
+        const data = await response.json();
+        alert(data.mensagem || "Erro ao cancelar chamado.");
+      }
+    } catch (error) {
+      console.error("Erro ao cancelar chamado:", error);
+      alert("Erro de conexão ao tentar cancelar o chamado.");
+    } finally {
+      setIsCanceling(false);
+    }
+  };
+
   // Função auxiliar para formatar datas no padrão BR
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
@@ -94,14 +139,16 @@ function Detalhes() {
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
 
   if (loading) {
     return (
       <main className="detalhes-page">
-        <p style={{ textAlign: "center", color: "#fff", marginTop: "50px" }}>Carregando detalhes do chamado...</p>
+        <p style={{ textAlign: "center", color: "#fff", marginTop: "50px" }}>
+          Carregando detalhes do chamado...
+        </p>
       </main>
     );
   }
@@ -112,7 +159,11 @@ function Detalhes() {
         <div className="detalhes-container" style={{ textAlign: "center" }}>
           <h2>Ops! Chamado não encontrado.</h2>
           <p>{erro}</p>
-          <MotionLink to="/Chamados" className="new-ticket" style={{ marginTop: "20px" }}>
+          <MotionLink
+            to="/Chamados"
+            className="new-ticket"
+            style={{ marginTop: "20px" }}
+          >
             Voltar aos chamados
           </MotionLink>
         </div>
@@ -128,42 +179,64 @@ function Detalhes() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1>Chamado #{String(chamado.id_chamado).padStart(3, '0')}</h1>
+        <h1>Chamado #{String(chamado.id_chamado).padStart(3, "0")}</h1>
 
         <motion.div
           className="info-chamado"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.5, 
-            delay: 0.2 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h2>Chamado #{String(chamado.id_chamado).padStart(3, '0')}</h2>
-          <p><strong>Problema:</strong> {chamado.titulo}</p>
-          <p><strong>Categoria:</strong> {chamado.categoria}</p>
-          <p><strong>Status:</strong> {chamado.situacao}</p>
-          <p><strong>Prioridade:</strong> {chamado.prioridade}</p>
-          <p><strong>Descrição:</strong> {chamado.descricao}</p>
-          <p><strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}</p>
+          <h2>Detalhes das Informações</h2>
+          <p>
+            <strong>Problema:</strong> {chamado.titulo}
+          </p>
+          <p>
+            <strong>Categoria:</strong> {chamado.categoria}
+          </p>
+          <p>
+            <strong>Status:</strong> {chamado.situacao}
+          </p>
+          <p>
+            <strong>Prioridade:</strong> {chamado.prioridade}
+          </p>
+          <p>
+            <strong>Descrição:</strong> {chamado.descricao}
+          </p>
+          <p>
+            <strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}
+          </p>
         </motion.div>
 
         <motion.div
           className="chat-chamado"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ 
-            duration: 0.5, 
-            delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
           <h2>Histórico de comunicações</h2>
-          
+
           {mensagens.length > 0 ? (
             mensagens.map((msg) => (
               <div key={msg.id_mensagem} style={{ marginBottom: "15px" }}>
-                <p><strong>{msg.tipo_usuario === 'tecnico' ? 'Suporte' : 'Usuário'}:</strong> {msg.nome_usuario || 'Usuário'}</p>
-                <p><strong>Mensagem:</strong> {msg.mensagem}</p>
-                <p><strong>Data:</strong> {formatarData(msg.data_envio)}</p>
-                <hr style={{ borderColor: "rgba(255,255,255,0.1)", margin: "10px 0" }} />
+                <p>
+                  <strong>
+                    {msg.tipo_usuario === "tecnico" ? "Suporte" : "Usuário"}:
+                  </strong>{" "}
+                  {msg.nome_usuario || "Usuário"}
+                </p>
+                <p>
+                  <strong>Mensagem:</strong> {msg.mensagem}
+                </p>
+                <p>
+                  <strong>Data:</strong> {formatarData(msg.data_envio)}
+                </p>
+                <hr
+                  style={{
+                    borderColor: "rgba(255,255,255,0.1)",
+                    margin: "10px 0",
+                  }}
+                />
               </div>
             ))
           ) : (
@@ -171,18 +244,61 @@ function Detalhes() {
           )}
         </motion.div>
 
-        <MotionLink
-          to="/Chamados"
-          className="new-ticket"
-          whileInView={{ opacity: 1, y: 0 }}
-          initial={{ opacity: 0, y: 20 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Voltar aos chamados
-        </MotionLink>
+        <div style={{ display: "flex", gap: "15px", marginTop: "20px", alignItems: "center" }}>
+          <MotionLink
+            to="/Chamados"
+            className="new-ticket"
+            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Voltar aos chamados
+          </MotionLink>
+
+          {/* Botão de Cancelar Chamado com Framer Motion */}
+          <AnimatePresence>
+            {chamado.situacao !== "Cancelado" &&
+              chamado.situacao !== "Resolvido" && (
+                <motion.button
+                  onClick={handleCancelarChamado}
+                  disabled={isCanceling}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  whileHover={{ scale: 1.05, backgroundColor: "#b91c1c" }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    backgroundColor: "#dc2626",
+                    color: "#fff",
+                    padding: "10px 18px",
+                    borderRadius: "6px",
+                    border: "none",
+                    fontWeight: "600",
+                    cursor: isCanceling ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  {isCanceling ? (
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                      style={{ display: "inline-block" }}
+                    >
+                      ⏳
+                    </motion.span>
+                  ) : (
+                    "Cancelar Chamado"
+                  )}
+                </motion.button>
+              )}
+          </AnimatePresence>
+        </div>
       </motion.div>
     </main>
   );

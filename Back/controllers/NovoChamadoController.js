@@ -102,3 +102,27 @@ export async function buscarChamadoPorId(req, res) {
     });
   }
 }
+
+export async function cancelarChamadoPorId(req, res) {
+  try {
+    const { id } = req.params;
+    const fk_cliente = req.usuario.id_usuario; // Pegando do token JWT
+
+    const canceladoComSucesso = await chamadoModel.cancelarChamado(id, fk_cliente);
+
+    if (!canceladoComSucesso) {
+      return res.status(400).json({ 
+        mensagem: "Não foi possível cancelar o chamado. Ele pode não existir, não pertencer a você ou já estar finalizado/cancelado." 
+      });
+    }
+
+    return res.status(200).json({ mensagem: "Chamado cancelado com sucesso!" });
+
+  } catch (error) {
+    console.error("Erro ao cancelar chamado:", error);
+    return res.status(500).json({ 
+      mensagem: "Erro interno no servidor ao cancelar chamado.", 
+      erro: error.message 
+    });
+  }
+}
