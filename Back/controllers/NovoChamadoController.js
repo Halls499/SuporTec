@@ -22,7 +22,6 @@ export async function AbrirNovoChamado(req, res) {
     // 1. Validação dos campos obrigatórios
     if (
       !titulo ||
-      !descricao ||
       !categoria ||
       !prioridade ||
       !tipo_atendimento ||

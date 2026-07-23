@@ -6,9 +6,10 @@ function AbrirChamado() {
   const navigate = useNavigate();
 
   // Estados dos seletores condicionais
-  const [tipoAtendimento, setTipoAtendimento] = useState("");
-  const [tipoLocal, setTipoLocal] = useState("");
-  const [tipoContato, setTipoContato] = useState("");
+  const [Tipo_atendimento, settipo_atendimento] = useState("");
+  const [Tipo_local, setTipo_local] = useState("");
+  const [Tipo_contato, setTipo_contato] = useState("");
+  const [contato, setContato] = useState(""); // <--- 1. Criado estado do contato
 
   // Estados dos campos do formulário
   const [titulo, setTitulo] = useState("");
@@ -20,7 +21,7 @@ function AbrirChamado() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token"); // Ajuste a chave se usar outro nome (ex: "token_suportec")
+    const token = localStorage.getItem("token");
     const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
     try {
@@ -35,14 +36,15 @@ function AbrirChamado() {
           descricao,
           prioridade,
           categoria,
-          tipoAtendimento,
-          tipoContato,
+          tipo_atendimento: Tipo_atendimento, // <--- Mapeado em minúsculo
+          tipo_contato: Tipo_contato,          // <--- Mapeado em minúsculo
+          contato,                             // <--- Enviado para o backend
         }),
       });
 
       if (resposta.ok) {
         alert("Chamado criado com sucesso!");
-        navigate("/chamados"); // Redireciona para a tela de listagem
+        navigate("/chamados");
       } else {
         const erro = await resposta.json();
         alert(erro.mensagem || "Erro ao criar chamado.");
@@ -66,11 +68,12 @@ function AbrirChamado() {
           {/* Tipo de atendimento */}
           <label>Tipo de atendimento</label>
           <select
-            value={tipoAtendimento}
+            value={Tipo_atendimento}
             onChange={(e) => {
-              setTipoAtendimento(e.target.value);
-              setTipoLocal("");
+              settipo_atendimento(e.target.value);
+              setTipo_local("");
             }}
+            required
           >
             <option value="" disabled>
               Selecione o tipo de atendimento
@@ -80,12 +83,12 @@ function AbrirChamado() {
           </select>
 
           {/* Se for presencial */}
-          {tipoAtendimento === "presencial" && (
+          {Tipo_atendimento === "presencial" && (
             <>
               <label>O atendimento será:</label>
               <select
-                value={tipoLocal}
-                onChange={(e) => setTipoLocal(e.target.value)}
+                value={Tipo_local}
+                onChange={(e) => setTipo_local(e.target.value)}
               >
                 <option value="" disabled>
                   Selecione
@@ -97,15 +100,15 @@ function AbrirChamado() {
           )}
 
           {/* Tipo de Contato */}
-
           <label>Tipo de Contato</label>
-
           <select
-            value={tipoContato}
+            value={Tipo_contato}
             onChange={(e) => {
-              setTipoContato(e.target.value);
-              setTipoLocal("");
+              setTipo_contato(e.target.value);
+              setTipo_local("");
+              setContato("");
             }}
+            required
           >
             <option value="" disabled>
               Selecione o tipo de Contato
@@ -117,45 +120,68 @@ function AbrirChamado() {
             <option value="linkedin">LinkedIn</option>
           </select>
 
-          {/* Formulário whatsapp */}
-          {tipoContato === "whatsapp" && (
+          {/* Inputs de contato com value e onChange vinculados */}
+          {Tipo_contato === "whatsapp" && (
             <>
               <label>Número do WhatsApp</label>
-              <input type="text" placeholder="Ex: (11) 99999-9999" />
+              <input 
+                type="text" 
+                placeholder="Ex: (11) 99999-9999" 
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                required
+              />
             </>
           )}
 
-          {/* Formulário email */}
-          {tipoContato === "email" && (
+          {Tipo_contato === "email" && (
             <>
               <label>Email</label>
-              <input type="email" placeholder="Ex: joao.silva@empresa.com" />
+              <input 
+                type="email" 
+                placeholder="Ex: joao.silva@empresa.com" 
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                required
+              />
             </>
           )}
 
-          {/* Formulário telefone */}
-          {tipoContato === "telefone" && (
+          {Tipo_contato === "telefone" && (
             <>
               <label>Telefone</label>
-              <input type="text" placeholder="Ex: (11) 3333-3333" />
+              <input 
+                type="text" 
+                placeholder="Ex: (11) 3333-3333" 
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                required
+              />
             </>
           )}
 
-          {/* Formulário teams */}
-          {tipoContato === "teams" && (
+          {Tipo_contato === "teams" && (
             <>
               <label>Conta do Teams</label>
-              <input type="text" placeholder="Ex: joao.silva@empresa.com" />
+              <input 
+                type="text" 
+                placeholder="Ex: joao.silva@empresa.com" 
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                required
+              />
             </>
           )}
 
-          {/* Formulário linkedin */}
-          {tipoContato === "linkedin" && (
+          {Tipo_contato === "linkedin" && (
             <>
               <label>Perfil do LinkedIn</label>
               <input
                 type="text"
                 placeholder="Ex: linkedin.com/in/joaodasilva"
+                value={contato}
+                onChange={(e) => setContato(e.target.value)}
+                required
               />
             </>
           )}
@@ -200,10 +226,6 @@ function AbrirChamado() {
             <option value="media">Média</option>
             <option value="alta">Alta</option>
           </select>
-
-          {/* Formulário horário */}
-          <label>Melhor horário para contato</label>
-          <input placeholder="Ex: Segunda-feira, 9h às 18h" />
 
           {/* Descrição */}
           <label>Descrição</label>
