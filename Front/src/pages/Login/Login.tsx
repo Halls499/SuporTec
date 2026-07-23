@@ -68,7 +68,10 @@ function Login() {
     e.preventDefault();
 
     try {
-      const resposta = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
+      // Garante que a URL base não tenha barra no final
+      const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+      const resposta = await fetch(`${baseUrl}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,24 +85,26 @@ function Login() {
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        alert(dados.erro);
+        alert(dados.erro || "E-mail ou senha incorretos.");
         return;
       }
 
+      // Salva sessão do usuário
       localStorage.setItem("usuario", JSON.stringify(dados.usuario));
-
       localStorage.setItem("token", dados.token);
 
+      // Dispara evento para atualização em outros componentes se necessário
       window.dispatchEvent(new Event("login"));
 
-      if (dados.usuario.tipo_usuario === "tecnico") {
+      // Redireciona conforme o perfil
+      if (dados.usuario?.tipo_usuario === "tecnico") {
         navigate("/dashboard-tecnico");
       } else {
         navigate("/dashboard");
       }
     } catch (erro) {
-      console.error(erro);
-      alert("Erro ao realizar login.");
+      console.error("Erro na requisição:", erro);
+      alert("Falha na conexão com o servidor. Verifique sua internet.");
     }
   }
 

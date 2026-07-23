@@ -7,33 +7,28 @@ import cors from "cors";
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// Middleware
+// Middlewares
+app.use(cors());
 app.use(express.json());
 
 // Rotas
 app.use(usuarioRoutes);
 
 // Teste de conexão com o banco
-pool.getConnection()
-    .then((connection) => { 
-        console.log("✅ Banco conectado com sucesso!");
-        connection.release();
-    })
-    .catch((err) => {
-        console.log("❌ Erro ao conectar no banco:", err.message);
-    });
+pool
+  .getConnection()
+  .then((connection) => {
+    console.log("✅ Banco conectado com sucesso!");
+    connection.release();
+  })
+  .catch((err) => {
+    console.log("❌ Erro ao conectar no banco:", err.message);
+  });
 
 // Porta do servidor
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
- console.log(`🚀 Servidor rodando na porta ${PORT}`);
-});
-
-// Inicia o servidor
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });

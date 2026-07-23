@@ -7,20 +7,11 @@ export async function listarUsuarios() {
 }
 
 export async function criarUsuario(nome, email, senha, tipo_usuario) {
-
   await pool.query(
     `
-        INSERT INTO usuario
-        (
-            nome,
-            email,
-            senha,
-            tipo_usuario,
-            data_cadastro
-        )
-        VALUES
-        (?, ?, ?, ?, NOW())
-        `,
+    INSERT INTO usuario (nome, email, senha, tipo_usuario)
+    VALUES (?, ?, ?, ?)
+    `,
     [nome, email, senha, tipo_usuario],
   );
 }
@@ -37,17 +28,16 @@ export async function verificarEmailExistente(email) {
 export async function buscarUsuarioPorId(id) {
   const [rows] = await pool.query(
     "SELECT * FROM usuario WHERE id_usuario = ?",
-    [id]
+    [id],
   );
 
   return rows;
-};
+}
 
 export async function buscarUsuarioPorEmail(email) {
-  const [rows] = await pool.query(
-    "SELECT * FROM usuario WHERE email = ?",
-    [email]
-  );
+  const [rows] = await pool.query("SELECT * FROM usuario WHERE email = ?", [
+    email,
+  ]);
 
   return rows;
-};
+}

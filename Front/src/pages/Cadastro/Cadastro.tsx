@@ -67,42 +67,44 @@ function Cadastro() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
   async function handleCadastro(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (senha !== confirmarSenha) {
-      alert("As senhas não coincidem.");
+  if (senha !== confirmarSenha) {
+    alert("As senhas não coincidem.");
+    return;
+  }
+
+  try {
+    // Garante que a URL base não tenha barra no final para não duplicar
+    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+    const resposta = await fetch(`${baseUrl}/usuarios`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nome,
+        email,
+        senha,
+        tipo_usuario: "cliente",
+      }),
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+      alert(dados.erro || "Erro ao realizar cadastro.");
       return;
     }
 
-    try {
-      const resposta = await fetch(`${import.meta.env.VITE_API_URL}/usuarios`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          nome,
-          email,
-          senha,
-          tipo_usuario: "cliente",
-        }),
-      });
-
-      const dados = await resposta.json();
-
-      if (!resposta.ok) {
-        alert(dados.erro);
-        return;
-      }
-
-      alert("Usuário cadastrado com sucesso!");
-
-      navigate("/login");
-    } catch (erro) {
-      console.error(erro);
-      alert("Erro ao cadastrar usuário.");
-    }
+    alert("Usuário cadastrado com sucesso!");
+    navigate("/login");
+  } catch (erro) {
+    console.error("Erro na requisição:", erro);
+    alert("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
   }
+}
 
   return (
     <main className="cadastro-page">
