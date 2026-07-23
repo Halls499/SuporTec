@@ -9,10 +9,10 @@ export async function listarUsuarios() {
 export async function criarUsuario(nome, email, senha, tipo_usuario) {
   await pool.query(
     `
-    INSERT INTO usuario (nome, email, senha, tipo_usuario)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO usuario (nome, email, senha, tipo_usuario, data_cadastro)
+    VALUES (?, ?, ?, ?, NOW())
     `,
-    [nome, email, senha, tipo_usuario],
+    [nome, email, senha, tipo_usuario]
   );
 }
 
