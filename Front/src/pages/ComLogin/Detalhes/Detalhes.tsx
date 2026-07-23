@@ -28,7 +28,7 @@ interface Mensagem {
 function Detalhes() {
   const { id } = useParams<{ id: string }>();
   const [chamado, setChamado] = useState<Chamado | null>(null);
-  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  //const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -208,7 +208,7 @@ function Detalhes() {
           </p>
         </motion.div>
 
-        <motion.div
+        {/*<motion.div
           className="chat-chamado"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -216,6 +216,7 @@ function Detalhes() {
         >
           <h2>Histórico de comunicações</h2>
 
+          
           {mensagens.length > 0 ? (
             mensagens.map((msg) => (
               <div key={msg.id_mensagem} style={{ marginBottom: "15px" }}>
@@ -242,7 +243,7 @@ function Detalhes() {
           ) : (
             <p>Nenhuma mensagem ou atualização registrada até o momento.</p>
           )}
-        </motion.div>
+        </motion.div>*/}
 
         <div style={{ display: "flex", gap: "15px", marginTop: "20px", alignItems: "center" }}>
           <MotionLink
