@@ -148,7 +148,7 @@ function Detalhes() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1>{String(chamado.titulo)}</h1>
+        <h1>Detalhes do chamado</h1>
 
         <motion.div
           className="info-chamado"
@@ -157,6 +157,9 @@ function Detalhes() {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <h2>Detalhes das Informações</h2>
+          <p>
+            <strong>Título:</strong> {chamado.titulo}
+          </p>
           <p>
             <strong>Categoria:</strong> {chamado.categoria}
           </p>
