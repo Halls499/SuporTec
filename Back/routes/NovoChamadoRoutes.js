@@ -7,6 +7,6 @@ const router = Router();
 router.post("/chamados", verificarToken, chamadoController.AbrirNovoChamado);
 router.get("/chamados", verificarToken, chamadoController.listarMeusChamados);
 router.get("/chamados/:id", verificarToken, chamadoController.buscarChamadoPorId);
-router.patch("/chamados/:id/cancelar", verificarToken, chamadoController.cancelarChamadoPorId);
+router.delete("/chamados/:id/cancelar", verificarToken, chamadoController.cancelarChamadoPorId);
 
 export default router;

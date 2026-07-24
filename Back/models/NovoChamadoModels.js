@@ -72,9 +72,9 @@ export async function buscarChamadoPorId(id) {
 
 export async function cancelarChamado(id_chamado, fk_cliente) {
   const [resultado] = await pool.query(
-    `UPDATE chamado 
+    `DELETE  chamado 
      SET situacao = 'Cancelado' 
-     WHERE id_chamado = ? AND fk_cliente = ? AND situacao NOT IN ('Resolvido', 'Cancelado')`,
+     WHERE id_chamado = ? AND fk_cliente = ?`,
     [id_chamado, fk_cliente]
   );
 

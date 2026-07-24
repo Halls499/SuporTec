@@ -2,8 +2,12 @@ import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./Detalhes.css";
 import { motion, AnimatePresence } from "framer-motion";
+import Chamados from "../Chamados/Chamados";
+import { useNavigate } from "react-router-dom";
 
+//variaveis base
 const MotionLink = motion(Link);
+const navigate = useNavigate();
 
 // Interface para tipar os dados do chamado
 interface Chamado {
@@ -109,7 +113,7 @@ function Detalhes() {
       const response = await fetch(
         `https://suportec.onrender.com/chamados/${id}/cancelar`,
         {
-          method: "PATCH",
+          method: "DELETE",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -119,9 +123,7 @@ function Detalhes() {
 
       if (response.ok) {
         alert("Chamado cancelado com sucesso!");
-        setChamado((prev) =>
-          prev ? { ...prev, situacao: "Cancelado" } : null,
-        );
+        navigate("/Chamados"); // Redireciona o usuário direto para a lista de chamados
       } else {
         const data = await response.json();
         alert(data.mensagem || "Erro ao cancelar chamado.");
