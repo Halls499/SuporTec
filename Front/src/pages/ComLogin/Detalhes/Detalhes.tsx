@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import "./Detalhes.css";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 
-//variaveis base
 const MotionLink = motion(Link);
-const navigate = useNavigate();
 
 // Interface para tipar os dados do chamado
 interface Chamado {
@@ -19,21 +16,10 @@ interface Chamado {
   data_abertura: string;
 }
 
-{
-  /*  Interface para tipar as mensagens
-interface Mensagem {
-  id_mensagem: number;
-  mensagem: string;
-  data_envio: string;
-  nome_usuario?: string;
-  tipo_usuario?: string;
-}*/
-}
-
 function Detalhes() {
+  const navigate = useNavigate(); // ✅ DENTRO do componente!
   const { id } = useParams<{ id: string }>();
   const [chamado, setChamado] = useState<Chamado | null>(null);
-  //const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -49,29 +35,8 @@ function Detalhes() {
       }
 
       try {
-        // 1. Busca os detalhes do chamado
         const responseChamado = await fetch(
           `https://suportec.onrender.com/chamados/${id}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (!responseChamado.ok) {
-          throw new Error("Não foi possível carregar os detalhes do chamado.");
-        }
-
-        const dataChamado = await responseChamado.json();
-        setChamado(dataChamado);
-
-        // 2. Busca o histórico de mensagens (Descomentar após criar a rota no backend)
-        /*
-        const responseMensagens = await fetch(
-          `https://suportec.onrender.com/chamados/${id}/mensagens`,
           {
             method: "GET",
             headers: {
@@ -81,11 +46,12 @@ function Detalhes() {
           }
         );
 
-        if (responseMensagens.ok) {
-          const dataMensagens = await responseMensagens.json();
-          setMensagens(dataMensagens);
+        if (!responseChamado.ok) {
+          throw new Error("Não foi possível carregar os detalhes do chamado.");
         }
-        */
+
+        const dataChamado = await responseChamado.json();
+        setChamado(dataChamado);
       } catch (err: any) {
         setErro(err.message || "Erro ao buscar dados do chamado.");
       } finally {
@@ -98,10 +64,9 @@ function Detalhes() {
     }
   }, [id]);
 
-  // Função para cancelar o chamado com animação e tratamento de estado
   const handleCancelarChamado = async () => {
     const confirmacao = window.confirm(
-      "Tem certeza que deseja cancelar este chamado?",
+      "Tem certeza que deseja cancelar este chamado?"
     );
     if (!confirmacao) return;
 
@@ -117,12 +82,12 @@ function Detalhes() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       if (response.ok) {
         alert("Chamado cancelado com sucesso!");
-        navigate("/Chamados"); // Redireciona o usuário direto para a lista de chamados
+        navigate("/Chamados");
       } else {
         const data = await response.json();
         alert(data.mensagem || "Erro ao cancelar chamado.");
@@ -135,7 +100,6 @@ function Detalhes() {
     }
   };
 
-  // Função auxiliar para formatar datas no padrão BR
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
     const data = new Date(dataIso);
@@ -194,9 +158,6 @@ function Detalhes() {
         >
           <h2>Detalhes das Informações</h2>
           <p>
-            <strong>Problema:</strong> {chamado.titulo}
-          </p>
-          <p>
             <strong>Categoria:</strong> {chamado.categoria}
           </p>
           <p>
@@ -213,43 +174,6 @@ function Detalhes() {
           </p>
         </motion.div>
 
-        {/*<motion.div
-          className="chat-chamado"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <h2>Histórico de comunicações</h2>
-
-          
-          {mensagens.length > 0 ? (
-            mensagens.map((msg) => (
-              <div key={msg.id_mensagem} style={{ marginBottom: "15px" }}>
-                <p>
-                  <strong>
-                    {msg.tipo_usuario === "tecnico" ? "Suporte" : "Usuário"}:
-                  </strong>{" "}
-                  {msg.nome_usuario || "Usuário"}
-                </p>
-                <p>
-                  <strong>Mensagem:</strong> {msg.mensagem}
-                </p>
-                <p>
-                  <strong>Data:</strong> {formatarData(msg.data_envio)}
-                </p>
-                <hr
-                  style={{
-                    borderColor: "rgba(255,255,255,0.1)",
-                    margin: "10px 0",
-                  }}
-                />
-              </div>
-            ))
-          ) : (
-            <p>Nenhuma mensagem ou atualização registrada até o momento.</p>
-          )}
-        </motion.div>*/}
-
         <div
           style={{
             display: "flex",
@@ -258,7 +182,6 @@ function Detalhes() {
             alignItems: "center",
           }}
         >
-          {/* Botão Azul - Voltar */}
           <MotionLink
             to="/Chamados"
             style={{
@@ -284,7 +207,6 @@ function Detalhes() {
             Voltar aos chamados
           </MotionLink>
 
-          {/* Botão Vermelho - Cancelar Chamado */}
           <AnimatePresence>
             {chamado.situacao !== "Cancelado" &&
               chamado.situacao !== "Resolvido" && (
