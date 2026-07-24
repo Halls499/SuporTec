@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import "./Detalhes.css";
 import { motion, AnimatePresence } from "framer-motion";
-import Chamados from "../Chamados/Chamados";
 import { useNavigate } from "react-router-dom";
 
 //variaveis base
