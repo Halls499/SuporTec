@@ -128,10 +128,7 @@ function Chamados() {
                 }}
               >
                 <div className="chamado-card">
-                  <h2>Chamado #{chamado.id_chamado}</h2>
-                  <p>
-                    <strong>Problema:</strong> {chamado.titulo}
-                  </p>
+                  <h2>Problema:{chamado.titulo}</h2>
                   <p>
                     <strong>Status:</strong> {chamado.situacao}
                   </p>

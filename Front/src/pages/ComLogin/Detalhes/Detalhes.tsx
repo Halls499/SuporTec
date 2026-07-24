@@ -185,7 +185,7 @@ function Detalhes() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <h1>Chamado #{String(chamado.id_chamado).padStart(3, "0")}</h1>
+        <h1>{String(chamado.titulo)}</h1>
 
         <motion.div
           className="info-chamado"
