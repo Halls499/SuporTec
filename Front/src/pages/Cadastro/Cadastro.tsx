@@ -67,44 +67,44 @@ function Cadastro() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
 
   async function handleCadastro(e: React.FormEvent) {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (senha !== confirmarSenha) {
-    alert("As senhas não coincidem.");
-    return;
-  }
-
-  try {
-    // Garante que a URL base não tenha barra no final para não duplicar
-    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-
-    const resposta = await fetch(`${baseUrl}/usuarios`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        nome,
-        email,
-        senha,
-        tipo_usuario: "cliente",
-      }),
-    });
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok) {
-      alert(dados.erro || "Erro ao realizar cadastro.");
+    if (senha !== confirmarSenha) {
+      alert("As senhas não coincidem.");
       return;
     }
 
-    alert("Usuário cadastrado com sucesso!");
-    navigate("/login");
-  } catch (erro) {
-    console.error("Erro na requisição:", erro);
-    alert("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
+    try {
+      // Garante que a URL base não tenha barra no final para não duplicar
+      const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+
+      const resposta = await fetch(`${baseUrl}/usuarios`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          email,
+          senha,
+          tipo_usuario: "cliente",
+        }),
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        alert(dados.erro || "Erro ao realizar cadastro.");
+        return;
+      }
+
+      alert("Usuário cadastrado com sucesso!");
+      navigate("/login");
+    } catch (erro) {
+      console.error("Erro na requisição:", erro);
+      alert("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
+    }
   }
-}
 
   return (
     <main className="cadastro-page">
@@ -173,18 +173,20 @@ function Cadastro() {
             <motion.button
               type="submit"
               variants={fieldVariants}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03, backgroundColor: "#1d4ed8" }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.15 }}
             >
               Cadastrar
             </motion.button>
           </motion.form>
 
           <p className="auth-link">
-            Já tem conta?
+            Já tem conta?{" "}
             <motion.a
               href="/login"
-              whileHover={{ scale: 1.05 }}
+              style={{ display: "inline-block", color: "#60a5fa" }}
+              whileHover={{ scale: 1.05, color: "#93c5fd" }}
               whileTap={{ scale: 0.95 }}
             >
               Entrar

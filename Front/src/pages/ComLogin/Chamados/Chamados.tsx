@@ -1,29 +1,28 @@
 import "./Chamados.css";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useState, useEffect } from "react";
 
-const MotionLink = motion(Link);
-
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.15,
+      staggerChildren: 0.12,
     },
   },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 40,
+    y: 30,
   },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.5,
+      duration: 0.4,
+      ease: "easeOut",
     },
   },
 };
@@ -56,7 +55,6 @@ function Chamados() {
         const dados = await resposta.json();
 
         if (resposta.ok) {
-          // Garante que 'dados' é um array antes de salvar no estado
           setChamados(Array.isArray(dados) ? dados : []);
         }
       } catch (erro) {
@@ -67,7 +65,6 @@ function Chamados() {
     carregarChamados();
   }, []);
 
-  // Função auxiliar para formatar datas (Ex: 23/07/2026)
   const formatarData = (dataIso: string) => {
     if (!dataIso) return "Data indisponível";
     return new Date(dataIso).toLocaleDateString("pt-BR", {
@@ -79,10 +76,25 @@ function Chamados() {
     });
   };
 
+  const getStatusBadge = (status: string) => {
+    const statusLower = status?.toLowerCase() || "";
+    if (statusLower.includes("novo")) return "badge-novo";
+    if (statusLower.includes("andamento")) return "badge-em-andamento";
+    if (statusLower.includes("resolvido")) return "badge-resolvido";
+    if (statusLower.includes("cancelado")) return "badge-cancelado";
+    return "badge-novo";
+  };
+
+  const getPrioridadeBadge = (prioridade: string) => {
+    const prioridadeLower = prioridade?.toLowerCase() || "";
+    if (prioridadeLower.includes("alta")) return "badge-alta";
+    if (prioridadeLower.includes("media") || prioridadeLower.includes("média")) return "badge-media";
+    return "badge-baixa";
+  };
+
   return (
     <main className="chamados-page">
       <div className="chamados-container">
-        {/* Título */}
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -91,7 +103,6 @@ function Chamados() {
           Meus chamados
         </motion.h1>
 
-        {/* Subtítulo */}
         <motion.h4
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -109,53 +120,62 @@ function Chamados() {
           initial="hidden"
           animate="visible"
         >
-          {/* Caso não tenha chamados cadastrados */}
           {chamados.length === 0 ? (
             <motion.p variants={cardVariants} style={{ marginTop: "20px" }}>
               Você ainda não abriu um chamado.
             </motion.p>
           ) : (
             chamados.map((chamado) => (
-              <MotionLink
+              <motion.div
                 key={chamado.id_chamado}
-                to={`/detalhes/${chamado.id_chamado}`}
                 variants={cardVariants}
-                whileHover={{ scale: 1.03, y: -5 }}
-                style={{ textDecoration: "none", color: "inherit" }}
-                onClick={() => {
-                  // Exibe o ID do chamado no console ao clicar
-                  console.log("ID do chamado clicado:", chamado.id_chamado);
-                }}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <div className="chamado-card">
-                  <h2>Problema:{chamado.titulo}</h2>
-                  <p>
-                    <strong>Status:</strong> {chamado.situacao}
-                  </p>
-                  <p>
-                    <strong>Prioridade:</strong> {chamado.prioridade}
-                  </p>
-                  <p>
-                    <strong>Aberto em:</strong>{" "}
-                    {formatarData(chamado.data_abertura)}
-                  </p>
-                </div>
-              </MotionLink>
+                <Link
+                  to={`/detalhes/${chamado.id_chamado}`}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                  onClick={() => {
+                    console.log("ID do chamado clicado:", chamado.id_chamado);
+                  }}
+                >
+                  <div className="chamado-card">
+                    <h2>Problema: {chamado.titulo}</h2>
+                    <p>
+                      <strong>Status:</strong>{" "}
+                      <span className={`badge ${getStatusBadge(chamado.situacao)}`}>
+                        {chamado.situacao}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Prioridade:</strong>{" "}
+                      <span className={`badge ${getPrioridadeBadge(chamado.prioridade)}`}>
+                        {chamado.prioridade}
+                      </span>
+                    </p>
+                    <p>
+                      <strong>Aberto em:</strong>{" "}
+                      {formatarData(chamado.data_abertura)}
+                    </p>
+                  </div>
+                </Link>
+              </motion.div>
             ))
           )}
         </motion.div>
 
-        <MotionLink
-          to="/abrir-chamado"
-          className="new-ticket"
+        <motion.div
           variants={cardVariants}
           initial="hidden"
           animate="visible"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          style={{ marginTop: "20px" }}
         >
-          📝 Abrir chamado
-        </MotionLink>
+          <Link to="/abrir-chamado" className="new-ticket">
+            📝 Abrir chamado
+          </Link>
+        </motion.div>
       </div>
     </main>
   );

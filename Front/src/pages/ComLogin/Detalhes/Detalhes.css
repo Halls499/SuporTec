@@ -78,6 +78,57 @@
   transform: translateY(-3px);
 }
 
+/* Estilo base da Badge */
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+/* Cores de Status */
+.badge-novo {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid #3b82f6;
+}
+
+.badge-em-andamento {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid #f59e0b;
+}
+
+.badge-resolvido {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid #22c55e;
+}
+
+.badge-cancelado {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid #ef4444;
+}
+
+/* Cores de Prioridade */
+.badge-baixa {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.badge-media {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.badge-alta {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
 /* Responsivo */
 @media (max-width: 600px) {
   .detalhes-page {

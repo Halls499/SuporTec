@@ -5,15 +5,20 @@ interface Props {
 }
 
 function PrivateRoute({ children }: Props) {
-  const usuario = JSON.parse(
-    localStorage.getItem("usuario") || "null"
-  );
+  let usuario = null;
 
-  if (!usuario) {
-    return <Navigate to="/login" />;
+  try {
+    usuario = JSON.parse(localStorage.getItem("usuario") || "null");
+  } catch (error) {
+    console.error("Erro ao ler dados do usuário no localStorage:", error);
+    usuario = null;
   }
 
-  return children;
+  if (!usuario) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 export default PrivateRoute;

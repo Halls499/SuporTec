@@ -417,8 +417,9 @@ function AbrirChamado() {
           <motion.button
             type="submit"
             variants={fieldVariants}
-            whileHover={{ scale: 1.03 }}
+            whileHover={{ scale: 1.02, backgroundColor: "#1d4ed8" }}
             whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.15 }}
           >
             Enviar chamado
           </motion.button>

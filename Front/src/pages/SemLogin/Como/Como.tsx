@@ -1,35 +1,54 @@
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import "./Como.css";
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+      staggerChildren: 0.12,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+};
 
 function Como() {
   return (
     <motion.div
       className="como-container"
-      initial={{ opacity: 0.7, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.6,
-        ease: "easeOut",
-      }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
-      <h1>Como Funciona</h1>
+      <motion.h1 variants={cardVariants}>Como Funciona</motion.h1>
 
-      <p>
+      <motion.p variants={cardVariants}>
         Ao acessar a plataforma e realizar o login, o usuário poderá abrir
         chamados para solicitar suporte técnico especializado. Além disso, será
         possível acompanhar o andamento de cada solicitação por meio dos
         diferentes status disponíveis:
-      </p>
+      </motion.p>
 
       <div className="status-container">
         <motion.div
           className="status-card"
-          initial={{ opacity: 0.7, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            ease: "easeIn",
-          }}
+          variants={cardVariants}
+          whileHover={{ scale: 1.04, y: -4 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>✅</span>
           <h2>Chamado resolvido</h2>
@@ -38,12 +57,9 @@ function Como() {
 
         <motion.div
           className="status-card"
-          initial={{ opacity: 0.7, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            ease: "easeIn",
-          }}
+          variants={cardVariants}
+          whileHover={{ scale: 1.04, y: -4 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>⏳</span>
           <h2>Aguardando resposta</h2>
@@ -55,12 +71,9 @@ function Como() {
 
         <motion.div
           className="status-card"
-          initial={{ opacity: 0.7, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            ease: "easeIn",
-          }}
+          variants={cardVariants}
+          whileHover={{ scale: 1.04, y: -4 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>🔧</span>
           <h2>Em atendimento</h2>
@@ -71,12 +84,9 @@ function Como() {
 
         <motion.div
           className="status-card"
-          initial={{ opacity: 0.7, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.6,
-            ease: "easeIn",
-          }}
+          variants={cardVariants}
+          whileHover={{ scale: 1.04, y: -4 }}
+          whileTap={{ scale: 0.98 }}
         >
           <span>💬</span>
           <h2>Respondido</h2>

@@ -4,6 +4,25 @@ import { Link } from "react-router-dom";
 
 const MotionLink = motion(Link);
 
+// Variantes para animação em cascata dos cards e tabela
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+};
+
 function Dashboard() {
   return (
     <main className="home-login-page">
@@ -24,43 +43,65 @@ function Dashboard() {
           <p>Acompanhe e gerencie seus chamados de suporte técnico.</p>
         </motion.div>
 
+        {/* Cards de Resumo Animados */}
         <motion.div
           className="summary-cards"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
           viewport={{ once: true }}
         >
-          <div className="summary-card">
+          <motion.div
+            className="summary-card"
+            variants={itemVariants}
+            whileHover={{ scale: 1.04, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <span>✅</span>
             <h2>10</h2>
             <p>Resolvidos</p>
-          </div>
+          </motion.div>
 
-          <div className="summary-card">
+          <motion.div
+            className="summary-card"
+            variants={itemVariants}
+            whileHover={{ scale: 1.04, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <span>⏳</span>
             <h2>5</h2>
             <p>Aguardando resposta</p>
-          </div>
+          </motion.div>
 
-          <div className="summary-card">
+          <motion.div
+            className="summary-card"
+            variants={itemVariants}
+            whileHover={{ scale: 1.04, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <span>🔧</span>
             <h2>5</h2>
             <p>Em andamento</p>
-          </div>
+          </motion.div>
 
-          <div className="summary-card">
+          <motion.div
+            className="summary-card"
+            variants={itemVariants}
+            whileHover={{ scale: 1.04, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+          >
             <span>💬</span>
             <h2>3</h2>
             <p>Respondidos</p>
-          </div>
+          </motion.div>
         </motion.div>
 
+        {/* Tabela de Chamados Recentes Animada */}
         <motion.div
           className="recent-tickets"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           viewport={{ once: true }}
         >
           <h2>Chamados recentes</h2>
@@ -72,17 +113,25 @@ function Dashboard() {
               <span>Status</span>
             </div>
 
-            <div className="ticket">
+            <motion.div
+              className="ticket"
+              whileHover={{ scale: 1.01, x: 4 }}
+              transition={{ duration: 0.2 }}
+            >
               <span>#001</span>
               <span>Computador não liga</span>
               <span>🔧 Em andamento</span>
-            </div>
+            </motion.div>
 
-            <div className="ticket">
+            <motion.div
+              className="ticket"
+              whileHover={{ scale: 1.01, x: 4 }}
+              transition={{ duration: 0.2 }}
+            >
               <span>#002</span>
               <span>Erro no sistema</span>
               <span>⏳ Aguardando</span>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 

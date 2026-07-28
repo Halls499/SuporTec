@@ -1,5 +1,6 @@
 import "./ChamadosTecnico.css";
 import { useNavigate } from "react-router-dom";
+import { motion, type Variants } from "framer-motion";
 
 interface Chamado {
   id: number;
@@ -9,6 +10,31 @@ interface Chamado {
   status: string;
   dataAbertura: string;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+};
 
 function ChamadosTecnico() {
   const navigate = useNavigate();
@@ -54,17 +80,28 @@ function ChamadosTecnico() {
 
   return (
     <main className="chamados-tecnico-page">
-      <div className="chamados-tecnico-container">
-        <h1>Chamados atribuídos</h1>
+      <motion.div
+        className="chamados-tecnico-container"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1 variants={cardVariants}>Chamados atribuídos</motion.h1>
 
-        <p className="subtitle">
+        <motion.p className="subtitle" variants={cardVariants}>
           Gerencie os chamados sob sua responsabilidade.
-        </p>
+        </motion.p>
 
-        <div className="chamados-list">
+        <motion.div className="chamados-list" variants={containerVariants}>
           {chamados.length > 0 ? (
             chamados.map((chamado) => (
-              <div key={chamado.id} className="chamado-card">
+              <motion.div
+                key={chamado.id}
+                className="chamado-card"
+                variants={cardVariants}
+                whileHover={{ scale: 1.02, y: -4 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <h2>Chamado #{String(chamado.id).padStart(3, "0")}</h2>
 
                 <p>
@@ -87,19 +124,23 @@ function ChamadosTecnico() {
                   <strong>📅 Aberto em:</strong> {chamado.dataAbertura}
                 </p>
 
-                <button
+                <motion.button
                   className="btn-atender"
                   onClick={() => handleChamadoClick(chamado.id)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Atender chamado
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             ))
           ) : (
-            <p className="sem-chamados">Nenhum chamado atribuído no momento.</p>
+            <motion.p className="sem-chamados" variants={cardVariants}>
+              Nenhum chamado atribuído no momento.
+            </motion.p>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </main>
   );
 }
