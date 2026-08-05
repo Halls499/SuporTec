@@ -2,6 +2,7 @@ import pool from "../config/database.js";
 
 export async function abrirChamado(chamado) {
   const {
+    fk_organizacao, // 🏢 Campo indispensável para o SaaS
     titulo,
     descricao,
     categoria,
@@ -13,18 +14,19 @@ export async function abrirChamado(chamado) {
     sala,
     tipo_contato,
     contato,
-    fk_cliente
+    fk_cliente,
   } = chamado;
 
   const [resultado] = await pool.query(
     `
     INSERT INTO chamado (
-      titulo, descricao, categoria, prioridade, tipo_atendimento, 
+      fk_organizacao, titulo, descricao, categoria, prioridade, tipo_atendimento, 
       endereco, empresa, setor, sala, tipo_contato, contato, fk_cliente
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
+      fk_organizacao || 1,
       titulo,
       descricao,
       categoria,
@@ -43,39 +45,63 @@ export async function abrirChamado(chamado) {
   return resultado;
 }
 
-export async function listarChamadosPorCliente(fk_cliente){
+// 🏢 Busca os chamados do cliente restritos à sua organização (empresa)
+export async function listarChamadosPorClienteEOrganizacao(
+  fk_cliente,
+  fk_organizacao,
+) {
   const [rows] = await pool.query(
-    "SELECT * FROM chamado WHERE fk_cliente = ?",
-    [fk_cliente]
+    `SELECT * FROM chamado 
+     WHERE fk_cliente = ? AND fk_organizacao = ?
+     ORDER BY data_abertura DESC`,
+    [fk_cliente, fk_organizacao],
   );
 
   return rows;
 }
 
-export async function buscarChamadoPorId(id) {
+// 🏢 Busca chamado por ID validando o isolamento da organização
+export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
   const [rows] = await pool.query(
     `SELECT 
       id_chamado, 
+      fk_organizacao,
       titulo, 
       descricao, 
       categoria, 
       prioridade, 
       situacao, 
-      data_abertura 
+      tipo_atendimento,
+      endereco,
+      empresa,
+      setor,
+      sala,
+      tipo_contato,
+      contato,
+      data_abertura,
+      data_fechamento,
+      fk_cliente,
+      fk_tecnico
      FROM chamado 
-     WHERE id_chamado = ?`,
-    [id]
+     WHERE id_chamado = ? AND fk_organizacao = ?`,
+    [id, fk_organizacao],
   );
 
   return rows[0]; // Retorna o chamado encontrado ou undefined
 }
 
-export async function cancelarChamado(id_chamado, fk_cliente) {
+// 🏢 Cancela o chamado validando cliente e organização
+export async function cancelarChamadoSaaS(
+  id_chamado,
+  fk_cliente,
+  fk_organizacao,
+) {
   const [resultado] = await pool.query(
-    `DELETE FROM chamado 
-     WHERE id_chamado = ? AND fk_cliente = ?`,
-    [id_chamado, fk_cliente]
+    `UPDATE chamado 
+     SET situacao = 'Cancelado' 
+     WHERE id_chamado = ? AND fk_cliente = ? AND fk_organizacao = ? AND situacao != 'Resolvido'`,
+    [id_chamado, fk_cliente, fk_organizacao],
   );
 
-  return resultado.affectedRows > 0; // Retorna true se alterou alguma linha
+  return resultado.affectedRows > 0;
 }

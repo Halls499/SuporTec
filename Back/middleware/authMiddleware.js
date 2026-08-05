@@ -9,9 +9,8 @@ export function verificarToken(req, res, next) {
     });
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1]; // Se não existir a segunda parte (o token em si), já barra aqui!
 
-  // Se não existir a segunda parte (o token em si), já barra aqui!
   if (!token) {
     return res.status(401).json({
       erro: "Formato do token inválido.",

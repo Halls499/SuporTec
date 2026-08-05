@@ -4,9 +4,16 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.get("/usuarios", verificarToken, usuarioController.listarUsuarios);
-router.get("/usuarios/:id", usuarioController.buscarUsuarioPorId);
-router.post("/usuarios", usuarioController.cadastrarUsuario);
+// GET /api/usuarios (protegido)
+router.get("/", verificarToken, usuarioController.listarUsuarios);
+
+// GET /api/usuarios/:id
+router.get("/:id", usuarioController.buscarUsuarioPorId);
+
+// POST /api/usuarios/cadastrar
+router.post("/cadastrar", usuarioController.cadastrarUsuario);
+
+// POST /api/usuarios/login
 router.post("/login", usuarioController.loginUsuario);
 
 export default router;

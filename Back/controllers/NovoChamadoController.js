@@ -15,9 +15,13 @@ export async function AbrirNovoChamado(req, res) {
     contato,
   } = req.body;
 
-  // Pegando o id do usuário do middleware JWT
+  // 🏢 Pegando id do cliente E o id da organização vindo do token JWT
   const fk_cliente = req.usuario.id_usuario;
-  console.log("👉 ID DO CLIENTE EXTRAÍDO DO TOKEN:", fk_cliente);
+  const fk_organizacao = req.usuario.fk_organizacao || 1;
+
+  console.log(
+    `👉 CHAMADO DA ORG ${fk_organizacao} CRIADO PELO CLIENTE ${fk_cliente}`,
+  );
 
   try {
     // 1. Validação dos campos obrigatórios
@@ -34,8 +38,9 @@ export async function AbrirNovoChamado(req, res) {
       });
     }
 
-    // 2. Montando o objeto que o Model espera receber
+    // 2. Montando o objeto que o Model espera receber (incluindo fk_organizacao)
     const dadosChamado = {
+      fk_organizacao, // 👈 Crucial para o SaaS!
       titulo,
       descricao,
       categoria,
@@ -67,9 +72,15 @@ export async function AbrirNovoChamado(req, res) {
 
 export async function listarMeusChamados(req, res) {
   const fk_cliente = req.usuario.id_usuario;
+  const fk_organizacao = req.usuario.fk_organizacao || 1;
 
   try {
-    const listaChamados = await chamadoModel.listarChamadosPorCliente(fk_cliente);
+    // 🏢 Garante que só busca chamados do cliente DENTRO da empresa dele
+    const listaChamados =
+      await chamadoModel.listarChamadosPorClienteEOrganizacao(
+        fk_cliente,
+        fk_organizacao,
+      );
 
     return res.status(200).json(listaChamados);
   } catch (erro) {
@@ -84,21 +95,26 @@ export async function listarMeusChamados(req, res) {
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
+    const fk_organizacao = req.usuario.fk_organizacao || 1;
 
-    // Chama a função correspondente no Model (que faz a busca no banco)
-    const chamado = await chamadoModel.buscarChamadoPorId(id);
+    // 🏢 Valida o ID do chamado + a Empresa do usuário logado (Isolamento SaaS)
+    const chamado = await chamadoModel.buscarChamadoPorIdEOrganizacao(
+      id,
+      fk_organizacao,
+    );
 
     if (!chamado) {
-      return res.status(404).json({ mensagem: "Chamado não encontrado." });
+      return res.status(404).json({
+        mensagem: "Chamado não encontrado ou sem permissão de acesso.",
+      });
     }
 
     return res.status(200).json(chamado);
-
   } catch (error) {
     console.error("Erro ao buscar detalhes do chamado:", error);
-    return res.status(500).json({ 
-      mensagem: "Erro interno no servidor ao buscar chamado.", 
-      erro: error.message 
+    return res.status(500).json({
+      mensagem: "Erro interno no servidor ao buscar chamado.",
+      erro: error.message,
     });
   }
 }
@@ -106,23 +122,29 @@ export async function buscarChamadoPorId(req, res) {
 export async function cancelarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
-    const fk_cliente = req.usuario.id_usuario; // Pegando do token JWT
+    const fk_cliente = req.usuario.id_usuario;
+    const fk_organizacao = req.usuario.fk_organizacao || 1;
 
-    const canceladoComSucesso = await chamadoModel.cancelarChamado(id, fk_cliente);
+    // 🏢 Cancela validando cliente E empresa
+    const canceladoComSucesso = await chamadoModel.cancelarChamadoSaaS(
+      id,
+      fk_cliente,
+      fk_organizacao,
+    );
 
     if (!canceladoComSucesso) {
-      return res.status(400).json({ 
-        mensagem: "Não foi possível cancelar o chamado. Ele pode não existir, não pertencer a você ou já estar finalizado/cancelado." 
+      return res.status(400).json({
+        mensagem:
+          "Não foi possível cancelar o chamado. Ele pode não existir, não pertencer a você ou já estar finalizado/cancelado.",
       });
     }
 
     return res.status(200).json({ mensagem: "Chamado cancelado com sucesso!" });
-
   } catch (error) {
     console.error("Erro ao cancelar chamado:", error);
-    return res.status(500).json({ 
-      mensagem: "Erro interno no servidor ao cancelar chamado.", 
-      erro: error.message 
+    return res.status(500).json({
+      mensagem: "Erro interno no servidor ao cancelar chamado.",
+      erro: error.message,
     });
   }
 }
