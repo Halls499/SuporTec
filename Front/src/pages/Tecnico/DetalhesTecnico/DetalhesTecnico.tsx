@@ -62,8 +62,10 @@ function DetalhesTecnico() {
 
         if (resposta.ok) {
           const dados = await resposta.json();
-          setChamado(dados);
-          setNovoStatus(dados.situacao || "Novo");
+          // Tratamento para garantir objeto único mesmo se a API retornar array
+          const chamadoFinal = Array.isArray(dados) ? dados[0] : dados;
+          setChamado(chamadoFinal);
+          setNovoStatus(chamadoFinal?.situacao || "Novo");
         }
       } catch (err) {
         console.error("Erro ao carregar chamado:", err);
@@ -138,7 +140,7 @@ function DetalhesTecnico() {
           Chamado não encontrado.
         </p>
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <Link to="/ChamadosTecnico" className="btn-voltar">
+          <Link to="/chamados-tecnico" className="btn-voltar">
             ← Voltar aos chamados
           </Link>
         </div>
@@ -261,7 +263,7 @@ function DetalhesTecnico() {
         </motion.section>
 
         <motion.div variants={itemVariants} style={{ marginTop: "20px" }}>
-          <Link to="/ChamadosTecnico" className="btn-voltar">
+          <Link to="/chamados-tecnico" className="btn-voltar">
             ← Voltar aos chamados
           </Link>
         </motion.div>

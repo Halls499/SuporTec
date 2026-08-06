@@ -8,6 +8,13 @@ interface Chamado {
   situacao: string;
 }
 
+interface ConquistaProps {
+  ico: string;
+  tit: string;
+  desc: string;
+  status: "desbloqueada" | "bloqueada" | string;
+}
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -107,7 +114,7 @@ function DashboardTecnico() {
             <motion.div
               className="xp-progress"
               initial={{ width: 0 }}
-              animate={{ width: "80%" }} // 320/400 = 80%
+              animate={{ width: "80%" }}
               transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
             >
               Nível 4 - Especialista <br /> 320 / 400 XP
@@ -264,7 +271,8 @@ function DashboardTecnico() {
           style={{ marginTop: "30px", textAlign: "center" }}
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link to="/ChamadosTecnico" className="new-ticket">
+            {/* 🎯 Ajuste o caminho conforme declarado no seu App.tsx */}
+            <Link to="/chamados-tecnico" className="new-ticket">
               Ver todos os chamados
             </Link>
           </motion.div>
@@ -274,18 +282,8 @@ function DashboardTecnico() {
   );
 }
 
-// Sub-componente para organizar os cards de conquista
-function ConquistaCard({
-  ico,
-  tit,
-  desc,
-  status,
-}: {
-  ico: string;
-  tit: string;
-  desc: string;
-  status: string;
-}) {
+// Sub-componente com tipagem explícita
+function ConquistaCard({ ico, tit, desc, status }: ConquistaProps) {
   return (
     <motion.div
       className={`conquista-card ${status}`}

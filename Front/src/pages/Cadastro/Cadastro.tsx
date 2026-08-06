@@ -43,7 +43,8 @@ function Cadastro() {
     try {
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-      const resposta = await fetch(`${baseUrl}/api/usuarios/cadastrar`, {
+      // 🎯 Rota corrigida de '/api/usuarios/cadastrar' para '/api/usuarios'
+      const resposta = await fetch(`${baseUrl}/api/usuarios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -52,7 +53,7 @@ function Cadastro() {
           nome,
           email,
           senha,
-          tipo_usuario: tipoUsuario, // 👈 Agora envia dinamicamente 'cliente' ou 'tecnico'
+          tipo_usuario: tipoUsuario,
           fk_organizacao: 1,
         }),
       });

@@ -79,7 +79,8 @@ function Detalhes() {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${baseUrl}/api/chamados/${id}/cancelar`, {
+      // 🎯 Rota corrigida de '/api/chamados/${id}/cancelar' para '/api/chamados/cancelar/${id}'
+      const response = await fetch(`${baseUrl}/api/chamados/cancelar/${id}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

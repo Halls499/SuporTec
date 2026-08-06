@@ -27,17 +27,23 @@ import DashboardTecnico from "./pages/Tecnico/DashboardTecnico/DashboardTecnico"
 import ChamadosTecnico from "./pages/Tecnico/ChamadosTecnico/ChamadosTecnico";
 import DetalhesTecnico from "./pages/Tecnico/DetalhesTecnico/DetalhesTecnico";
 
-function App() {
+// Helper para parse seguro do usuário do localStorage
+function obterUsuarioSalvo() {
   const usuarioSalvo = localStorage.getItem("usuario");
+  if (!usuarioSalvo) return null;
+  try {
+    return JSON.parse(usuarioSalvo);
+  } catch {
+    return null;
+  }
+}
 
-  const [usuario, setUsuario] = useState(
-    usuarioSalvo ? JSON.parse(usuarioSalvo) : null
-  );
+function App() {
+  const [usuario, setUsuario] = useState(obterUsuarioSalvo());
 
   useEffect(() => {
     function atualizarLogin() {
-      const usuarioSalvo = localStorage.getItem("usuario");
-      setUsuario(usuarioSalvo ? JSON.parse(usuarioSalvo) : null);
+      setUsuario(obterUsuarioSalvo());
     }
 
     window.addEventListener("login", atualizarLogin);
@@ -109,8 +115,9 @@ function App() {
           }
         />
 
+        {/* 🎯 Mantido em minúsculo para manter o padrão das rotas */}
         <Route
-          path="/ChamadosTecnico"
+          path="/chamados-tecnico"
           element={
             <TecnicoRoute>
               <ChamadosTecnico />

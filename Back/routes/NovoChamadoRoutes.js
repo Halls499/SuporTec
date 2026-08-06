@@ -4,17 +4,20 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-// POST /api/chamados -> Criar novo chamado
+// 1. POST /api/chamados -> Criar novo chamado
 router.post("/", verificarToken, chamadoController.AbrirNovoChamado);
 
-// GET /api/chamados -> Listar chamados do cliente/empresa
+// 2. GET /api/chamados -> Listar chamados do cliente
 router.get("/", verificarToken, chamadoController.listarMeusChamados);
 
-// GET /api/chamados/:id -> Buscar detalhes de um chamado
+// 👨‍💻 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
+// ⚠️ ATENÇÃO: Essa linha TEM QUE VIR ANTES de /:id !
+router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
+
+// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
-// PATCH /api/chamados/:id/cancelar -> Cancelar chamado
-// (Alterado de DELETE para PATCH/PUT, já que no model mudamos para atualizar o status em vez de apagar do banco)
+// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch(
   "/:id/cancelar",
   verificarToken,
