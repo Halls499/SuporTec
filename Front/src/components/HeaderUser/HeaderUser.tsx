@@ -62,7 +62,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
             </motion.div>
 
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link to="/ChamadosTecnico">Chamados</Link>
+              <Link to="/chamados-tecnico">Chamados</Link>
             </motion.div>
           </>
         ) : (

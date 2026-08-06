@@ -138,7 +138,7 @@ function Chamados() {
               >
                 {/* 🔗 Redireciona para o componente de detalhes mantendo a coerência das rotas */}
                 <Link
-                  to={`/chamados/${chamado.id_chamado}`}
+                  to={`/detalhes/${chamado.id_chamado}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <div className="chamado-card">
