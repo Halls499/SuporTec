@@ -1,19 +1,17 @@
 .cadastro-page {
   min-height: calc(100vh - 90px);
-  background-color: #1A2236;
+  background-color: #1a2236;
 
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 
 .auth-box {
   width: 350px;
@@ -26,18 +24,15 @@
   text-align: center;
 }
 
-
 .auth-box h1 {
   color: #fff;
   margin-bottom: 10px;
 }
 
-
 .auth-box p {
   color: #d1d5db;
   margin-bottom: 25px;
 }
-
 
 .auth-box form {
   display: flex;
@@ -45,24 +40,21 @@
   gap: 15px;
 }
 
-
 .auth-box input {
   padding: 12px;
 
   border: none;
   border-radius: 8px;
 
-  background-color: #1A2236;
+  background-color: #1a2236;
   color: #fff;
 
   font-size: 16px;
 }
 
-
 .auth-box input::placeholder {
   color: #9ca3af;
 }
-
 
 .auth-box button {
   padding: 12px;
@@ -79,16 +71,13 @@
   transition: 0.2s;
 }
 
-
 .auth-box button:hover {
   background-color: #2563eb;
 }
 
-
 .auth-link {
   margin-top: 20px;
 }
-
 
 .auth-link a {
   color: #3b82f6;
@@ -96,7 +85,35 @@
   margin-left: 5px;
 }
 
-
 .auth-link a:hover {
   text-decoration: underline;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+}
+
+.input-group label {
+  color: #ffffff; /* ⚪ Texto da label em branco */
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.input-group select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background-color: #1f2937; /* Fundo escuro para combinar */
+  color: #ffffff; /* ⚪ Texto do select em branco */
+  outline: none;
+}
+
+.input-group select option {
+  background-color: #1f2937;
+  color: #ffffff;
 }

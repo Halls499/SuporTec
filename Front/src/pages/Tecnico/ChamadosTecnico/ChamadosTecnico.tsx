@@ -51,7 +51,8 @@ function ChamadosTecnico() {
       ).replace(/\/$/, "");
 
       try {
-        const resposta = await fetch(`${baseUrl}/api/chamados`, {
+        const resposta = await fetch(`${baseUrl}/api/chamados/tecnico`, {
+          // 👈 Rota correta para técnicos
           method: "GET",
           headers: {
             "Content-Type": "application/json",

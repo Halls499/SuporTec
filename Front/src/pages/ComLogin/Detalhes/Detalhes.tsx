@@ -35,42 +35,49 @@ function Detalhes() {
   ).replace(/\/$/, "");
 
   useEffect(() => {
-    const carregarDetalhes = async () => {
-      const token = localStorage.getItem("token");
+  const carregarDetalhes = async () => {
+    const token = localStorage.getItem("token");
 
-      if (!token) {
-        setErro("Usuário não autenticado.");
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // 🏢 1. Busca os detalhes do chamado com isolamento SaaS via JWT
-        const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!responseChamado.ok) {
-          throw new Error("Não foi possível carregar os detalhes do chamado.");
-        }
-
-        const dataChamado = await responseChamado.json();
-        setChamado(dataChamado);
-      } catch (err: any) {
-        setErro(err.message || "Erro ao buscar dados do chamado.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      carregarDetalhes();
+    if (!token) {
+      setErro("Usuário não autenticado.");
+      setLoading(false);
+      return;
     }
-  }, [id, baseUrl]);
+
+    try {
+      // 1️⃣ PRIMEIRO: Faz a requisição e declara 'responseChamado'
+      const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // 2️⃣ SEGUNDO: Valida se a resposta foi de erro (agora responseChamado já existe!)
+      if (!responseChamado.ok) {
+        throw new Error("Não foi possível carregar os detalhes do chamado.");
+      }
+
+      // 3️⃣ TERCEIRO: Converte para JSON
+      const dataChamado = await responseChamado.json();
+      console.log("Dados do chamado recebidos:", dataChamado);
+
+      // Tratamento caso a API retorne array [ {...} ] ou objeto direto { ... }
+      const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
+
+      setChamado(chamadoFinal);
+    } catch (err: any) {
+      setErro(err.message || "Erro ao buscar dados do chamado.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (id) {
+    carregarDetalhes();
+  }
+}, [id, baseUrl]);
 
   // Função para abrir o Modal de Confirmação
   const handleOpenModal = () => {
