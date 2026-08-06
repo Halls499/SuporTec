@@ -60,6 +60,22 @@ export async function listarChamadosPorClienteEOrganizacao(
   return rows;
 }
 
+// 👨‍💻 NOVO (SaaS): Busca TODOS os chamados da organização para a visão do Técnico
+export async function listarChamadosPorOrganizacao(fk_organizacao) {
+  const [rows] = await pool.query(
+    `SELECT 
+        c.*, 
+        u.nome AS nome_solicitante 
+     FROM chamado c
+     LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
+     WHERE c.fk_organizacao = ?
+     ORDER BY c.data_abertura DESC`,
+    [fk_organizacao],
+  );
+
+  return rows;
+}
+
 // 🏢 Busca chamado por ID validando o isolamento da organização
 export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
   const [rows] = await pool.query(

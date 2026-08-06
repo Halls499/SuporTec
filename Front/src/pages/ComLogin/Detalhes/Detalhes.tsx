@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const MotionLink = motion(Link);
 
-// Interface para tipar os dados do chamado
 interface Chamado {
   id_chamado: number;
   titulo: string;
@@ -20,79 +19,66 @@ function Detalhes() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  // Estados da página
   const [chamado, setChamado] = useState<Chamado | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-
-  // Estado para controlar a exibição do Modal de Confirmação
   const [showModal, setShowModal] = useState(false);
 
-  // Define a URL base dinamicamente (com fallback local para desenvolvimento)
   const baseUrl = (
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
   useEffect(() => {
-  const carregarDetalhes = async () => {
-    const token = localStorage.getItem("token");
+    const carregarDetalhes = async () => {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      setErro("Usuário não autenticado.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // 1️⃣ PRIMEIRO: Faz a requisição e declara 'responseChamado'
-      const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      // 2️⃣ SEGUNDO: Valida se a resposta foi de erro (agora responseChamado já existe!)
-      if (!responseChamado.ok) {
-        throw new Error("Não foi possível carregar os detalhes do chamado.");
+      if (!token) {
+        setErro("Usuário não autenticado.");
+        setLoading(false);
+        return;
       }
 
-      // 3️⃣ TERCEIRO: Converte para JSON
-      const dataChamado = await responseChamado.json();
-      console.log("Dados do chamado recebidos:", dataChamado);
+      try {
+        const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      // Tratamento caso a API retorne array [ {...} ] ou objeto direto { ... }
-      const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
+        if (!responseChamado.ok) {
+          throw new Error("Não foi possível carregar os detalhes do chamado.");
+        }
 
-      setChamado(chamadoFinal);
-    } catch (err: any) {
-      setErro(err.message || "Erro ao buscar dados do chamado.");
-    } finally {
-      setLoading(false);
+        const dataChamado = await responseChamado.json();
+        const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
+
+        setChamado(chamadoFinal);
+      } catch (err: any) {
+        setErro(err.message || "Erro ao buscar dados do chamado.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      carregarDetalhes();
     }
-  };
+  }, [id, baseUrl]);
 
-  if (id) {
-    carregarDetalhes();
-  }
-}, [id, baseUrl]);
-
-  // Função para abrir o Modal de Confirmação
   const handleOpenModal = () => {
     setShowModal(true);
   };
 
-  // Função para efetuar a requisição de cancelamento no backend
   const handleConfirmarCancelamento = async () => {
-    setShowModal(false); // Fecha o modal
+    setShowModal(false);
     setIsCanceling(true);
 
     try {
       const token = localStorage.getItem("token");
 
-      // 🏢 2. Atualiza a requisição para PATCH e aponta para o endpoint correto
       const response = await fetch(`${baseUrl}/api/chamados/${id}/cancelar`, {
         method: "PATCH",
         headers: {
@@ -103,7 +89,7 @@ function Detalhes() {
 
       if (response.ok) {
         alert("Chamado cancelado com sucesso!");
-        navigate("/chamados"); // 3. Redireciona para a lista de chamados
+        navigate("/chamados");
       } else {
         const data = await response.json();
         alert(data.mensagem || "Erro ao cancelar chamado.");
@@ -116,7 +102,6 @@ function Detalhes() {
     }
   };
 
-  // Função auxiliar para formatar datas no padrão BR
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
     const data = new Date(dataIso);
@@ -129,7 +114,6 @@ function Detalhes() {
     });
   };
 
-  // Funções auxiliares para mapear as cores das Badges
   const getStatusBadge = (status: string) => {
     const statusLower = status?.toLowerCase() || "";
     if (statusLower.includes("novo")) return "badge-novo";
@@ -225,7 +209,6 @@ function Detalhes() {
             alignItems: "center",
           }}
         >
-          {/* Botão Azul - Voltar */}
           <MotionLink
             to="/chamados"
             style={{
@@ -251,7 +234,6 @@ function Detalhes() {
             Voltar aos chamados
           </MotionLink>
 
-          {/* Botão Vermelho - Cancelar Chamado */}
           <AnimatePresence>
             {chamado.situacao !== "Cancelado" &&
               chamado.situacao !== "Resolvido" && (
@@ -302,7 +284,6 @@ function Detalhes() {
         </div>
       </motion.div>
 
-      {/* MODAL DE CONFIRMAÇÃO CUSTOMIZADO */}
       <AnimatePresence>
         {showModal && (
           <motion.div

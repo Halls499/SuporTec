@@ -92,6 +92,24 @@ export async function listarMeusChamados(req, res) {
   }
 }
 
+// 👨‍💻 NOVO: Função para a visão do TÉCNICO
+export async function listarChamadosTecnico(req, res) {
+  const fk_organizacao = req.usuario.fk_organizacao || 1;
+
+  try {
+    // 🏢 Busca TODOS os chamados da empresa (sem filtrar por id_cliente)
+    const listaChamados = await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
+
+    return res.status(200).json(listaChamados);
+  } catch (erro) {
+    console.error(erro);
+
+    return res.status(500).json({
+      erro: "Erro ao buscar chamados do técnico.",
+    });
+  }
+}
+
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;

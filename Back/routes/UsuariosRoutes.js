@@ -1,19 +1,17 @@
+// Exemplo no arquivo de rotas (routes/chamados.js)
 import { Router } from "express";
-import * as usuarioController from "../controllers/UsuariosController.js";
-import { verificarToken } from "../middleware/authMiddleware.js";
+import {
+  listarMeusChamados,
+  listarChamadosTecnico, // 👈 Importe a nova função do controller
+} from "../controllers/chamadoController.js";
+import { autenticarToken } from "../middlewares/authMiddleware.js"; // seu middleware de auth
 
 const router = Router();
 
-// GET /api/usuarios (protegido)
-router.get("/", verificarToken, usuarioController.listarUsuarios);
+// Rota do Cliente
+router.get("/", autenticarToken, listarMeusChamados);
 
-// GET /api/usuarios/:id
-router.get("/:id", usuarioController.buscarUsuarioPorId);
-
-// POST /api/usuarios/cadastrar
-router.post("/cadastrar", usuarioController.cadastrarUsuario);
-
-// POST /api/usuarios/login
-router.post("/login", usuarioController.loginUsuario);
+// 👨‍💻 Rota do Técnico (adicione esta linha)
+router.get("/tecnico", autenticarToken, listarChamadosTecnico);
 
 export default router;
