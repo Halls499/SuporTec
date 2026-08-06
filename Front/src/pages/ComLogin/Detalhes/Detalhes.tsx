@@ -30,6 +30,7 @@ function Detalhes() {
   ).replace(/\/$/, "");
 
   useEffect(() => {
+    console.log("ID capturado da URL:", id);
     const carregarDetalhes = async () => {
       const token = localStorage.getItem("token");
 
