@@ -81,7 +81,6 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           </>
         )}
       </nav>
-      // 🛠️ Ajuste no avatar e no nome para evitar erro de runtime
       <div className="user">
         <div className="user-info">
           <motion.div
