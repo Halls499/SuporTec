@@ -30,6 +30,7 @@ function Cadastro() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [tipoUsuario, setTipoUsuario] = useState("cliente");
 
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
@@ -42,7 +43,6 @@ function Cadastro() {
     try {
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-      // 🏢 Ajustado para o endpoint /api/usuarios/cadastrar
       const resposta = await fetch(`${baseUrl}/api/usuarios/cadastrar`, {
         method: "POST",
         headers: {
@@ -52,8 +52,8 @@ function Cadastro() {
           nome,
           email,
           senha,
-          tipo_usuario: "cliente",
-          fk_organizacao: 1, // 🏢 Define a empresa padrão (ou dynamic via input futuramente)
+          tipo_usuario: tipoUsuario, // 👈 Agora envia dinamicamente 'cliente' ou 'tecnico'
+          fk_organizacao: 1,
         }),
       });
 
@@ -137,6 +137,18 @@ function Cadastro() {
               onChange={(e) => setConfirmarSenha(e.target.value)}
               variants={fieldVariants}
             />
+
+            <motion.div className="input-group" variants={fieldVariants}>
+              <label htmlFor="tipo_usuario">Tipo de Conta:</label>
+              <select
+                id="tipo_usuario"
+                value={tipoUsuario}
+                onChange={(e) => setTipoUsuario(e.target.value)}
+              >
+                <option value="cliente">Cliente (Solicitante)</option>
+                <option value="tecnico">Técnico (Suporte)</option>
+              </select>
+            </motion.div>
 
             <motion.button
               type="submit"
