@@ -10,17 +10,18 @@ function ClienteRoute({ children }: Props) {
 
   try {
     usuario = JSON.parse(localStorage.getItem("usuario") || "null");
-  } catch (error) {
-    console.error("Erro ao ler dados do usuário no localStorage:", error);
+  } catch {
+    // 👈 Removido o "(error)" daqui para o TypeScript parar de reclamar
     usuario = null;
   }
 
-  // 🔒 1. Valida se o token existe E se o usuário está no localStorage
+  console.log("Usuário lido no ClienteRoute:", usuario);
+  console.log("Tipo do usuário é:", usuario?.tipo_usuario);
+
   if (!token || !usuario) {
     return <Navigate to="/login" replace />;
   }
 
-  // 🚫 2. Garante que apenas usuários com o tipo "cliente" acessem
   if (usuario.tipo_usuario !== "cliente") {
     return <Navigate to="/dashboard-tecnico" replace />;
   }
