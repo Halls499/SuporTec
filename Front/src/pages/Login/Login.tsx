@@ -4,58 +4,23 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 
 const boxVariants = {
-  hidden: {
-    opacity: 0,
-    y: 40,
-  },
-
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-    },
-  },
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const containerVariants = {
   hidden: {},
-
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-    },
-  },
+  visible: { transition: { staggerChildren: 0.15 } },
 };
 
 const fieldVariants = {
-  hidden: {
-    opacity: 0,
-    x: -20,
-  },
-
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.4,
-    },
-  },
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
 };
 
 const textVariants = {
-  hidden: {
-    opacity: 0,
-    y: -20,
-  },
-
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
+  hidden: { opacity: 0, y: -20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 function Login() {
@@ -68,10 +33,10 @@ function Login() {
     e.preventDefault();
 
     try {
-      // Garante que a URL base não tenha barra no final
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-      const resposta = await fetch(`${baseUrl}/login`, {
+      // 🏢 Ajustado para bater no prefixo correto /api/usuarios/login
+      const resposta = await fetch(`${baseUrl}/api/usuarios/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,16 +54,19 @@ function Login() {
         return;
       }
 
-      // Salva sessão do usuário
+      // 🔑 Salva os dados contendo id, tipo_usuario e a fk_organizacao!
       localStorage.setItem("usuario", JSON.stringify(dados.usuario));
       localStorage.setItem("token", dados.token);
 
-      // Dispara evento para atualização em outros componentes se necessário
       window.dispatchEvent(new Event("login"));
 
-      // Redireciona conforme o perfil
-      if (dados.usuario?.tipo_usuario === "tecnico") {
+      // 🔀 Redirecionamento baseado no perfil SaaS
+      const tipo = dados.usuario?.tipo_usuario;
+
+      if (tipo === "tecnico") {
         navigate("/dashboard-tecnico");
+      } else if (tipo === "admin_empresa") {
+        navigate("/dashboard"); // Ou rota de admin, se criar uma no futuro
       } else {
         navigate("/dashboard");
       }
@@ -149,7 +117,7 @@ function Login() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Entrar{" "}
+              Entrar
             </motion.button>
           </motion.form>
 

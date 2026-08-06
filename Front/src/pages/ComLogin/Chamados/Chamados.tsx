@@ -41,10 +41,13 @@ function Chamados() {
   useEffect(() => {
     async function carregarChamados() {
       const token = localStorage.getItem("token");
-      const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const baseUrl = (
+        import.meta.env.VITE_API_URL || "http://localhost:3000"
+      ).replace(/\/$/, "");
 
       try {
-        const resposta = await fetch(`${baseUrl}/chamados`, {
+        // 🏢 Endpoint atualizado para o prefixo /api/chamados
+        const resposta = await fetch(`${baseUrl}/api/chamados`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -88,7 +91,8 @@ function Chamados() {
   const getPrioridadeBadge = (prioridade: string) => {
     const prioridadeLower = prioridade?.toLowerCase() || "";
     if (prioridadeLower.includes("alta")) return "badge-alta";
-    if (prioridadeLower.includes("media") || prioridadeLower.includes("média")) return "badge-media";
+    if (prioridadeLower.includes("media") || prioridadeLower.includes("média"))
+      return "badge-media";
     return "badge-baixa";
   };
 
@@ -132,24 +136,26 @@ function Chamados() {
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
               >
+                {/* 🔗 Redireciona para o componente de detalhes mantendo a coerência das rotas */}
                 <Link
-                  to={`/detalhes/${chamado.id_chamado}`}
+                  to={`/chamados/${chamado.id_chamado}`}
                   style={{ textDecoration: "none", color: "inherit" }}
-                  onClick={() => {
-                    console.log("ID do chamado clicado:", chamado.id_chamado);
-                  }}
                 >
                   <div className="chamado-card">
                     <h2>Problema: {chamado.titulo}</h2>
                     <p>
                       <strong>Status:</strong>{" "}
-                      <span className={`badge ${getStatusBadge(chamado.situacao)}`}>
+                      <span
+                        className={`badge ${getStatusBadge(chamado.situacao)}`}
+                      >
                         {chamado.situacao}
                       </span>
                     </p>
                     <p>
                       <strong>Prioridade:</strong>{" "}
-                      <span className={`badge ${getPrioridadeBadge(chamado.prioridade)}`}>
+                      <span
+                        className={`badge ${getPrioridadeBadge(chamado.prioridade)}`}
+                      >
                         {chamado.prioridade}
                       </span>
                     </p>

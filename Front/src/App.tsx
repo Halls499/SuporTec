@@ -16,13 +16,13 @@ import Como from "./pages/SemLogin/Como/Como";
 import Login from "./pages/Login/Login";
 import Cadastro from "./pages/Cadastro/Cadastro";
 
-// Rotas privadas
+// Rotas privadas do Cliente
 import HomeLogin from "./pages/ComLogin/Dashboard/Dashboard";
 import AbrirChamado from "./pages/ComLogin/AbrirChamado/AbrirChamado";
 import Chamado from "./pages/ComLogin/Chamados/Chamados";
 import Detalhes from "./pages/ComLogin/Detalhes/Detalhes";
 
-// Técnico
+// Rotas privadas do Técnico
 import DashboardTecnico from "./pages/Tecnico/DashboardTecnico/DashboardTecnico";
 import ChamadosTecnico from "./pages/Tecnico/ChamadosTecnico/ChamadosTecnico";
 import DetalhesTecnico from "./pages/Tecnico/DetalhesTecnico/DetalhesTecnico";
@@ -31,13 +31,12 @@ function App() {
   const usuarioSalvo = localStorage.getItem("usuario");
 
   const [usuario, setUsuario] = useState(
-    usuarioSalvo ? JSON.parse(usuarioSalvo) : null,
+    usuarioSalvo ? JSON.parse(usuarioSalvo) : null
   );
 
   useEffect(() => {
     function atualizarLogin() {
       const usuarioSalvo = localStorage.getItem("usuario");
-
       setUsuario(usuarioSalvo ? JSON.parse(usuarioSalvo) : null);
     }
 
@@ -59,11 +58,11 @@ function App() {
         <Route path="/como" element={<Como />} />
         <Route path="/sobre" element={<Sobre />} />
 
-        {/* Login */}
+        {/* Login / Cadastro */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
 
-        {/* Usuário */}
+        {/* Usuário (Cliente) */}
         <Route
           path="/dashboard"
           element={
@@ -90,7 +89,15 @@ function App() {
             </ClienteRoute>
           }
         />
-        <Route path="/detalhes/:id" element={<Detalhes />} />
+
+        <Route
+          path="/detalhes/:id"
+          element={
+            <ClienteRoute>
+              <Detalhes />
+            </ClienteRoute>
+          }
+        />
 
         {/* Técnico */}
         <Route
@@ -120,6 +127,7 @@ function App() {
           }
         />
 
+        {/* Redirecionamento padrão para rotas inexistentes */}
         <Route path="*" element={<Home />} />
       </Routes>
     </BrowserRouter>

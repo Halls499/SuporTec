@@ -22,7 +22,7 @@ const containerVariants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.08, // Levemente mais rápido por ter mais campos
+      staggerChildren: 0.08,
     },
   },
 };
@@ -58,7 +58,7 @@ const textVariants = {
 function AbrirChamado() {
   const navigate = useNavigate();
 
-  // Estados com os nomes exatamente iguais aos do Banco e Backend (snake_case)
+  // Estados com os nomes alinhados ao schema da base de dados
   const [tipo_atendimento, setTipoAtendimento] = useState("");
   const [tipo_local, setTipoLocal] = useState("");
   const [tipo_contato, setTipoContato] = useState("");
@@ -77,16 +77,21 @@ function AbrirChamado() {
   const [prioridade, setPrioridade] = useState("");
   const [horarioContato, setHorarioContato] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Função de envio para a API
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const token = localStorage.getItem("token");
-    const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    const baseUrl = (
+      import.meta.env.VITE_API_URL || "http://localhost:3000"
+    ).replace(/\/$/, "");
 
     try {
-      const resposta = await fetch(`${baseUrl}/chamados`, {
+      // 🏢 Envio com isolamento multi-tenant gerenciado pelo JWT Token no Backend
+      const resposta = await fetch(`${baseUrl}/api/chamados`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -100,6 +105,8 @@ function AbrirChamado() {
           tipo_atendimento,
           tipo_contato,
           contato,
+          nome_solicitante: nomeSolicitante || null,
+          horario_contato: horarioContato || null,
           endereco: endereco || null,
           empresa: empresa || null,
           setor: setor || null,
@@ -117,6 +124,8 @@ function AbrirChamado() {
     } catch (err) {
       console.error("Erro na requisição:", err);
       alert("Falha ao se conectar com o servidor.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -260,7 +269,7 @@ function AbrirChamado() {
             <option value="LinkedIn">LinkedIn</option>
           </motion.select>
 
-          {/* Formulário whatsapp */}
+          {/* Formulários dinâmicos de contato */}
           {tipo_contato === "WhatsApp" && (
             <>
               <motion.label variants={fieldVariants}>
@@ -277,7 +286,6 @@ function AbrirChamado() {
             </>
           )}
 
-          {/* Formulário email */}
           {tipo_contato === "Email" && (
             <>
               <motion.label variants={fieldVariants}>Email</motion.label>
@@ -292,7 +300,6 @@ function AbrirChamado() {
             </>
           )}
 
-          {/* Formulário telefone */}
           {tipo_contato === "Telefone" && (
             <>
               <motion.label variants={fieldVariants}>Telefone</motion.label>
@@ -307,7 +314,6 @@ function AbrirChamado() {
             </>
           )}
 
-          {/* Formulário teams */}
           {tipo_contato === "Teams" && (
             <>
               <motion.label variants={fieldVariants}>
@@ -324,7 +330,6 @@ function AbrirChamado() {
             </>
           )}
 
-          {/* Formulário linkedin */}
           {tipo_contato === "LinkedIn" && (
             <>
               <motion.label variants={fieldVariants}>
@@ -416,12 +421,13 @@ function AbrirChamado() {
 
           <motion.button
             type="submit"
+            disabled={isSubmitting}
             variants={fieldVariants}
             whileHover={{ scale: 1.02, backgroundColor: "#1d4ed8" }}
             whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.15 }}
           >
-            Enviar chamado
+            {isSubmitting ? "Enviando..." : "Enviar chamado"}
           </motion.button>
         </motion.form>
       </motion.div>

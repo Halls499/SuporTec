@@ -5,6 +5,7 @@ interface Props {
 }
 
 function ClienteRoute({ children }: Props) {
+  const token = localStorage.getItem("token");
   let usuario = null;
 
   try {
@@ -14,10 +15,12 @@ function ClienteRoute({ children }: Props) {
     usuario = null;
   }
 
-  if (!usuario) {
+  // 🔒 1. Valida se o token existe E se o usuário está no localStorage
+  if (!token || !usuario) {
     return <Navigate to="/login" replace />;
   }
 
+  // 🚫 2. Garante que apenas usuários com o tipo "cliente" acessem
   if (usuario.tipo_usuario !== "cliente") {
     return <Navigate to="/dashboard-tecnico" replace />;
   }

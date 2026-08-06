@@ -19,15 +19,20 @@ interface Chamado {
 function Detalhes() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  
+
   // Estados da página
   const [chamado, setChamado] = useState<Chamado | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  
+
   // Estado para controlar a exibição do Modal de Confirmação
   const [showModal, setShowModal] = useState(false);
+
+  // Define a URL base dinamicamente (com fallback local para desenvolvimento)
+  const baseUrl = (
+    import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ).replace(/\/$/, "");
 
   useEffect(() => {
     const carregarDetalhes = async () => {
@@ -40,17 +45,14 @@ function Detalhes() {
       }
 
       try {
-        // 1. Busca os detalhes do chamado
-        const responseChamado = await fetch(
-          `https://suportec.onrender.com/chamados/${id}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        // 🏢 1. Busca os detalhes do chamado com isolamento SaaS via JWT
+        const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
         if (!responseChamado.ok) {
           throw new Error("Não foi possível carregar os detalhes do chamado.");
@@ -68,7 +70,7 @@ function Detalhes() {
     if (id) {
       carregarDetalhes();
     }
-  }, [id]);
+  }, [id, baseUrl]);
 
   // Função para abrir o Modal de Confirmação
   const handleOpenModal = () => {
@@ -82,20 +84,19 @@ function Detalhes() {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(
-        `https://suportec.onrender.com/chamados/${id}/cancelar`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+
+      // 🏢 2. Atualiza a requisição para PATCH e aponta para o endpoint correto
+      const response = await fetch(`${baseUrl}/api/chamados/${id}/cancelar`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.ok) {
         alert("Chamado cancelado com sucesso!");
-        navigate("/Chamados"); // Redireciona o usuário direto para a lista de chamados
+        navigate("/chamados"); // 3. Redireciona para a lista de chamados
       } else {
         const data = await response.json();
         alert(data.mensagem || "Erro ao cancelar chamado.");
@@ -134,7 +135,8 @@ function Detalhes() {
   const getPrioridadeBadge = (prioridade: string) => {
     const prioridadeLower = prioridade?.toLowerCase() || "";
     if (prioridadeLower.includes("alta")) return "badge-alta";
-    if (prioridadeLower.includes("media") || prioridadeLower.includes("média")) return "badge-media";
+    if (prioridadeLower.includes("media") || prioridadeLower.includes("média"))
+      return "badge-media";
     return "badge-baixa";
   };
 
@@ -155,7 +157,7 @@ function Detalhes() {
           <h2>Ops! Chamado não encontrado.</h2>
           <p>{erro}</p>
           <MotionLink
-            to="/Chamados"
+            to="/chamados"
             className="new-ticket"
             style={{ marginTop: "20px" }}
             whileHover={{ scale: 1.05 }}
@@ -218,7 +220,7 @@ function Detalhes() {
         >
           {/* Botão Azul - Voltar */}
           <MotionLink
-            to="/Chamados"
+            to="/chamados"
             style={{
               backgroundColor: "#2563eb",
               color: "#ffffff",
@@ -314,7 +316,8 @@ function Detalhes() {
               <div className="modal-icon">⚠️</div>
               <h2>Cancelar Chamado?</h2>
               <p>
-                Tem certeza de que deseja cancelar este chamado? Esta ação não pode ser desfeita.
+                Tem certeza de que deseja cancelar este chamado? Esta ação não
+                pode ser desfeita.
               </p>
 
               <div className="modal-actions">

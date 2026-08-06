@@ -5,6 +5,7 @@ interface Props {
 }
 
 function PrivateRoute({ children }: Props) {
+  const token = localStorage.getItem("token");
   let usuario = null;
 
   try {
@@ -14,7 +15,8 @@ function PrivateRoute({ children }: Props) {
     usuario = null;
   }
 
-  if (!usuario) {
+  // 🔒 Se não houver token OU usuário salvo, redireciona para a tela de login
+  if (!token || !usuario) {
     return <Navigate to="/login" replace />;
   }
 

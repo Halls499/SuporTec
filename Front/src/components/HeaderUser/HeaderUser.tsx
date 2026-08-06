@@ -35,9 +35,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
   }
 
   const rotaInicial =
-    usuario.tipo_usuario === "tecnico"
-      ? "/dashboard-tecnico"
-      : "/dashboard";
+    usuario.tipo_usuario === "tecnico" ? "/dashboard-tecnico" : "/dashboard";
 
   return (
     <motion.header
@@ -56,7 +54,6 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           <h1>SuporTec</h1>
         </motion.div>
       </Link>
-
       <nav className="user-actions">
         {usuario.tipo_usuario === "tecnico" ? (
           <>
@@ -84,7 +81,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           </>
         )}
       </nav>
-
+      // 🛠️ Ajuste no avatar e no nome para evitar erro de runtime
       <div className="user">
         <div className="user-info">
           <motion.div
@@ -92,10 +89,10 @@ function HeaderUser({ usuario }: HeaderUserProps) {
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.2 }}
           >
-            {usuario.nome.charAt(0).toUpperCase()}
+            {usuario?.nome ? usuario.nome.charAt(0).toUpperCase() : "U"}
           </motion.div>
 
-          <span>{usuario.nome}</span>
+          <span>{usuario?.nome || "Usuário"}</span>
         </div>
 
         <motion.button

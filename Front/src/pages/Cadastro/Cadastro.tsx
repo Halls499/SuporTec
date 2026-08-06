@@ -5,57 +5,22 @@ import { useState } from "react";
 
 const containerVariants = {
   hidden: {},
-
-  visible: {
-    transition: {
-      staggerChildren: 0.15,
-    },
-  },
+  visible: { transition: { staggerChildren: 0.15 } },
 };
 
 const fieldVariants = {
-  hidden: {
-    opacity: 0,
-    x: -20,
-  },
-
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.5 } },
 };
 
 const boxVariants = {
-  hidden: {
-    opacity: 0,
-    y: 40,
-  },
-
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-    },
-  },
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const textVariants = {
-  hidden: {
-    opacity: 0,
-    y: -20,
-  },
-
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
+  hidden: { opacity: 0, y: -20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 function Cadastro() {
@@ -75,10 +40,10 @@ function Cadastro() {
     }
 
     try {
-      // Garante que a URL base não tenha barra no final para não duplicar
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-      const resposta = await fetch(`${baseUrl}/usuarios`, {
+      // 🏢 Ajustado para o endpoint /api/usuarios/cadastrar
+      const resposta = await fetch(`${baseUrl}/api/usuarios/cadastrar`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,6 +53,7 @@ function Cadastro() {
           email,
           senha,
           tipo_usuario: "cliente",
+          fk_organizacao: 1, // 🏢 Define a empresa padrão (ou dynamic via input futuramente)
         }),
       });
 
@@ -102,7 +68,9 @@ function Cadastro() {
       navigate("/login");
     } catch (erro) {
       console.error("Erro na requisição:", erro);
-      alert("Não foi possível conectar ao servidor. Tente novamente mais tarde.");
+      alert(
+        "Não foi possível conectar ao servidor. Tente novamente mais tarde.",
+      );
     }
   }
 
