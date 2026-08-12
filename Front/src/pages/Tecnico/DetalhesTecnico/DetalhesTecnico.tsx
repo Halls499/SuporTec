@@ -138,9 +138,20 @@ function DetalhesTecnico() {
       });
 
       if (resposta.ok) {
-        const mensagemCriada = await resposta.json();
-        setMensagens((prev) => [...prev, mensagemCriada]);
-        setNovaResposta("");
+        const novaMensagemCriada = await resposta.json();
+
+        // 🛠️ Garante que se a API não retornar a data, preenchemos com a data atual do navegador
+        const mensagemComData = {
+          ...novaMensagemCriada,
+          data_envio:
+            novaMensagemCriada.data_envio ||
+            novaMensagemCriada.criado_em ||
+            novaMensagemCriada.data ||
+            new Date().toISOString(),
+        };
+
+        setMensagens((prev) => [...prev, mensagemComData]);
+        setNovaResposta(""); // ✅ CORRIGIDO AQUI (era setTextoMensagem)
       } else {
         alert("Erro ao enviar resposta.");
       }
@@ -221,7 +232,8 @@ function DetalhesTecnico() {
     );
   }
 
-  const dataAbertoChamado = chamado.data_abertura || chamado.criado_em || chamado.data;
+  const dataAbertoChamado =
+    chamado.data_abertura || chamado.criado_em || chamado.data;
 
   return (
     <main className="detalhes-tecnico-page">

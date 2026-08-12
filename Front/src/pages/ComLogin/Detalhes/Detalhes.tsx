@@ -128,7 +128,18 @@ function Detalhes() {
 
       if (response.ok) {
         const novaMensagemCriada = await response.json();
-        setMensagens((prev) => [...prev, novaMensagemCriada]);
+
+        // 🛠️ Garante que se a API não retornar a data, preenchemos com a data atual do navegador
+        const mensagemComData = {
+          ...novaMensagemCriada,
+          data_envio:
+            novaMensagemCriada.data_envio ||
+            novaMensagemCriada.criado_em ||
+            novaMensagemCriada.data ||
+            new Date().toISOString(),
+        };
+
+        setMensagens((prev) => [...prev, mensagemComData]);
         setTextoMensagem("");
       } else {
         alert("Erro ao enviar mensagem.");

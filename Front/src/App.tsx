@@ -97,7 +97,7 @@ function App() {
         />
 
         <Route
-          path="/detalhes/:id"
+          path="/chamados/:id"
           element={
             <ClienteRoute>
               <Detalhes />
