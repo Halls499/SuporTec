@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 
 const MotionLink = motion(Link);
 
-// Variantes para animação em cascata dos cards e tabela
 const containerVariants = {
   hidden: {},
   visible: {
@@ -35,7 +34,6 @@ function Dashboard() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Busca chamados reais do backend SaaS
   useEffect(() => {
     const buscarChamados = async () => {
       const token = localStorage.getItem("token");
@@ -69,7 +67,6 @@ function Dashboard() {
     buscarChamados();
   }, []);
 
-  // 📊 Cálculo dinâmico dos cards de métricas baseados nos dados da organização do cliente
   const resolvidos = chamados.filter((c) =>
     c.situacao?.toLowerCase().includes("resolvido"),
   ).length;
@@ -85,7 +82,6 @@ function Dashboard() {
     c.situacao?.toLowerCase().includes("cancelado"),
   ).length;
 
-  // Pega os 5 chamados mais recentes
   const recentes = chamados.slice(0, 5);
 
   return (
@@ -107,7 +103,7 @@ function Dashboard() {
           <p>Acompanhe e gerencie seus chamados de suporte técnico.</p>
         </motion.div>
 
-        {/* Cards de Resumo Animados com Dados Dinâmicos */}
+        {/* Cards de Resumo */}
         <motion.div
           className="summary-cards"
           variants={containerVariants}
@@ -160,7 +156,7 @@ function Dashboard() {
           </motion.div>
         </motion.div>
 
-        {/* Tabela de Chamados Recentes Animada */}
+        {/* Tabela de Chamados Recentes */}
         <motion.div
           className="recent-tickets"
           initial={{ opacity: 0, y: 20 }}
@@ -178,15 +174,11 @@ function Dashboard() {
             </div>
 
             {loading ? (
-              <p
-                style={{ color: "#aaa", padding: "15px", textAlign: "center" }}
-              >
+              <p className="dashboard-msg-status">
                 Carregando seus chamados...
               </p>
             ) : recentes.length === 0 ? (
-              <p
-                style={{ color: "#aaa", padding: "15px", textAlign: "center" }}
-              >
+              <p className="dashboard-msg-status">
                 Nenhum chamado encontrado.
               </p>
             ) : (
@@ -194,7 +186,7 @@ function Dashboard() {
                 <MotionLink
                   to={`/chamados/${ticket.id_chamado}`}
                   key={ticket.id_chamado}
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  className="ticket-link-wrapper"
                 >
                   <motion.div
                     className="ticket"

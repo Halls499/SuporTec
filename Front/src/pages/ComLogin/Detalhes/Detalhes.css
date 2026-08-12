@@ -51,12 +51,14 @@
 /* Estilos do Chat */
 .chat-mensagens-container {
   min-height: 150px;
-  max-height: 300px;
+  max-height: 350px;
   overflow-y: auto;
   background: rgba(0, 0, 0, 0.2);
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-vazio {
@@ -65,18 +67,36 @@
 }
 
 .chat-mensagem-item {
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  max-width: 80%;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+/* Mensagem do cliente vista pelo cliente */
+.chat-mensagem-item.cliente {
+  background-color: #1a2236;
+  border-left: 4px solid #6b7280;
+  margin-right: auto;
+}
+
+/* Mensagem do técnico vista pelo cliente */
+.chat-mensagem-item.tecnico {
+  background-color: #24304a;
+  border-left: 4px solid #3b82f6;
+  margin-left: auto;
 }
 
 .chat-mensagem-header {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
-  color: #888;
-  margin-bottom: 4px;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.chat-mensagem-header strong {
+  color: #fff;
 }
 
 .chat-mensagem-texto {

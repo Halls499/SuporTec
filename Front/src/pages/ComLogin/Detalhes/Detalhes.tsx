@@ -12,16 +12,21 @@ interface Chamado {
   categoria: string;
   prioridade: string;
   situacao: string;
-  data_abertura: string;
+  data_abertura?: string;
+  criado_em?: string;
+  data?: string;
 }
 
 interface Mensagem {
   id_mensagem: number;
   mensagem: string;
-  data_envio: string;
+  data_envio?: string;
+  criado_em?: string;
+  data?: string;
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
+  tipo_usuario?: string;
 }
 
 function Detalhes() {
@@ -65,7 +70,9 @@ function Detalhes() {
         }
 
         const dataChamado = await responseChamado.json();
-        const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
+        const chamadoFinal = Array.isArray(dataChamado)
+          ? dataChamado[0]
+          : dataChamado;
         setChamado(chamadoFinal);
 
         const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
@@ -101,7 +108,7 @@ function Detalhes() {
     if (!textoMensagem.trim()) return;
 
     const token = localStorage.getItem("token");
-    const fk_usuario = localStorage.getItem("id_usuario") || 1; 
+    const fk_usuario = localStorage.getItem("id_usuario") || 1;
 
     setEnviando(true);
 
@@ -168,9 +175,11 @@ function Detalhes() {
     }
   };
 
+  // 🛠️ Função flexível para pegar qualquer variação de nome de data da API
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
     const data = new Date(dataIso);
+    if (isNaN(data.getTime())) return dataIso; // Se já vier formatada ou customizada do banco
     return data.toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
@@ -224,6 +233,10 @@ function Detalhes() {
     );
   }
 
+  // Pega a data independentemente de como venha nomeada no objeto
+  const dataAbertoChamado =
+    chamado.data_abertura || chamado.criado_em || chamado.data;
+
   return (
     <main className="detalhes-page">
       <motion.div
@@ -260,27 +273,44 @@ function Detalhes() {
             <strong>Descrição:</strong> {chamado.descricao}
           </p>
           <p>
-            <strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}
+            <strong>Aberto em:</strong> {formatarData(dataAbertoChamado)}
           </p>
         </motion.div>
 
         {/* SEÇÃO DO CHAT */}
         <div className="chat-section">
           <h3>Conversa do Chamado</h3>
-          
+
           <div className="chat-mensagens-container">
             {mensagens.length === 0 ? (
-              <p className="chat-vazio">Ainda não há mensagens nesta conversa.</p>
+              <p className="chat-vazio">
+                Ainda não há mensagens nesta conversa.
+              </p>
             ) : (
-              mensagens.map((msg) => (
-                <div key={msg.id_mensagem} className="chat-mensagem-item">
-                  <div className="chat-mensagem-header">
-                    <span>Usuário #{msg.fk_usuario}</span>
-                    <span>{formatarData(msg.data_envio)}</span>
+              mensagens.map((msg) => {
+                const isTecnico =
+                  msg.tipo_usuario?.toLowerCase() === "tecnico" ||
+                  msg.tipo_usuario?.toLowerCase() === "técnico" ||
+                  msg.nome_usuario?.toLowerCase().includes("técnico");
+
+                const classeItem = isTecnico
+                  ? "chat-mensagem-item tecnico"
+                  : "chat-mensagem-item cliente";
+                const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
+
+                // Pega a data da mensagem independentemente do nome do campo
+                const dataMsg = msg.data_envio || msg.criado_em || msg.data;
+
+                return (
+                  <div key={msg.id_mensagem} className={classeItem}>
+                    <div className="chat-mensagem-header">
+                      <span>{rotuloUsuario}</span>
+                      <span>{formatarData(dataMsg)}</span>
+                    </div>
+                    <p className="chat-mensagem-texto">{msg.mensagem}</p>
                   </div>
-                  <p className="chat-mensagem-texto">{msg.mensagem}</p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

@@ -10,7 +10,9 @@ interface ChamadoDetalhes {
   categoria: string;
   prioridade: string;
   situacao: string;
-  data_abertura: string;
+  data_abertura?: string;
+  criado_em?: string;
+  data?: string;
   nome_solicitante?: string;
   contato?: string;
 }
@@ -18,10 +20,13 @@ interface ChamadoDetalhes {
 interface Mensagem {
   id_mensagem: number;
   mensagem: string;
-  data_envio: string;
+  data_envio?: string;
+  criado_em?: string;
+  data?: string;
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
+  tipo_usuario?: string;
 }
 
 const containerVariants: Variants = {
@@ -179,9 +184,12 @@ function DetalhesTecnico() {
     }
   };
 
+  // 🛠️ Função flexível e segura para formatar datas
   const formatarData = (dataIso?: string) => {
-    if (!dataIso) return "Data indisponível";
-    return new Date(dataIso).toLocaleDateString("pt-BR", {
+    if (!dataIso) return "Data não disponível";
+    const data = new Date(dataIso);
+    if (isNaN(data.getTime())) return dataIso;
+    return data.toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -212,6 +220,8 @@ function DetalhesTecnico() {
       </main>
     );
   }
+
+  const dataAbertoChamado = chamado.data_abertura || chamado.criado_em || chamado.data;
 
   return (
     <main className="detalhes-tecnico-page">
@@ -253,7 +263,7 @@ function DetalhesTecnico() {
             </p>
             <p>
               <strong>📅 Aberto em:</strong>{" "}
-              {formatarData(chamado.data_abertura)}
+              {formatarData(dataAbertoChamado)}
             </p>
             <p>
               <strong>📝 Descrição inicial:</strong>
@@ -271,18 +281,31 @@ function DetalhesTecnico() {
                 Ainda não há mensagens nesta conversa.
               </p>
             ) : (
-              mensagens.map((msg) => (
-                <motion.div
-                  key={msg.id_mensagem}
-                  className="mensagem"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                >
-                  <strong>👤 Usuário #{msg.fk_usuario}</strong>
-                  <p>{msg.mensagem}</p>
-                  <span>{formatarData(msg.data_envio)}</span>
-                </motion.div>
-              ))
+              mensagens.map((msg) => {
+                const isTecnico =
+                  msg.tipo_usuario?.toLowerCase() === "tecnico" ||
+                  msg.tipo_usuario?.toLowerCase() === "técnico" ||
+                  msg.nome_usuario?.toLowerCase().includes("técnico");
+
+                const classeMensagem = isTecnico
+                  ? "mensagem tecnico"
+                  : "mensagem cliente";
+                const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
+                const dataMsg = msg.data_envio || msg.criado_em || msg.data;
+
+                return (
+                  <motion.div
+                    key={msg.id_mensagem}
+                    className={classeMensagem}
+                    initial={{ opacity: 0, x: isTecnico ? 20 : -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                  >
+                    <strong>{rotuloUsuario}</strong>
+                    <p>{msg.mensagem}</p>
+                    <span>{formatarData(dataMsg)}</span>
+                  </motion.div>
+                );
+              })
             )}
           </div>
         </motion.section>
