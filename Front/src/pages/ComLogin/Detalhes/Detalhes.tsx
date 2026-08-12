@@ -21,7 +21,7 @@ interface Mensagem {
   data_envio: string;
   fk_usuario: number;
   fk_chamado: number;
-  nome_usuario?: string; // Caso seu backend traga o nome do usuário
+  nome_usuario?: string;
 }
 
 function Detalhes() {
@@ -41,7 +41,6 @@ function Detalhes() {
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
-  // Carregar detalhes do chamado e mensagens
   useEffect(() => {
     const carregarDados = async () => {
       const token = localStorage.getItem("token");
@@ -53,7 +52,6 @@ function Detalhes() {
       }
 
       try {
-        // 1. Busca os detalhes do chamado
         const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           method: "GET",
           headers: {
@@ -70,7 +68,6 @@ function Detalhes() {
         const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
         setChamado(chamadoFinal);
 
-        // 2. Busca as mensagens do chat deste chamado
         const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
           method: "GET",
           headers: {
@@ -81,7 +78,6 @@ function Detalhes() {
 
         if (responseMensagens.ok) {
           const dataMensagens = await responseMensagens.json();
-          // Se o backend retornar a mensagem de que não há mensagens (string), tratamos como array vazio
           if (Array.isArray(dataMensagens)) {
             setMensagens(dataMensagens);
           } else {
@@ -100,13 +96,11 @@ function Detalhes() {
     }
   }, [id, baseUrl]);
 
-  // Enviar nova mensagem
   const handleEnviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!textoMensagem.trim()) return;
 
     const token = localStorage.getItem("token");
-    // Pega o ID do usuário logado do localStorage (ajuste a chave conforme o seu sistema salva)
     const fk_usuario = localStorage.getItem("id_usuario") || 1; 
 
     setEnviando(true);
@@ -127,9 +121,8 @@ function Detalhes() {
 
       if (response.ok) {
         const novaMensagemCriada = await response.json();
-        // Adiciona a nova mensagem na lista local para aparecer na hora
         setMensagens((prev) => [...prev, novaMensagemCriada]);
-        setTextoMensagem(""); // Limpa o input
+        setTextoMensagem("");
       } else {
         alert("Erro ao enviar mensagem.");
       }
@@ -207,9 +200,7 @@ function Detalhes() {
   if (loading) {
     return (
       <main className="detalhes-page">
-        <p style={{ textAlign: "center", color: "#fff", marginTop: "50px" }}>
-          Carregando detalhes do chamado...
-        </p>
+        <p className="detalhes-loading">Carregando detalhes do chamado...</p>
       </main>
     );
   }
@@ -217,13 +208,12 @@ function Detalhes() {
   if (erro || !chamado) {
     return (
       <main className="detalhes-page">
-        <div className="detalhes-container" style={{ textAlign: "center" }}>
+        <div className="detalhes-container detalhes-erro">
           <h2>Ops! Chamado não encontrado.</h2>
           <p>{erro}</p>
           <MotionLink
             to="/chamados"
             className="new-ticket"
-            style={{ marginTop: "20px" }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -275,72 +265,50 @@ function Detalhes() {
         </motion.div>
 
         {/* SEÇÃO DO CHAT */}
-        <div className="chat-section" style={{ marginTop: "30px", borderTop: "1px solid #333", paddingTop: "20px" }}>
+        <div className="chat-section">
           <h3>Conversa do Chamado</h3>
           
-          <div className="chat-mensagens-container" style={{ minHeight: "150px", maxHeight: "300px", overflowY: "auto", background: "rgba(0,0,0,0.2)", padding: "15px", borderRadius: "8px", marginBottom: "15px" }}>
+          <div className="chat-mensagens-container">
             {mensagens.length === 0 ? (
-              <p style={{ color: "#aaa", textAlign: "center" }}>Ainda não há mensagens nesta conversa.</p>
+              <p className="chat-vazio">Ainda não há mensagens nesta conversa.</p>
             ) : (
               mensagens.map((msg) => (
-                <div key={msg.id_mensagem} style={{ marginBottom: "12px", padding: "8px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "6px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#888", marginBottom: "4px" }}>
+                <div key={msg.id_mensagem} className="chat-mensagem-item">
+                  <div className="chat-mensagem-header">
                     <span>Usuário #{msg.fk_usuario}</span>
                     <span>{formatarData(msg.data_envio)}</span>
                   </div>
-                  <p style={{ color: "#fff", margin: 0 }}>{msg.mensagem}</p>
+                  <p className="chat-mensagem-texto">{msg.mensagem}</p>
                 </div>
               ))
             )}
           </div>
 
           {/* FORMULÁRIO DE ENVIO */}
-          <form onSubmit={handleEnviarMensagem} style={{ display: "flex", gap: "10px" }}>
+          <form onSubmit={handleEnviarMensagem} className="chat-form">
             <input
               type="text"
               value={textoMensagem}
               onChange={(e) => setTextoMensagem(e.target.value)}
               placeholder="Digite sua mensagem..."
-              style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid #444", background: "#111", color: "#fff" }}
+              className="chat-input"
               disabled={enviando || chamado.situacao === "Cancelado"}
             />
             <button
               type="submit"
               disabled={enviando || chamado.situacao === "Cancelado"}
-              style={{ padding: "10px 20px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
+              className="chat-btn-enviar"
             >
               {enviando ? "Enviando..." : "Enviar"}
             </button>
           </form>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "15px",
-            marginTop: "20px",
-            alignItems: "center",
-          }}
-        >
+        <div className="detalhes-acoes">
           <MotionLink
             to="/chamados"
-            style={{
-              backgroundColor: "#2563eb",
-              color: "#ffffff",
-              padding: "10px 18px",
-              borderRadius: "6px",
-              border: "none",
-              fontWeight: "600",
-              fontSize: "14px",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "42px",
-              boxSizing: "border-box",
-              cursor: "pointer",
-            }}
-            whileHover={{ scale: 1.05, backgroundColor: "#1d4ed8" }}
+            className="btn-voltar"
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.2 }}
           >
@@ -353,28 +321,13 @@ function Detalhes() {
                 <motion.button
                   onClick={handleOpenModal}
                   disabled={isCanceling}
+                  className="btn-cancelar-chamado"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ scale: 1.05, backgroundColor: "#b91c1c" }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  style={{
-                    backgroundColor: "#dc2626",
-                    color: "#ffffff",
-                    padding: "10px 18px",
-                    borderRadius: "6px",
-                    border: "none",
-                    fontWeight: "600",
-                    fontSize: "14px",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "42px",
-                    boxSizing: "border-box",
-                    cursor: isCanceling ? "not-allowed" : "pointer",
-                    gap: "8px",
-                  }}
                 >
                   {isCanceling ? (
                     <motion.span
@@ -384,7 +337,7 @@ function Detalhes() {
                         duration: 1,
                         ease: "linear",
                       }}
-                      style={{ display: "inline-block" }}
+                      className="spinner-cancelar"
                     >
                       ⏳
                     </motion.span>
