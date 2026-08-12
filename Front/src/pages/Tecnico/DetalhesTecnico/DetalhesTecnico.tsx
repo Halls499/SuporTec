@@ -27,6 +27,7 @@ interface Mensagem {
   fk_chamado: number;
   nome_usuario?: string;
   tipo_usuario?: string | number;
+  tipo?: string | number;
 }
 
 const containerVariants: Variants = {
@@ -161,6 +162,7 @@ function DetalhesTecnico() {
             novaMensagemCriada?.criado_em ||
             novaMensagemCriada?.data ||
             new Date().toISOString(),
+          tipo_usuario: novaMensagemCriada?.tipo_usuario || "tecnico",
         };
 
         setMensagens((prev) => [...prev, mensagemComData]);
@@ -308,12 +310,24 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                // Pega o ID do usuário logado no localStorage
+                const tipoStr = String(
+                  msg.tipo_usuario || msg.tipo || "",
+                ).toLowerCase();
+                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
                 const idUsuarioLogado =
                   Number(localStorage.getItem("id_usuario")) || 0;
 
-                // Se o ID do remetente da mensagem for igual ao meu ID logado, fui eu (técnico) que mandei
-                const isTecnico = Number(msg.fk_usuario) === idUsuarioLogado;
+                // NO PAINEL DO TÉCNICO:
+                // É considerado técnico se a API especificar, ou se o ID do remetente for IGUAL ao do técnico logado.
+                const isTecnico =
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  nomeStr.includes("tecnico") ||
+                  nomeStr.includes("técnico") ||
+                  tipoStr === "2" ||
+                  tipoStr === "admin" ||
+                  (idUsuarioLogado > 0 &&
+                    Number(msg.fk_usuario) === idUsuarioLogado);
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"

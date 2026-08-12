@@ -27,6 +27,7 @@ interface Mensagem {
   fk_chamado: number;
   nome_usuario?: string;
   tipo_usuario?: string | number;
+  tipo?: string | number;
 }
 
 function Detalhes() {
@@ -154,6 +155,8 @@ function Detalhes() {
             novaMensagemCriada?.criado_em ||
             novaMensagemCriada?.data ||
             new Date().toISOString(),
+          // Garante que a mensagem enviada por ele mesmo venha marcada como cliente
+          tipo_usuario: novaMensagemCriada?.tipo_usuario || "cliente",
         };
 
         setMensagens((prev) => [...prev, mensagemComData]);
@@ -314,11 +317,20 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const idUsuarioLogado =
-                  Number(localStorage.getItem("id_usuario")) || 0;
+                const tipoStr = String(msg.tipo_usuario || msg.tipo || "").toLowerCase();
+                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
+                const idUsuarioLogado = Number(localStorage.getItem("id_usuario")) || 0;
 
-                // No painel do cliente: se o ID da mensagem for DIFERENTE do meu, foi o técnico que mandou
-                const isTecnico = Number(msg.fk_usuario) !== idUsuarioLogado;
+                // NO PAINEL DO CLIENTE:
+                // É técnico se a API explicitamente disser que é técnico, OU se o ID da mensagem for DIFERENTE do ID do cliente logado.
+                const isTecnico =
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  nomeStr.includes("tecnico") ||
+                  nomeStr.includes("técnico") ||
+                  tipoStr === "2" ||
+                  tipoStr === "admin" ||
+                  (idUsuarioLogado > 0 && Number(msg.fk_usuario) !== idUsuarioLogado);
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"
