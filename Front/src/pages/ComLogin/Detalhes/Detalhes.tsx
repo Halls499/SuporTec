@@ -26,7 +26,7 @@ interface Mensagem {
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
-  tipo_usuario?: string;
+  tipo_usuario?: string | number;
 }
 
 function Detalhes() {
@@ -47,16 +47,21 @@ function Detalhes() {
   ).replace(/\/$/, "");
 
   useEffect(() => {
+    let isMounted = true;
+
     const carregarDados = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setErro("Usuário não autenticado.");
-        setLoading(false);
+        if (isMounted) {
+          setErro("Usuário não autenticado. Faça login novamente.");
+          setLoading(false);
+        }
         return;
       }
 
       try {
+        // 1. Busca detalhes do chamado
         const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           method: "GET",
           headers: {
@@ -73,8 +78,12 @@ function Detalhes() {
         const chamadoFinal = Array.isArray(dataChamado)
           ? dataChamado[0]
           : dataChamado;
-        setChamado(chamadoFinal);
 
+        if (isMounted) {
+          setChamado(chamadoFinal || null);
+        }
+
+        // 2. Busca histórico do chat
         const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
           method: "GET",
           headers: {
@@ -85,30 +94,39 @@ function Detalhes() {
 
         if (responseMensagens.ok) {
           const dataMensagens = await responseMensagens.json();
-          if (Array.isArray(dataMensagens)) {
-            setMensagens(dataMensagens);
-          } else {
-            setMensagens([]);
+          if (isMounted) {
+            setMensagens(Array.isArray(dataMensagens) ? dataMensagens : []);
           }
         }
       } catch (err: any) {
-        setErro(err.message || "Erro ao buscar dados.");
+        if (isMounted) {
+          setErro(err?.message || "Erro ao buscar dados do servidor.");
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     if (id) {
       carregarDados();
+    } else {
+      setErro("ID do chamado inválido.");
+      setLoading(false);
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, baseUrl]);
 
   const handleEnviarMensagem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!textoMensagem.trim()) return;
+    if (!textoMensagem.trim() || !id) return;
 
     const token = localStorage.getItem("token");
-    const fk_usuario = localStorage.getItem("id_usuario") || 1;
+    const fk_usuario = localStorage.getItem("id_usuario") || "1";
 
     setEnviando(true);
 
@@ -120,7 +138,7 @@ function Detalhes() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          mensagem: textoMensagem,
+          mensagem: textoMensagem.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
         }),
@@ -129,20 +147,19 @@ function Detalhes() {
       if (response.ok) {
         const novaMensagemCriada = await response.json();
 
-        // 🛠️ Garante que se a API não retornar a data, preenchemos com a data atual do navegador
         const mensagemComData = {
           ...novaMensagemCriada,
           data_envio:
-            novaMensagemCriada.data_envio ||
-            novaMensagemCriada.criado_em ||
-            novaMensagemCriada.data ||
+            novaMensagemCriada?.data_envio ||
+            novaMensagemCriada?.criado_em ||
+            novaMensagemCriada?.data ||
             new Date().toISOString(),
         };
 
         setMensagens((prev) => [...prev, mensagemComData]);
         setTextoMensagem("");
       } else {
-        alert("Erro ao enviar mensagem.");
+        alert("Erro ao enviar mensagem. Tente novamente.");
       }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -175,8 +192,8 @@ function Detalhes() {
         alert("Chamado cancelado com sucesso!");
         navigate("/chamados");
       } else {
-        const data = await response.json();
-        alert(data.mensagem || "Erro ao cancelar chamado.");
+        const data = await response.json().catch(() => ({}));
+        alert(data?.mensagem || "Erro ao cancelar chamado.");
       }
     } catch (error) {
       console.error("Erro ao cancelar chamado:", error);
@@ -186,11 +203,10 @@ function Detalhes() {
     }
   };
 
-  // 🛠️ Função flexível para pegar qualquer variação de nome de data da API
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
     const data = new Date(dataIso);
-    if (isNaN(data.getTime())) return dataIso; // Se já vier formatada ou customizada do banco
+    if (isNaN(data.getTime())) return dataIso;
     return data.toLocaleString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
@@ -200,7 +216,7 @@ function Detalhes() {
     });
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
     const statusLower = status?.toLowerCase() || "";
     if (statusLower.includes("novo")) return "badge-novo";
     if (statusLower.includes("andamento")) return "badge-em-andamento";
@@ -209,7 +225,7 @@ function Detalhes() {
     return "badge-novo";
   };
 
-  const getPrioridadeBadge = (prioridade: string) => {
+  const getPrioridadeBadge = (prioridade?: string) => {
     const prioridadeLower = prioridade?.toLowerCase() || "";
     if (prioridadeLower.includes("alta")) return "badge-alta";
     if (prioridadeLower.includes("media") || prioridadeLower.includes("média"))
@@ -230,7 +246,7 @@ function Detalhes() {
       <main className="detalhes-page">
         <div className="detalhes-container detalhes-erro">
           <h2>Ops! Chamado não encontrado.</h2>
-          <p>{erro}</p>
+          <p>{erro || "Não foi possível carregar as informações."}</p>
           <MotionLink
             to="/chamados"
             className="new-ticket"
@@ -244,7 +260,6 @@ function Detalhes() {
     );
   }
 
-  // Pega a data independentemente de como venha nomeada no objeto
   const dataAbertoChamado =
     chamado.data_abertura || chamado.criado_em || chamado.data;
 
@@ -256,7 +271,7 @@ function Detalhes() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
       >
-        <h1>{String(chamado.titulo)}</h1>
+        <h1>{String(chamado.titulo || "Detalhes do Chamado")}</h1>
 
         <motion.div
           className="info-chamado"
@@ -266,22 +281,22 @@ function Detalhes() {
         >
           <h2>Detalhes das Informações</h2>
           <p>
-            <strong>Categoria:</strong> {chamado.categoria}
+            <strong>Categoria:</strong> {chamado.categoria || "Não informada"}
           </p>
           <p>
             <strong>Status:</strong>{" "}
             <span className={`badge ${getStatusBadge(chamado.situacao)}`}>
-              {chamado.situacao}
+              {chamado.situacao || "Desconhecido"}
             </span>
           </p>
           <p>
             <strong>Prioridade:</strong>{" "}
             <span className={`badge ${getPrioridadeBadge(chamado.prioridade)}`}>
-              {chamado.prioridade}
+              {chamado.prioridade || "Normal"}
             </span>
           </p>
           <p>
-            <strong>Descrição:</strong> {chamado.descricao}
+            <strong>Descrição:</strong> {chamado.descricao || "Sem descrição"}
           </p>
           <p>
             <strong>Aberto em:</strong> {formatarData(dataAbertoChamado)}
@@ -299,26 +314,32 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
+                // 🛠️ BLINDAGEM ROBUSTA PARA DETECTAR O TÉCNICO
+                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
+                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
+
                 const isTecnico =
-                  msg.tipo_usuario?.toLowerCase() === "tecnico" ||
-                  msg.tipo_usuario?.toLowerCase() === "técnico" ||
-                  msg.nome_usuario?.toLowerCase().includes("técnico");
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  nomeStr.includes("tecnico") ||
+                  nomeStr.includes("técnico") ||
+                  tipoStr === "2" || // Caso o backend armazene ID de tipo de usuário
+                  tipoStr === "admin";
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"
                   : "chat-mensagem-item cliente";
+                
                 const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
-
-                // Pega a data da mensagem independentemente do nome do campo
                 const dataMsg = msg.data_envio || msg.criado_em || msg.data;
 
                 return (
-                  <div key={msg.id_mensagem} className={classeItem}>
+                  <div key={msg.id_mensagem || Math.random()} className={classeItem}>
                     <div className="chat-mensagem-header">
                       <span>{rotuloUsuario}</span>
                       <span>{formatarData(dataMsg)}</span>
                     </div>
-                    <p className="chat-mensagem-texto">{msg.mensagem}</p>
+                    <p className="chat-mensagem-texto">{msg.mensagem || ""}</p>
                   </div>
                 );
               })

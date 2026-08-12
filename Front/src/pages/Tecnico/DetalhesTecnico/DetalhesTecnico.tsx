@@ -26,7 +26,7 @@ interface Mensagem {
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
-  tipo_usuario?: string;
+  tipo_usuario?: string | number;
 }
 
 const containerVariants: Variants = {
@@ -65,13 +65,15 @@ function DetalhesTecnico() {
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
-  // 🔄 Busca os dados do chamado e as mensagens do chat
+  // 🔄 Busca os dados do chamado e as mensagens do chat de forma segura
   useEffect(() => {
+    let isMounted = true;
+
     async function carregarDadosTecnico() {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setLoading(false);
+        if (isMounted) setLoading(false);
         return;
       }
 
@@ -80,39 +82,51 @@ function DetalhesTecnico() {
         const respostaChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 
         if (respostaChamado.ok) {
           const dados = await respostaChamado.json();
           const chamadoFinal = Array.isArray(dados) ? dados[0] : dados;
-          setChamado(chamadoFinal);
-          setNovoStatus(chamadoFinal?.situacao || "Novo");
+          if (isMounted) {
+            setChamado(chamadoFinal || null);
+            setNovoStatus(chamadoFinal?.situacao || "Novo");
+          }
         }
 
         // 2. Busca histórico de mensagens do chat
         const respostaChat = await fetch(`${baseUrl}/api/chat/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
 
         if (respostaChat.ok) {
           const dadosChat = await respostaChat.json();
-          if (Array.isArray(dadosChat)) {
-            setMensagens(dadosChat);
-          } else {
-            setMensagens([]);
+          if (isMounted) {
+            setMensagens(Array.isArray(dadosChat) ? dadosChat : []);
           }
         }
       } catch (err) {
         console.error("Erro ao carregar detalhes técnicos:", err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
-    if (id) carregarDadosTecnico();
+    if (id) {
+      carregarDadosTecnico();
+    } else {
+      setLoading(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, baseUrl]);
 
   // 📝 Envia nova resposta pelo chat
@@ -121,7 +135,7 @@ function DetalhesTecnico() {
 
     setEnviandoMensagem(true);
     const token = localStorage.getItem("token");
-    const fk_usuario = localStorage.getItem("id_usuario") || 1;
+    const fk_usuario = localStorage.getItem("id_usuario") || "1";
 
     try {
       const resposta = await fetch(`${baseUrl}/api/chat`, {
@@ -131,7 +145,7 @@ function DetalhesTecnico() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          mensagem: novaResposta,
+          mensagem: novaResposta.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
         }),
@@ -140,18 +154,17 @@ function DetalhesTecnico() {
       if (resposta.ok) {
         const novaMensagemCriada = await resposta.json();
 
-        // 🛠️ Garante que se a API não retornar a data, preenchemos com a data atual do navegador
         const mensagemComData = {
           ...novaMensagemCriada,
           data_envio:
-            novaMensagemCriada.data_envio ||
-            novaMensagemCriada.criado_em ||
-            novaMensagemCriada.data ||
+            novaMensagemCriada?.data_envio ||
+            novaMensagemCriada?.criado_em ||
+            novaMensagemCriada?.data ||
             new Date().toISOString(),
         };
 
         setMensagens((prev) => [...prev, mensagemComData]);
-        setNovaResposta(""); // ✅ CORRIGIDO AQUI (era setTextoMensagem)
+        setNovaResposta("");
       } else {
         alert("Erro ao enviar resposta.");
       }
@@ -185,7 +198,8 @@ function DetalhesTecnico() {
           setChamado({ ...chamado, situacao: novoStatus });
         }
       } else {
-        alert("Erro ao atualizar o status.");
+        const dadosErro = await resposta.json().catch(() => ({}));
+        alert(dadosErro?.mensagem || "Erro ao atualizar o status.");
       }
     } catch (err) {
       console.error("Erro na requisição de atualização:", err);
@@ -252,7 +266,7 @@ function DetalhesTecnico() {
 
         {/* Informações */}
         <motion.section className="detalhes-card" variants={itemVariants}>
-          <h2>Chamado #{String(chamado.id_chamado).padStart(3, "0")}</h2>
+          <h2>Chamado #{String(chamado.id_chamado || 0).padStart(3, "0")}</h2>
           <div className="info-group">
             <p>
               <strong>👤 Cliente:</strong>{" "}
@@ -262,16 +276,16 @@ function DetalhesTecnico() {
               <strong>📞 Contato:</strong> {chamado.contato || "Não informado"}
             </p>
             <p>
-              <strong>💻 Problema:</strong> {chamado.titulo}
+              <strong>💻 Problema:</strong> {chamado.titulo || "Sem título"}
             </p>
             <p>
-              <strong>📂 Categoria:</strong> {chamado.categoria}
+              <strong>📂 Categoria:</strong> {chamado.categoria || "Não informada"}
             </p>
             <p>
-              <strong>🚨 Prioridade:</strong> {chamado.prioridade}
+              <strong>🚨 Prioridade:</strong> {chamado.prioridade || "Normal"}
             </p>
             <p>
-              <strong>📌 Status:</strong> {chamado.situacao}
+              <strong>📌 Status:</strong> {chamado.situacao || "Novo"}
             </p>
             <p>
               <strong>📅 Aberto em:</strong>{" "}
@@ -280,7 +294,7 @@ function DetalhesTecnico() {
             <p>
               <strong>📝 Descrição inicial:</strong>
             </p>
-            <p className="descricao">{chamado.descricao}</p>
+            <p className="descricao">{chamado.descricao || "Sem descrição"}</p>
           </div>
         </motion.section>
 
@@ -294,26 +308,34 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
+                // 🛠️ BLINDAGEM ROBUSTA PARA DETECTAR O TÉCNICO
+                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
+                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
+
                 const isTecnico =
-                  msg.tipo_usuario?.toLowerCase() === "tecnico" ||
-                  msg.tipo_usuario?.toLowerCase() === "técnico" ||
-                  msg.nome_usuario?.toLowerCase().includes("técnico");
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  nomeStr.includes("tecnico") ||
+                  nomeStr.includes("técnico") ||
+                  tipoStr === "2" ||
+                  tipoStr === "admin";
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"
                   : "mensagem cliente";
+                
                 const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
                 const dataMsg = msg.data_envio || msg.criado_em || msg.data;
 
                 return (
                   <motion.div
-                    key={msg.id_mensagem}
+                    key={msg.id_mensagem || Math.random()}
                     className={classeMensagem}
                     initial={{ opacity: 0, x: isTecnico ? 20 : -20 }}
                     animate={{ opacity: 1, x: 0 }}
                   >
                     <strong>{rotuloUsuario}</strong>
-                    <p>{msg.mensagem}</p>
+                    <p>{msg.mensagem || ""}</p>
                     <span>{formatarData(dataMsg)}</span>
                   </motion.div>
                 );
