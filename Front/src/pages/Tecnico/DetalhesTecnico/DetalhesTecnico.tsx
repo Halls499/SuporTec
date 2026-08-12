@@ -15,6 +15,15 @@ interface ChamadoDetalhes {
   contato?: string;
 }
 
+interface Mensagem {
+  id_mensagem: number;
+  mensagem: string;
+  data_envio: string;
+  fk_usuario: number;
+  fk_chamado: number;
+  nome_usuario?: string;
+}
+
 const containerVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -40,51 +49,109 @@ const itemVariants: Variants = {
 function DetalhesTecnico() {
   const { id } = useParams<{ id: string }>();
   const [chamado, setChamado] = useState<ChamadoDetalhes | null>(null);
+  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [loading, setLoading] = useState(true);
   const [novaResposta, setNovaResposta] = useState("");
   const [novoStatus, setNovoStatus] = useState("");
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [enviandoMensagem, setEnviandoMensagem] = useState(false);
 
-  // 🔄 Busca os dados reais do chamado na API
+  const baseUrl = (
+    import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  // 🔄 Busca os dados do chamado e as mensagens do chat
   useEffect(() => {
-    async function carregarDetalhes() {
+    async function carregarDadosTecnico() {
       const token = localStorage.getItem("token");
-      const baseUrl = (
-        import.meta.env.VITE_API_URL || "http://localhost:3000"
-      ).replace(/\/$/, "");
+
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const resposta = await fetch(`${baseUrl}/api/chamados/${id}`, {
+        // 1. Busca detalhes do chamado
+        const respostaChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          // Tratamento para garantir objeto único mesmo se a API retornar array
+        if (respostaChamado.ok) {
+          const dados = await respostaChamado.json();
           const chamadoFinal = Array.isArray(dados) ? dados[0] : dados;
           setChamado(chamadoFinal);
           setNovoStatus(chamadoFinal?.situacao || "Novo");
         }
+
+        // 2. Busca histórico de mensagens do chat
+        const respostaChat = await fetch(`${baseUrl}/api/chat/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (respostaChat.ok) {
+          const dadosChat = await respostaChat.json();
+          if (Array.isArray(dadosChat)) {
+            setMensagens(dadosChat);
+          } else {
+            setMensagens([]);
+          }
+        }
       } catch (err) {
-        console.error("Erro ao carregar chamado:", err);
+        console.error("Erro ao carregar detalhes técnicos:", err);
       } finally {
         setLoading(false);
       }
     }
 
-    if (id) carregarDetalhes();
-  }, [id]);
+    if (id) carregarDadosTecnico();
+  }, [id, baseUrl]);
+
+  // 📝 Envia nova resposta pelo chat
+  const handleEnviarResposta = async () => {
+    if (!novaResposta.trim() || !id) return;
+
+    setEnviandoMensagem(true);
+    const token = localStorage.getItem("token");
+    const fk_usuario = localStorage.getItem("id_usuario") || 1;
+
+    try {
+      const resposta = await fetch(`${baseUrl}/api/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          mensagem: novaResposta,
+          fk_usuario: Number(fk_usuario),
+          fk_chamado: Number(id),
+        }),
+      });
+
+      if (resposta.ok) {
+        const mensagemCriada = await resposta.json();
+        setMensagens((prev) => [...prev, mensagemCriada]);
+        setNovaResposta("");
+      } else {
+        alert("Erro ao enviar resposta.");
+      }
+    } catch (err) {
+      console.error("Erro ao enviar mensagem:", err);
+      alert("Falha de comunicação com o servidor.");
+    } finally {
+      setEnviandoMensagem(false);
+    }
+  };
 
   // 📝 Atualiza o status do chamado no backend
   const handleAtualizarStatus = async () => {
     if (!id) return;
     setIsUpdatingStatus(true);
     const token = localStorage.getItem("token");
-    const baseUrl = (
-      import.meta.env.VITE_API_URL || "http://localhost:3000"
-    ).replace(/\/$/, "");
 
     try {
       const resposta = await fetch(`${baseUrl}/api/chamados/${id}`, {
@@ -126,7 +193,7 @@ function DetalhesTecnico() {
   if (loading) {
     return (
       <main className="detalhes-tecnico-page">
-        <p style={{ color: "#fff", textAlign: "center", marginTop: "40px" }}>
+        <p className="detalhes-tecnico-loading">
           Carregando informações do chamado...
         </p>
       </main>
@@ -136,10 +203,8 @@ function DetalhesTecnico() {
   if (!chamado) {
     return (
       <main className="detalhes-tecnico-page">
-        <p style={{ color: "#fff", textAlign: "center", marginTop: "40px" }}>
-          Chamado não encontrado.
-        </p>
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
+        <p className="detalhes-tecnico-loading">Chamado não encontrado.</p>
+        <div className="detalhes-tecnico-erro-acao">
           <Link to="/chamados-tecnico" className="btn-voltar">
             ← Voltar aos chamados
           </Link>
@@ -191,25 +256,34 @@ function DetalhesTecnico() {
               {formatarData(chamado.data_abertura)}
             </p>
             <p>
-              <strong>📝 Descrição:</strong>
+              <strong>📝 Descrição inicial:</strong>
             </p>
             <p className="descricao">{chamado.descricao}</p>
           </div>
         </motion.section>
 
-        {/* Histórico */}
+        {/* Histórico do Chat */}
         <motion.section className="detalhes-card" variants={itemVariants}>
           <h2>Histórico de mensagens</h2>
           <div className="chat-box">
-            <motion.div
-              className="mensagem cliente"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
-              <strong>👤 {chamado.nome_solicitante || "Cliente"}</strong>
-              <p>{chamado.descricao}</p>
-              <span>{formatarData(chamado.data_abertura)}</span>
-            </motion.div>
+            {mensagens.length === 0 ? (
+              <p className="chat-vazio">
+                Ainda não há mensagens nesta conversa.
+              </p>
+            ) : (
+              mensagens.map((msg) => (
+                <motion.div
+                  key={msg.id_mensagem}
+                  className="mensagem"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                >
+                  <strong>👤 Usuário #{msg.fk_usuario}</strong>
+                  <p>{msg.mensagem}</p>
+                  <span>{formatarData(msg.data_envio)}</span>
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.section>
 
@@ -217,23 +291,21 @@ function DetalhesTecnico() {
         <motion.section className="detalhes-card" variants={itemVariants}>
           <h2>Responder chamado</h2>
           <motion.textarea
+            className="textarea-resposta"
             placeholder="Digite uma resposta ao cliente..."
             value={novaResposta}
             onChange={(e) => setNovaResposta(e.target.value)}
             whileFocus={{ scale: 1.01, borderColor: "#3b82f6" }}
+            disabled={enviandoMensagem}
           />
           <motion.button
             className="btn-enviar"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (novaResposta.trim()) {
-                alert("Resposta enviada com sucesso!");
-                setNovaResposta("");
-              }
-            }}
+            onClick={handleEnviarResposta}
+            disabled={enviandoMensagem}
           >
-            Enviar resposta
+            {enviandoMensagem ? "Enviando..." : "Enviar resposta"}
           </motion.button>
         </motion.section>
 
@@ -241,6 +313,7 @@ function DetalhesTecnico() {
         <motion.section className="detalhes-card" variants={itemVariants}>
           <h2>Atualizar status</h2>
           <motion.select
+            className="select-status"
             value={novoStatus}
             onChange={(e) => setNovoStatus(e.target.value)}
             whileFocus={{ scale: 1.01 }}
@@ -262,7 +335,7 @@ function DetalhesTecnico() {
           </motion.button>
         </motion.section>
 
-        <motion.div variants={itemVariants} style={{ marginTop: "20px" }}>
+        <motion.div variants={itemVariants} className="voltar-container">
           <Link to="/chamados-tecnico" className="btn-voltar">
             ← Voltar aos chamados
           </Link>
