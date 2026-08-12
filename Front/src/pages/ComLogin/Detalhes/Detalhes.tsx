@@ -15,12 +15,24 @@ interface Chamado {
   data_abertura: string;
 }
 
+interface Mensagem {
+  id_mensagem: number;
+  mensagem: string;
+  data_envio: string;
+  fk_usuario: number;
+  fk_chamado: number;
+  nome_usuario?: string; // Caso seu backend traga o nome do usuário
+}
+
 function Detalhes() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [chamado, setChamado] = useState<Chamado | null>(null);
+  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+  const [textoMensagem, setTextoMensagem] = useState("");
   const [loading, setLoading] = useState(true);
+  const [enviando, setEnviando] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -29,9 +41,9 @@ function Detalhes() {
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
+  // Carregar detalhes do chamado e mensagens
   useEffect(() => {
-    console.log("ID capturado da URL:", id);
-    const carregarDetalhes = async () => {
+    const carregarDados = async () => {
       const token = localStorage.getItem("token");
 
       if (!token) {
@@ -41,6 +53,7 @@ function Detalhes() {
       }
 
       try {
+        // 1. Busca os detalhes do chamado
         const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           method: "GET",
           headers: {
@@ -55,19 +68,78 @@ function Detalhes() {
 
         const dataChamado = await responseChamado.json();
         const chamadoFinal = Array.isArray(dataChamado) ? dataChamado[0] : dataChamado;
-
         setChamado(chamadoFinal);
+
+        // 2. Busca as mensagens do chat deste chamado
+        const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (responseMensagens.ok) {
+          const dataMensagens = await responseMensagens.json();
+          // Se o backend retornar a mensagem de que não há mensagens (string), tratamos como array vazio
+          if (Array.isArray(dataMensagens)) {
+            setMensagens(dataMensagens);
+          } else {
+            setMensagens([]);
+          }
+        }
       } catch (err: any) {
-        setErro(err.message || "Erro ao buscar dados do chamado.");
+        setErro(err.message || "Erro ao buscar dados.");
       } finally {
         setLoading(false);
       }
     };
 
     if (id) {
-      carregarDetalhes();
+      carregarDados();
     }
   }, [id, baseUrl]);
+
+  // Enviar nova mensagem
+  const handleEnviarMensagem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!textoMensagem.trim()) return;
+
+    const token = localStorage.getItem("token");
+    // Pega o ID do usuário logado do localStorage (ajuste a chave conforme o seu sistema salva)
+    const fk_usuario = localStorage.getItem("id_usuario") || 1; 
+
+    setEnviando(true);
+
+    try {
+      const response = await fetch(`${baseUrl}/api/chat`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mensagem: textoMensagem,
+          fk_usuario: Number(fk_usuario),
+          fk_chamado: Number(id),
+        }),
+      });
+
+      if (response.ok) {
+        const novaMensagemCriada = await response.json();
+        // Adiciona a nova mensagem na lista local para aparecer na hora
+        setMensagens((prev) => [...prev, novaMensagemCriada]);
+        setTextoMensagem(""); // Limpa o input
+      } else {
+        alert("Erro ao enviar mensagem.");
+      }
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      alert("Erro de conexão ao enviar mensagem.");
+    } finally {
+      setEnviando(false);
+    }
+  };
 
   const handleOpenModal = () => {
     setShowModal(true);
@@ -80,7 +152,6 @@ function Detalhes() {
     try {
       const token = localStorage.getItem("token");
 
-      // 🎯 Rota corrigida de '/api/chamados/${id}/cancelar' para '/api/chamados/cancelar/${id}'
       const response = await fetch(`${baseUrl}/api/chamados/cancelar/${id}`, {
         method: "PATCH",
         headers: {
@@ -202,6 +273,46 @@ function Detalhes() {
             <strong>Aberto em:</strong> {formatarData(chamado.data_abertura)}
           </p>
         </motion.div>
+
+        {/* SEÇÃO DO CHAT */}
+        <div className="chat-section" style={{ marginTop: "30px", borderTop: "1px solid #333", paddingTop: "20px" }}>
+          <h3>Conversa do Chamado</h3>
+          
+          <div className="chat-mensagens-container" style={{ minHeight: "150px", maxHeight: "300px", overflowY: "auto", background: "rgba(0,0,0,0.2)", padding: "15px", borderRadius: "8px", marginBottom: "15px" }}>
+            {mensagens.length === 0 ? (
+              <p style={{ color: "#aaa", textAlign: "center" }}>Ainda não há mensagens nesta conversa.</p>
+            ) : (
+              mensagens.map((msg) => (
+                <div key={msg.id_mensagem} style={{ marginBottom: "12px", padding: "8px 12px", background: "rgba(255,255,255,0.05)", borderRadius: "6px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#888", marginBottom: "4px" }}>
+                    <span>Usuário #{msg.fk_usuario}</span>
+                    <span>{formatarData(msg.data_envio)}</span>
+                  </div>
+                  <p style={{ color: "#fff", margin: 0 }}>{msg.mensagem}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* FORMULÁRIO DE ENVIO */}
+          <form onSubmit={handleEnviarMensagem} style={{ display: "flex", gap: "10px" }}>
+            <input
+              type="text"
+              value={textoMensagem}
+              onChange={(e) => setTextoMensagem(e.target.value)}
+              placeholder="Digite sua mensagem..."
+              style={{ flex: 1, padding: "10px", borderRadius: "6px", border: "1px solid #444", background: "#111", color: "#fff" }}
+              disabled={enviando || chamado.situacao === "Cancelado"}
+            />
+            <button
+              type="submit"
+              disabled={enviando || chamado.situacao === "Cancelado"}
+              style={{ padding: "10px 20px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "6px", cursor: "pointer", fontWeight: "600" }}
+            >
+              {enviando ? "Enviando..." : "Enviar"}
+            </button>
+          </form>
+        </div>
 
         <div
           style={{
