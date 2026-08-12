@@ -279,7 +279,8 @@ function DetalhesTecnico() {
               <strong>💻 Problema:</strong> {chamado.titulo || "Sem título"}
             </p>
             <p>
-              <strong>📂 Categoria:</strong> {chamado.categoria || "Não informada"}
+              <strong>📂 Categoria:</strong>{" "}
+              {chamado.categoria || "Não informada"}
             </p>
             <p>
               <strong>🚨 Prioridade:</strong> {chamado.prioridade || "Normal"}
@@ -288,8 +289,7 @@ function DetalhesTecnico() {
               <strong>📌 Status:</strong> {chamado.situacao || "Novo"}
             </p>
             <p>
-              <strong>📅 Aberto em:</strong>{" "}
-              {formatarData(dataAbertoChamado)}
+              <strong>📅 Aberto em:</strong> {formatarData(dataAbertoChamado)}
             </p>
             <p>
               <strong>📝 Descrição inicial:</strong>
@@ -308,22 +308,17 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                // 🛠️ BLINDAGEM ROBUSTA PARA DETECTAR O TÉCNICO
-                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
+                // Pega o ID do usuário logado no localStorage
+                const idUsuarioLogado =
+                  Number(localStorage.getItem("id_usuario")) || 0;
 
-                const isTecnico =
-                  tipoStr.includes("tecnico") ||
-                  tipoStr.includes("técnico") ||
-                  nomeStr.includes("tecnico") ||
-                  nomeStr.includes("técnico") ||
-                  tipoStr === "2" ||
-                  tipoStr === "admin";
+                // Se o ID do remetente da mensagem for igual ao meu ID logado, fui eu (técnico) que mandei
+                const isTecnico = Number(msg.fk_usuario) === idUsuarioLogado;
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"
                   : "mensagem cliente";
-                
+
                 const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
                 const dataMsg = msg.data_envio || msg.criado_em || msg.data;
 

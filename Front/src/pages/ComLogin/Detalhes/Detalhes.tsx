@@ -314,27 +314,24 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                // 🛠️ BLINDAGEM ROBUSTA PARA DETECTAR O TÉCNICO
-                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
+                const idUsuarioLogado =
+                  Number(localStorage.getItem("id_usuario")) || 0;
 
-                const isTecnico =
-                  tipoStr.includes("tecnico") ||
-                  tipoStr.includes("técnico") ||
-                  nomeStr.includes("tecnico") ||
-                  nomeStr.includes("técnico") ||
-                  tipoStr === "2" || // Caso o backend armazene ID de tipo de usuário
-                  tipoStr === "admin";
+                // No painel do cliente: se o ID da mensagem for DIFERENTE do meu, foi o técnico que mandou
+                const isTecnico = Number(msg.fk_usuario) !== idUsuarioLogado;
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"
                   : "chat-mensagem-item cliente";
-                
+
                 const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
                 const dataMsg = msg.data_envio || msg.criado_em || msg.data;
 
                 return (
-                  <div key={msg.id_mensagem || Math.random()} className={classeItem}>
+                  <div
+                    key={msg.id_mensagem || Math.random()}
+                    className={classeItem}
+                  >
                     <div className="chat-mensagem-header">
                       <span>{rotuloUsuario}</span>
                       <span>{formatarData(dataMsg)}</span>
