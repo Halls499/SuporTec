@@ -66,7 +66,6 @@ function DetalhesTecnico() {
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
-  // 🔄 Busca os dados do chamado e as mensagens do chat de forma segura
   useEffect(() => {
     let isMounted = true;
 
@@ -79,7 +78,6 @@ function DetalhesTecnico() {
       }
 
       try {
-        // 1. Busca detalhes do chamado
         const respostaChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,7 +94,6 @@ function DetalhesTecnico() {
           }
         }
 
-        // 2. Busca histórico de mensagens do chat
         const respostaChat = await fetch(`${baseUrl}/api/chat/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -130,7 +127,6 @@ function DetalhesTecnico() {
     };
   }, [id, baseUrl]);
 
-  // 📝 Envia nova resposta pelo chat
   const handleEnviarResposta = async () => {
     if (!novaResposta.trim() || !id) return;
 
@@ -178,7 +174,6 @@ function DetalhesTecnico() {
     }
   };
 
-  // 📝 Atualiza o status do chamado no backend
   const handleAtualizarStatus = async () => {
     if (!id) return;
     setIsUpdatingStatus(true);
@@ -211,7 +206,6 @@ function DetalhesTecnico() {
     }
   };
 
-  // 🛠️ Função flexível e segura para formatar datas
   const formatarData = (dataIso?: string) => {
     if (!dataIso) return "Data não disponível";
     const data = new Date(dataIso);
@@ -312,19 +306,19 @@ function DetalhesTecnico() {
               mensagens.map((msg) => {
                 const idUsuarioLogado =
                   Number(localStorage.getItem("id_usuario")) || 0;
-
+                const fkMsg = Number(msg.fk_usuario);
                 const tipoStr = String(
-                  msg.tipo_usuario || msg.tipo || "",
+                  msg.tipo_usuario || msg.tipo || ""
                 ).toLowerCase();
 
-                // No painel do técnico: é técnico se a API disser explicitamente OU se o ID da mensagem bater com o meu ID logado
+                // NO PAINEL DO TÉCNICO:
+                // É técnico se explicitamente rotulado OU se o ID da mensagem bater com o ID logado
                 const isTecnico =
                   tipoStr.includes("tecnico") ||
                   tipoStr.includes("técnico") ||
                   tipoStr === "2" ||
                   tipoStr === "admin" ||
-                  (idUsuarioLogado > 0 &&
-                    Number(msg.fk_usuario) === idUsuarioLogado);
+                  (fkMsg > 0 && fkMsg === idUsuarioLogado);
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"

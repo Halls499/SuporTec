@@ -317,20 +317,25 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                // Pega o ID de quem está logado como cliente
-                const idUsuarioLogado =
-                  Number(localStorage.getItem("id_usuario")) || 0;
+                // Pega o ID e o nome do usuário logado no localStorage
+                const idLogado = Number(localStorage.getItem("id_usuario")) || 15;
+                const nomeLogado = (localStorage.getItem("nome_usuario") || "testar").toLowerCase();
 
-                // Se a mensagem veio do ID do cliente logado, é ele mesmo.
-                // Se o fk_usuario for diferente (ou se o tipo escrito for técnico), é o técnico.
-                const tipoStr = String(
-                  msg.tipo_usuario || msg.tipo || "",
-                ).toLowerCase();
-                const isTecnico =
-                  tipoStr.includes("tecnico") ||
-                  tipoStr.includes("técnico") ||
-                  (idUsuarioLogado > 0 &&
-                    Number(msg.fk_usuario) !== idUsuarioLogado);
+                const fkMsg = Number(msg.fk_usuario);
+                const nomeMsg = String(msg.nome_usuario || "").toLowerCase();
+                const tipoStr = String(msg.tipo_usuario || msg.tipo || "").toLowerCase();
+
+                // É TÉCNICO se: 
+                // 1. O tipo explicitamente disser técnico/admin 
+                // 2. Ou se o ID da mensagem for DIFERENTE do ID do cliente logado (15)
+                // 3. Ou se o nome do remetente na mensagem for diferente do cliente logado
+                const isTecnico = 
+                  tipoStr.includes("tecnico") || 
+                  tipoStr.includes("técnico") || 
+                  tipoStr === "2" || 
+                  tipoStr === "admin" ||
+                  (fkMsg > 0 && fkMsg !== idLogado) ||
+                  (nomeMsg !== "" && nomeMsg !== nomeLogado && !nomeMsg.includes("testar"));
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"
