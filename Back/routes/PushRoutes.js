@@ -17,13 +17,19 @@ router.post("/salvar-inscricao", verificarToken, async (req, res) => {
   const { endpoint, keys } = req.body;
   const id_usuario = req.usuarioId; // Obtido do token JWT
 
+  // 🔍 LOG 1: Confirma se a requisição chegou na rota e quem é o usuário
+  console.log("🔔 Requisição recebida em /salvar-inscricao para o usuário ID:", id_usuario);
+
   try {
     const query = `REPLACE INTO push_subscriptions (id_usuario, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)`;
     await pool.query(query, [id_usuario, endpoint, keys.p256dh, keys.auth]);
     
+    // 🔍 LOG 2: Confirma que gravou no banco com sucesso
+    console.log("✅ Inscrição salva/atualizada com sucesso no MySQL!");
     res.status(200).json({ mensagem: "Inscrição salva com sucesso!" });
   } catch (err) {
-    console.error("Erro ao salvar inscrição:", err);
+    // 🔍 LOG 3: Mostra se deu erro no banco de dados
+    console.error("❌ ERRO CRÍTICO ao salvar inscrição no banco:", err);
     res.status(500).json({ erro: "Erro ao salvar inscrição" });
   }
 });
@@ -33,7 +39,10 @@ export async function enviarNotificacaoParaUsuario(id_usuario, tituloMensagem, c
   try {
     const [results] = await pool.query(`SELECT * FROM push_subscriptions WHERE id_usuario = ?`, [id_usuario]);
     
-    if (results.length === 0) return;
+    if (results.length === 0) {
+      console.log(`⚠️ Nenhuma inscrição push encontrada para o usuário ID: ${id_usuario}`);
+      return;
+    }
 
     results.forEach(sub => {
       const pushSubscription = {
@@ -50,10 +59,11 @@ export async function enviarNotificacaoParaUsuario(id_usuario, tituloMensagem, c
       });
 
       webpush.sendNotification(pushSubscription, payload)
-        .catch(error => console.error("Erro ao enviar push notification:", error));
+        .then(() => console.log(`🚀 Push enviado com sucesso para o usuário ${id_usuario}`))
+        .catch(error => console.error("❌ Erro ao enviar push notification via web-push:", error));
     });
   } catch (err) {
-    console.error("Erro ao buscar inscrições para envio:", err);
+    console.error("❌ Erro ao buscar inscrições para envio:", err);
   }
 }
 
