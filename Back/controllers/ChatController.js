@@ -1,11 +1,7 @@
 import * as mensagemModel from "../models/ChatModels.js";
 
 export async function NovaMensagem(req, res) {
-  const {
-    mensagem,
-    fk_usuario,
-    fk_chamado
-  } = req.body;
+  const { mensagem, fk_usuario, fk_chamado } = req.body;
 
   try {
     const novaMensagem = await mensagemModel.create({
@@ -24,14 +20,10 @@ export async function NovaMensagem(req, res) {
 export async function ListarMensagensPorChamado(req, res) {
   try {
     const id_chamado = req.params.id_chamado;
-    
     const mensagens = await mensagemModel.findByChamado(id_chamado);
 
-    if (mensagens.length > 0) {
-      res.status(200).json(mensagens);
-    } else {
-      res.status(200).json({ mensagem: "Ainda não há mensagens nesta conversa" });
-    }
+    // Retorna sempre um array (vazio ou preenchido)
+    res.status(200).json(Array.isArray(mensagens) ? mensagens : []);
   } catch (error) {
     console.error("Erro ao listar mensagens:", error);
     res.status(500).json({ error: "Não foi possível encontrar as mensagens desta conversa" });

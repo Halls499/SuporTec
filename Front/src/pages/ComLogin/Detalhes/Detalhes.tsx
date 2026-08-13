@@ -15,6 +15,7 @@ interface Chamado {
   data_abertura?: string;
   criado_em?: string;
   data?: string;
+  fk_usuario?: number;
 }
 
 interface Mensagem {
@@ -62,7 +63,6 @@ function Detalhes() {
       }
 
       try {
-        // 1. Busca detalhes do chamado
         const responseChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           method: "GET",
           headers: {
@@ -84,7 +84,6 @@ function Detalhes() {
           setChamado(chamadoFinal || null);
         }
 
-        // 2. Busca histórico do chat
         const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
           method: "GET",
           headers: {
@@ -142,6 +141,7 @@ function Detalhes() {
           mensagem: textoMensagem.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
+          tipo_usuario: "cliente",
         }),
       });
 
@@ -155,7 +155,6 @@ function Detalhes() {
             novaMensagemCriada?.criado_em ||
             novaMensagemCriada?.data ||
             new Date().toISOString(),
-          // Garante que a mensagem enviada por ele mesmo venha marcada como cliente
           tipo_usuario: novaMensagemCriada?.tipo_usuario || "cliente",
         };
 
@@ -317,25 +316,16 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                // Pega o ID e o nome do usuário logado no localStorage
-                const idLogado = Number(localStorage.getItem("id_usuario")) || 15;
-                const nomeLogado = (localStorage.getItem("nome_usuario") || "testar").toLowerCase();
+                const tipoStr = String(
+                  msg.tipo_usuario || msg.tipo || ""
+                ).toLowerCase();
 
-                const fkMsg = Number(msg.fk_usuario);
-                const nomeMsg = String(msg.nome_usuario || "").toLowerCase();
-                const tipoStr = String(msg.tipo_usuario || msg.tipo || "").toLowerCase();
-
-                // É TÉCNICO se: 
-                // 1. O tipo explicitamente disser técnico/admin 
-                // 2. Ou se o ID da mensagem for DIFERENTE do ID do cliente logado (15)
-                // 3. Ou se o nome do remetente na mensagem for diferente do cliente logado
-                const isTecnico = 
-                  tipoStr.includes("tecnico") || 
-                  tipoStr.includes("técnico") || 
-                  tipoStr === "2" || 
-                  tipoStr === "admin" ||
-                  (fkMsg > 0 && fkMsg !== idLogado) ||
-                  (nomeMsg !== "" && nomeMsg !== nomeLogado && !nomeMsg.includes("testar"));
+                // Validação simplificada e robusta usando os dados do backend
+                const isTecnico =
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  tipoStr.includes("admin") ||
+                  tipoStr === "2";
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"

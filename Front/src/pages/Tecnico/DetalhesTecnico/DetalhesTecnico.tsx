@@ -15,6 +15,7 @@ interface ChamadoDetalhes {
   data?: string;
   nome_solicitante?: string;
   contato?: string;
+  fk_usuario?: number;
 }
 
 interface Mensagem {
@@ -85,12 +86,13 @@ function DetalhesTecnico() {
           },
         });
 
+        let dadosChamadoFinal = null;
         if (respostaChamado.ok) {
           const dados = await respostaChamado.json();
-          const chamadoFinal = Array.isArray(dados) ? dados[0] : dados;
+          dadosChamadoFinal = Array.isArray(dados) ? dados[0] : dados;
           if (isMounted) {
-            setChamado(chamadoFinal || null);
-            setNovoStatus(chamadoFinal?.situacao || "Novo");
+            setChamado(dadosChamadoFinal || null);
+            setNovoStatus(dadosChamadoFinal?.situacao || "Novo");
           }
         }
 
@@ -145,6 +147,7 @@ function DetalhesTecnico() {
           mensagem: novaResposta.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
+          tipo_usuario: "tecnico",
         }),
       });
 
@@ -231,7 +234,7 @@ function DetalhesTecnico() {
 
   if (!chamado) {
     return (
-      <main className="detalhes-tecnico-page">
+      <main className="detlhes-tecnico-page">
         <p className="detalhes-tecnico-loading">Chamado não encontrado.</p>
         <div className="detalhes-tecnico-erro-acao">
           <Link to="/chamados-tecnico" className="btn-voltar">
@@ -304,21 +307,18 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const idUsuarioLogado =
+                const idTecnicoLogado =
                   Number(localStorage.getItem("id_usuario")) || 0;
-                const fkMsg = Number(msg.fk_usuario);
                 const tipoStr = String(
                   msg.tipo_usuario || msg.tipo || ""
                 ).toLowerCase();
 
-                // NO PAINEL DO TÉCNICO:
-                // É técnico se explicitamente rotulado OU se o ID da mensagem bater com o ID logado
                 const isTecnico =
                   tipoStr.includes("tecnico") ||
                   tipoStr.includes("técnico") ||
+                  tipoStr.includes("admin") ||
                   tipoStr === "2" ||
-                  tipoStr === "admin" ||
-                  (fkMsg > 0 && fkMsg === idUsuarioLogado);
+                  Number(msg.fk_usuario) === idTecnicoLogado;
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"

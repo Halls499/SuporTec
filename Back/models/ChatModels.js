@@ -1,9 +1,16 @@
 import pool from "../config/database.js";
 
-// Mostrar mensagens de um chamado específico
+// Mostrar mensagens de um chamado específico trazendo informações do usuário
 export async function findByChamado(id_chamado) {
   const [rows] = await pool.query(
-    "SELECT * FROM mensagem WHERE fk_chamado = ? ORDER BY data_envio ASC",
+    `SELECT 
+      m.*, 
+      u.tipo_usuario, 
+      u.nome AS nome_usuario 
+     FROM mensagem m
+     LEFT JOIN usuario u ON m.fk_usuario = u.id_usuario
+     WHERE m.fk_chamado = ? 
+     ORDER BY m.data_envio ASC`,
     [id_chamado]
   );
   return rows;
