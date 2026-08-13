@@ -1,0 +1,449 @@
+.detalhes-page {
+  min-height: calc(100vh - 90px);
+  background-color: #1a2236;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.detalhes-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Título */
+.detalhes-container > h1 {
+  color: #fff;
+  font-size: 38px;
+  margin-bottom: 35px;
+}
+
+/* Cards */
+.info-chamado,
+.chat-section {
+  background-color: #111827;
+  padding: 30px;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  transition: 0.2s;
+}
+
+.info-chamado:hover,
+.chat-section:hover {
+  transform: translateY(-3px);
+}
+
+/* Títulos dos cards */
+.info-chamado h2,
+.chat-section h3 {
+  color: #fff;
+  font-size: 24px;
+  margin-bottom: 25px;
+}
+
+/* Textos */
+.info-chamado p {
+  color: #d1d5db;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+/* Estilos do Chat */
+.chat-mensagens-container {
+  min-height: 150px;
+  max-height: 350px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-vazio {
+  color: #aaa;
+  text-align: center;
+}
+
+.chat-mensagem-item {
+  max-width: 80%;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+
+/* Mensagem do cliente vista pelo cliente */
+.chat-mensagem-item.cliente {
+  background-color: #1a2236;
+  border-left: 4px solid #6b7280;
+  margin-right: auto;
+}
+
+/* Mensagem do técnico vista pelo cliente */
+.chat-mensagem-item.tecnico {
+  background-color: #24304a;
+  border-left: 4px solid #3b82f6;
+  margin-left: auto;
+}
+
+.chat-mensagem-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 6px;
+}
+
+.chat-mensagem-header strong {
+  color: #fff;
+}
+
+.chat-mensagem-texto {
+  color: #fff;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chat-form {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #111;
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  border-color: #3b82f6;
+}
+
+.chat-btn-enviar {
+  padding: 12px 24px;
+  background-color: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.chat-btn-enviar:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.chat-btn-enviar:disabled,
+.chat-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Botões de Ação Gerais */
+.detalhes-acoes {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.btn-voltar {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.btn-voltar:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-cancelar-chamado {
+  background-color: #dc2626;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  box-sizing: border-box;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.btn-cancelar-chamado:hover:not(:disabled) {
+  background-color: #b91c1c;
+}
+
+.btn-cancelar-chamado:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.spinner-cancelar {
+  display: inline-block;
+}
+
+/* Botão voltar alternativo / Links antigos */
+.new-ticket {
+  display: block;
+  width: fit-content;
+  margin: 35px auto 0;
+  padding: 14px 30px;
+  background-color: #3b82f6;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.new-ticket:hover {
+  background-color: #2563eb;
+  transform: translateY(-3px);
+}
+
+/* Modais e Alertas */
+.detalhes-loading {
+  text-align: center;
+  color: #fff;
+  margin-top: 50px;
+}
+
+.detalhes-erro {
+  text-align: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-container {
+  background-color: #111827;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.modal-icon {
+  font-size: 40px;
+  margin-bottom: 15px;
+}
+
+.modal-container h2 {
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.modal-container p {
+  color: #d1d5db;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.btn-cancelar-modal {
+  background-color: #374151;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-cancelar-modal:hover {
+  background-color: #4b5563;
+}
+
+.btn-confirmar-modal {
+  background-color: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.btn-confirmar-modal:hover {
+  background-color: #b91c1c;
+}
+
+/* Estilo base da Badge */
+.badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+  text-transform: capitalize;
+}
+
+/* Cores de Status */
+.badge-novo {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid #3b82f6;
+}
+
+.badge-em-andamento {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid #f59e0b;
+}
+
+.badge-resolvido {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid #22c55e;
+}
+
+.badge-cancelado {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid #ef4444;
+}
+
+/* Cores de Prioridade */
+.badge-baixa {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+}
+
+.badge-media {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+}
+
+.badge-alta {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+}
+
+/* ==========================================
+   RESPONSIVIDADE AJUSTADA
+   ========================================== */
+
+@media (max-width: 768px) {
+  .detalhes-page {
+    padding: 20px;
+  }
+
+  .detalhes-container > h1 {
+    font-size: 30px;
+    margin-bottom: 25px;
+  }
+
+  .info-chamado,
+  .chat-section {
+    padding: 20px;
+  }
+
+  .info-chamado h2,
+  .chat-section h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .new-ticket {
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+  }
+
+  .detalhes-acoes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-voltar,
+  .btn-cancelar-chamado {
+    width: 100%;
+  }
+
+  .chat-form {
+    flex-direction: column;
+  }
+
+  .chat-btn-enviar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalhes-page {
+    padding: 12px;
+  }
+
+  .detalhes-container > h1 {
+    font-size: 24px;
+  }
+
+  .info-chamado,
+  .chat-section {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .chat-mensagem-item {
+    max-width: 90%;
+    padding: 10px 12px;
+  }
+
+  .modal-container {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancelar-modal,
+  .btn-confirmar-modal {
+    width: 100%;
+  }
+}

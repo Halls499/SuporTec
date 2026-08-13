@@ -1,0 +1,147 @@
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 40px;
+  background-color: #111827;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Logo + Nome */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Menu */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.topbar-actions a {
+  text-decoration: none;
+  color: #d1d5db;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.topbar-actions a:hover {
+  color: #fff;
+  transform: scale(1.02);
+}
+
+.btn-entrar {
+  background: #3b82f6;
+  color: #fff !important;
+  padding: 8px 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.btn-entrar:hover {
+  background: #2563eb;
+}
+
+/* Link da home */
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.logo-area:hover {
+  color: inherit;
+  transform: scale(1.02);
+}
+
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 10px 20px;
+  }
+
+  .topbar-actions {
+    gap: 18px;
+  }
+
+  .topbar-actions a {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 15px;
+    gap: 15px;
+  }
+
+  .logo img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .logo h1 {
+    font-size: 24px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    justify-content: center;
+    gap: 15px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .topbar-actions a {
+    font-size: 15px;
+  }
+
+  .btn-entrar {
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 10px;
+  }
+
+  .logo h1 {
+    display: none; /* Oculta o texto da logo em telas muito compactas, mantendo apenas a imagem e os links */
+  }
+
+  .topbar-actions {
+    gap: 12px;
+  }
+
+  .topbar-actions a {
+    font-size: 14px;
+  }
+}
