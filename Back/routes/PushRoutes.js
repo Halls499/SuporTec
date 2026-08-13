@@ -15,26 +15,28 @@ webpush.setVapidDetails(
 // Rota para salvar a inscrição do navegador
 router.post("/salvar-inscricao", verificarToken, async (req, res) => {
   const { endpoint, keys } = req.body;
-  const id_usuario = req.usuarioId; // Obtido do token JWT
+  const id_usuario = req.usuarioId;
 
-  // 🔍 LOG 1: Confirma se a requisição chegou na rota e quem é o usuário
   console.log("🔔 Requisição recebida em /salvar-inscricao para o usuário ID:", id_usuario);
+
+  if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
+    console.error("❌ Erro: Faltam dados na inscrição do push!");
+    return res.status(400).json({ erro: "Dados de inscrição incompletos." });
+  }
 
   try {
     const query = `REPLACE INTO push_subscriptions (id_usuario, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)`;
     await pool.query(query, [id_usuario, endpoint, keys.p256dh, keys.auth]);
     
-    // 🔍 LOG 2: Confirma que gravou no banco com sucesso
-    console.log("✅ Inscrição salva/atualizada com sucesso no MySQL!");
+    console.log("✅ Inscrição salva/atualizada com sucesso no MySQL para o usuário:", id_usuario);
     res.status(200).json({ mensagem: "Inscrição salva com sucesso!" });
   } catch (err) {
-    // 🔍 LOG 3: Mostra se deu erro no banco de dados
     console.error("❌ ERRO CRÍTICO ao salvar inscrição no banco:", err);
     res.status(500).json({ erro: "Erro ao salvar inscrição" });
   }
 });
 
-// Função auxiliar exportável para disparar notificações de qualquer lugar do sistema
+// Função auxiliar exportável para disparar notificações
 export async function enviarNotificacaoParaUsuario(id_usuario, tituloMensagem, corpoMensagem) {
   try {
     const [results] = await pool.query(`SELECT * FROM push_subscriptions WHERE id_usuario = ?`, [id_usuario]);

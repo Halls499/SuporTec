@@ -10,14 +10,16 @@ router.post("/", verificarToken, chamadoController.AbrirNovoChamado);
 // 2. GET /api/chamados -> Listar chamados do cliente
 router.get("/", verificarToken, chamadoController.listarMeusChamados);
 
-// 👨‍💻 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
-// ⚠️ ATENÇÃO: Essa linha TEM QUE VIR ANTES de /:id !
+// 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
 router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 
 // 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
-// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
+// 5. PATCH /api/chamados/:id -> Atualizar/responder chamado pelo técnico
+router.patch("/:id", verificarToken, chamadoController.atualizarChamado);
+
+// 6. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch(
   "/:id/cancelar",
   verificarToken,

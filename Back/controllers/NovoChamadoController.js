@@ -1,4 +1,5 @@
 import * as chamadoModel from "../models/NovoChamadoModels.js";
+import { enviarNotificacaoParaUsuario } from "../routes/PushRoutes.js";
 
 export async function AbrirNovoChamado(req, res) {
   const {
@@ -92,7 +93,7 @@ export async function listarMeusChamados(req, res) {
   }
 }
 
-// 👨‍💻 NOVO: Função para a visão do TÉCNICO
+// 👨‍💻 Função para a visão do TÉCNICO
 export async function listarChamadosTecnico(req, res) {
   const fk_organizacao = req.usuario.fk_organizacao || 1;
 
@@ -132,6 +133,42 @@ export async function buscarChamadoPorId(req, res) {
     console.error("Erro ao buscar detalhes do chamado:", error);
     return res.status(500).json({
       mensagem: "Erro interno no servidor ao buscar chamado.",
+      erro: error.message,
+    });
+  }
+}
+
+// 🛠️ NOVO: Função para o técnico atualizar/responder o chamado e disparar a Notificação Push
+export async function atualizarChamado(req, res) {
+  try {
+    const { id } = req.params;
+    const fk_organizacao = req.usuario.fk_organizacao || 1;
+    const dadosAtualizacao = req.body;
+
+    // 1. Atualiza o chamado no banco via Model (você já deve ter essa função no seu model)
+    const atualizado = await chamadoModel.atualizarChamadoSaaS(id, fk_organizacao, dadosAtualizacao);
+
+    if (!atualizado) {
+      return res.status(404).json({ mensagem: "Chamado não encontrado para atualização." });
+    }
+
+    // 2. Descobre quem é o cliente dono deste chamado para mandar a notificação para ele
+    const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
+
+    if (clienteDono && clienteDono.fk_cliente) {
+      // 🚀 Dispara a notificação push para o celular do cliente
+      await enviarNotificacaoParaUsuario(
+        clienteDono.fk_cliente,
+        "SuporTec - Chamado Atualizado",
+        "O técnico respondeu ou atualizou o seu chamado!"
+      );
+    }
+
+    return res.status(200).json({ mensagem: "Chamado atualizado com sucesso e notificação disparada!" });
+  } catch (error) {
+    console.error("Erro ao atualizar chamado:", error);
+    return res.status(500).json({
+      mensagem: "Erro interno no servidor ao atualizar chamado.",
       erro: error.message,
     });
   }

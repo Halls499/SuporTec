@@ -121,3 +121,28 @@ export async function cancelarChamadoSaaS(
 
   return resultado.affectedRows > 0;
 }
+
+// 🛠️ NOVO: Atualiza o chamado pelo técnico (respeitando o SaaS)
+export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
+  const { situacao, fk_tecnico } = dados;
+
+  const [resultado] = await pool.query(
+    `UPDATE chamado 
+     SET situacao = COALESCE(?, situacao), 
+         fk_tecnico = COALESCE(?, fk_tecnico)
+     WHERE id_chamado = ? AND fk_organizacao = ?`,
+    [situacao || null, fk_tecnico || null, id_chamado, fk_organizacao]
+  );
+
+  return resultado.affectedRows > 0;
+}
+
+// 🔔 NOVO: Descobre quem é o cliente dono do chamado para enviar a notificação Push
+export async function buscarClienteDoChamado(id_chamado) {
+  const [rows] = await pool.query(
+    `SELECT fk_cliente FROM chamado WHERE id_chamado = ?`,
+    [id_chamado]
+  );
+
+  return rows[0]; // Retorna { fk_cliente: X }
+}
