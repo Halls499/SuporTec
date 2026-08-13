@@ -27,8 +27,7 @@ interface Mensagem {
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
-  tipo_usuario?: string | number;
-  tipo?: string | number;
+  tipo_usuario?: string;
 }
 
 function Detalhes() {
@@ -141,24 +140,13 @@ function Detalhes() {
           mensagem: textoMensagem.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
-          tipo_usuario: "cliente",
         }),
       });
 
       if (response.ok) {
         const novaMensagemCriada = await response.json();
 
-        const mensagemComData = {
-          ...novaMensagemCriada,
-          data_envio:
-            novaMensagemCriada?.data_envio ||
-            novaMensagemCriada?.criado_em ||
-            novaMensagemCriada?.data ||
-            new Date().toISOString(),
-          tipo_usuario: novaMensagemCriada?.tipo_usuario || "cliente",
-        };
-
-        setMensagens((prev) => [...prev, mensagemComData]);
+        setMensagens((prev) => [...prev, novaMensagemCriada]);
         setTextoMensagem("");
       } else {
         alert("Erro ao enviar mensagem. Tente novamente.");
@@ -316,16 +304,8 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const tipoStr = String(
-                  msg.tipo_usuario || msg.tipo || ""
-                ).toLowerCase();
-
-                // Validação simplificada e robusta usando os dados do backend
-                const isTecnico =
-                  tipoStr.includes("tecnico") ||
-                  tipoStr.includes("técnico") ||
-                  tipoStr.includes("admin") ||
-                  tipoStr === "2";
+                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
+                const isTecnico = tipoStr === "tecnico";
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"

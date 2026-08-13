@@ -27,8 +27,7 @@ interface Mensagem {
   fk_usuario: number;
   fk_chamado: number;
   nome_usuario?: string;
-  tipo_usuario?: string | number;
-  tipo?: string | number;
+  tipo_usuario?: string;
 }
 
 const containerVariants: Variants = {
@@ -147,24 +146,13 @@ function DetalhesTecnico() {
           mensagem: novaResposta.trim(),
           fk_usuario: Number(fk_usuario),
           fk_chamado: Number(id),
-          tipo_usuario: "tecnico",
         }),
       });
 
       if (resposta.ok) {
         const novaMensagemCriada = await resposta.json();
 
-        const mensagemComData = {
-          ...novaMensagemCriada,
-          data_envio:
-            novaMensagemCriada?.data_envio ||
-            novaMensagemCriada?.criado_em ||
-            novaMensagemCriada?.data ||
-            new Date().toISOString(),
-          tipo_usuario: novaMensagemCriada?.tipo_usuario || "tecnico",
-        };
-
-        setMensagens((prev) => [...prev, mensagemComData]);
+        setMensagens((prev) => [...prev, novaMensagemCriada]);
         setNovaResposta("");
       } else {
         alert("Erro ao enviar resposta.");
@@ -307,18 +295,8 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const idTecnicoLogado =
-                  Number(localStorage.getItem("id_usuario")) || 0;
-                const tipoStr = String(
-                  msg.tipo_usuario || msg.tipo || ""
-                ).toLowerCase();
-
-                const isTecnico =
-                  tipoStr.includes("tecnico") ||
-                  tipoStr.includes("técnico") ||
-                  tipoStr.includes("admin") ||
-                  tipoStr === "2" ||
-                  Number(msg.fk_usuario) === idTecnicoLogado;
+                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
+                const isTecnico = tipoStr === "tecnico";
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"
@@ -376,8 +354,8 @@ function DetalhesTecnico() {
             whileFocus={{ scale: 1.01 }}
           >
             <option value="Novo">Novo</option>
-            <option value="Em atendimento">Em atendimento</option>
-            <option value="Aguardando resposta">Aguardando resposta</option>
+            <option value="Em andamento">Em andamento</option>
+            <option value="Aguardando cliente">Aguardando cliente</option>
             <option value="Resolvido">Resolvido</option>
             <option value="Cancelado">Cancelado</option>
           </motion.select>
