@@ -364,14 +364,18 @@
   color: #f87171;
 }
 
-/* Responsivo */
-@media (max-width: 600px) {
+/* ==========================================
+   RESPONSIVIDADE AJUSTADA
+   ========================================== */
+
+@media (max-width: 768px) {
   .detalhes-page {
     padding: 20px;
   }
 
   .detalhes-container > h1 {
     font-size: 30px;
+    margin-bottom: 25px;
   }
 
   .info-chamado,
@@ -379,9 +383,16 @@
     padding: 20px;
   }
 
+  .info-chamado h2,
+  .chat-section h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
   .new-ticket {
     width: 100%;
     text-align: center;
+    box-sizing: border-box;
   }
 
   .detalhes-acoes {
@@ -389,7 +400,50 @@
     align-items: stretch;
   }
 
+  .btn-voltar,
+  .btn-cancelar-chamado {
+    width: 100%;
+  }
+
   .chat-form {
     flex-direction: column;
+  }
+
+  .chat-btn-enviar {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalhes-page {
+    padding: 12px;
+  }
+
+  .detalhes-container > h1 {
+    font-size: 24px;
+  }
+
+  .info-chamado,
+  .chat-section {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .chat-mensagem-item {
+    max-width: 90%;
+    padding: 10px 12px;
+  }
+
+  .modal-container {
+    padding: 20px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancelar-modal,
+  .btn-confirmar-modal {
+    width: 100%;
   }
 }

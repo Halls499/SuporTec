@@ -38,6 +38,7 @@
   transition: 0.25s;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .chamado-card:hover {
@@ -74,6 +75,10 @@
   font-weight: bold;
   cursor: pointer;
   transition: 0.2s;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  display: block;
 }
 
 .btn-atender:hover {
@@ -90,9 +95,12 @@
   background-color: #111827;
   padding: 30px;
   border-radius: 14px;
+  box-sizing: border-box;
 }
 
-/* Responsividade */
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
 
 @media (max-width: 768px) {
   .chamados-tecnico-page {
@@ -110,6 +118,7 @@
 
   .chamados-list {
     grid-template-columns: 1fr;
+    gap: 20px;
   }
 
   .chamado-card {
@@ -118,5 +127,40 @@
 
   .btn-atender {
     width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .chamados-tecnico-page {
+    padding: 15px 10px;
+  }
+
+  .chamados-tecnico-container h1 {
+    font-size: 26px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .chamado-card {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .chamado-card h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+
+  .chamado-card p {
+    font-size: 14px;
+  }
+
+  .btn-atender {
+    margin-top: 15px;
+    padding: 12px;
+    font-size: 15px;
   }
 }

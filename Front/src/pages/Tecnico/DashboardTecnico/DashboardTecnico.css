@@ -88,6 +88,7 @@
   text-align: center;
   transition: 0.2s;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .summary-card:hover {
@@ -145,6 +146,7 @@
   padding: 22px;
   transition: 0.2s;
   border: 2px solid transparent;
+  box-sizing: border-box;
 }
 
 .conquista-card:hover {
@@ -207,6 +209,7 @@
   font-size: 18px;
   font-weight: bold;
   transition: 0.2s;
+  box-sizing: border-box;
 }
 
 .new-ticket:hover {
@@ -249,5 +252,49 @@
   .new-ticket {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-login-page {
+    padding: 12px;
+  }
+
+  .welcome h1 {
+    font-size: 24px;
+  }
+
+  .welcome p {
+    font-size: 14px;
+  }
+
+  .conquistas h2 {
+    font-size: 24px;
+  }
+
+  .conquistas h3 {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+
+  .conquistas h4 {
+    font-size: 20px;
+  }
+
+  .summary-card {
+    padding: 20px 15px;
+  }
+
+  .summary-card span {
+    font-size: 34px;
+    margin-bottom: 10px;
+  }
+
+  .summary-card p {
+    font-size: 16px;
+  }
+
+  .conquista-card {
+    padding: 16px;
   }
 }

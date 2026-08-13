@@ -31,6 +31,7 @@
   padding: 30px;
   margin-bottom: 30px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
 }
 
 .detalhes-card h2 {
@@ -62,6 +63,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .chat-vazio {
@@ -74,6 +76,7 @@
   padding: 16px 18px;
   border-radius: 14px;
   margin-bottom: 18px;
+  box-sizing: border-box;
 }
 
 .mensagem strong {
@@ -141,6 +144,7 @@
   color: #fff;
   font-size: 16px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .select-status:focus {
@@ -162,6 +166,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: 0.2s;
+  box-sizing: border-box;
 }
 
 .btn-enviar:hover,
@@ -180,16 +185,19 @@
 
 .btn-salvar {
   margin-top: 5px;
+  width: 100%;
 }
 
 .voltar-container {
   margin-top: 20px;
+  text-align: center;
 }
 
 .btn-voltar {
   display: block;
   width: fit-content;
   margin: 10px auto 0;
+  text-align: center;
 }
 
 .detalhes-tecnico-loading {
@@ -203,7 +211,10 @@
   margin-top: 20px;
 }
 
-/* Responsividade */
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+
 @media (max-width: 768px) {
   .detalhes-tecnico-page {
     padding: 20px;
@@ -215,6 +226,7 @@
 
   .subtitle {
     font-size: 16px;
+    margin-bottom: 25px;
   }
 
   .detalhes-card {
@@ -226,5 +238,53 @@
   .btn-voltar {
     width: 100%;
     text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .detalhes-tecnico-page {
+    padding: 12px;
+  }
+
+  .detalhes-tecnico-container h1 {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .detalhes-card {
+    padding: 15px;
+    border-radius: 10px;
+  }
+
+  .detalhes-card h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .mensagem {
+    max-width: 92%;
+    padding: 12px 14px;
+  }
+
+  .textarea-resposta {
+    min-height: 110px;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .select-status {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .btn-enviar,
+  .btn-salvar,
+  .btn-voltar {
+    padding: 12px;
+    font-size: 15px;
   }
 }

@@ -133,13 +133,17 @@
   font-size: 17px;
   font-weight: bold;
   transition: 0.2s;
+  box-sizing: border-box;
 }
 
 .new-ticket:hover {
   background-color: #2563eb;
 }
 
-/* Responsividade */
+/* ==========================================
+   RESPONSIVIDADE
+   ========================================== */
+
 @media (max-width: 768px) {
   .home-login-page {
     padding: 20px;
@@ -149,15 +153,56 @@
     font-size: 30px;
   }
 
+  .welcome p {
+    font-size: 16px;
+  }
+
+  .recent-tickets {
+    padding: 20px;
+  }
+
   .ticket-header,
   .ticket {
     grid-template-columns: 60px 1fr 110px;
     font-size: 14px;
+    padding: 12px 10px;
   }
 
   .new-ticket {
     width: 100%;
     text-align: center;
-    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-login-page {
+    padding: 12px;
+  }
+
+  .welcome h1 {
+    font-size: 24px;
+  }
+
+  .welcome p {
+    font-size: 14px;
+  }
+
+  .summary-card {
+    padding: 18px;
+  }
+
+  .summary-card h2 {
+    font-size: 26px;
+  }
+
+  .recent-tickets h2 {
+    font-size: 20px;
+  }
+
+  .ticket-header,
+  .ticket {
+    grid-template-columns: 50px 1fr 90px;
+    font-size: 12px;
+    padding: 10px 8px;
   }
 }
