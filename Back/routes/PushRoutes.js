@@ -1,7 +1,7 @@
 import express from "express";
 import webpush from "web-push";
-import pool from "../config/database.js"; // Ajuste o caminho para o seu pool do banco
-import { verificarToken } from "../middlewares/verificarToken.js"; // Middleware para verificar token JWT
+import pool from "../config/database.js";
+import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
