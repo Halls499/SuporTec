@@ -296,7 +296,10 @@ function DetalhesTecnico() {
             ) : (
               mensagens.map((msg) => {
                 const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const isTecnico = tipoStr === "tecnico";
+                const idUsuarioLogado = Number(localStorage.getItem("id_usuario")) || 0;
+
+                // Considera técnico se o banco diz que é técnico OU se o ID da mensagem for o mesmo do usuário logado na tela técnica
+                const isTecnico = tipoStr === "tecnico" || Number(msg.fk_usuario) === idUsuarioLogado;
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"

@@ -20,14 +20,13 @@ export async function findByChamado(id_chamado) {
   return rows;
 }
 
-// Criar uma nova mensagem retornando também os dados completos
+// Criar uma nova mensagem permitindo opcionalmente forçar o tipo ou ler da tabela
 export async function create({ mensagem, fk_usuario, fk_chamado }) {
   const [resultado] = await pool.query(
     "INSERT INTO mensagem (mensagem, fk_usuario, fk_chamado, data_envio) VALUES (?, ?, ?, NOW())",
     [mensagem, fk_usuario, fk_chamado]
   );
 
-  // Busca a mensagem recém-criada já com o tipo do usuário do banco
   const [rows] = await pool.query(
     `SELECT 
       m.id_mensagem,
