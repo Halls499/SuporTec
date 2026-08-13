@@ -151,7 +151,6 @@ function DetalhesTecnico() {
 
       if (resposta.ok) {
         const novaMensagemCriada = await resposta.json();
-
         setMensagens((prev) => [...prev, novaMensagemCriada]);
         setNovaResposta("");
       } else {
@@ -298,7 +297,6 @@ function DetalhesTecnico() {
                 const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
                 const idUsuarioLogado = Number(localStorage.getItem("id_usuario")) || 0;
 
-                // Considera técnico se o banco diz que é técnico OU se o ID da mensagem for o mesmo do usuário logado na tela técnica
                 const isTecnico = tipoStr === "tecnico" || Number(msg.fk_usuario) === idUsuarioLogado;
 
                 const classeMensagem = isTecnico

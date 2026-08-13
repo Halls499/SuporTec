@@ -145,7 +145,6 @@ function Detalhes() {
 
       if (response.ok) {
         const novaMensagemCriada = await response.json();
-
         setMensagens((prev) => [...prev, novaMensagemCriada]);
         setTextoMensagem("");
       } else {

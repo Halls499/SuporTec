@@ -1,4 +1,3 @@
-
 import * as mensagemModel from "../models/ChatModels.js";
 
 export async function NovaMensagem(req, res) {

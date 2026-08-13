@@ -1,6 +1,6 @@
 import pool from "../config/database.js";
 
-// Mostrar mensagens de um chamado específico trazendo explicitamente o tipo do usuário
+// Mostrar mensagens de um chamado específico trazendo explicitamente o tipo do usuário do banco
 export async function findByChamado(id_chamado) {
   const [rows] = await pool.query(
     `SELECT 
@@ -20,7 +20,7 @@ export async function findByChamado(id_chamado) {
   return rows;
 }
 
-// Criar uma nova mensagem permitindo opcionalmente forçar o tipo ou ler da tabela
+// Criar uma nova mensagem e retornar imediatamente o objeto completo com o tipo do usuário correto
 export async function create({ mensagem, fk_usuario, fk_chamado }) {
   const [resultado] = await pool.query(
     "INSERT INTO mensagem (mensagem, fk_usuario, fk_chamado, data_envio) VALUES (?, ?, ?, NOW())",
