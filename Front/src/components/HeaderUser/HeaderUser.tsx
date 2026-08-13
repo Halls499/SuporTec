@@ -54,6 +54,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           <h1>SuporTec</h1>
         </motion.div>
       </Link>
+      
       <nav className="user-actions">
         {usuario.tipo_usuario === "tecnico" ? (
           <>
@@ -81,8 +82,10 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           </>
         )}
       </nav>
+
       <div className="user">
-        <div className="user-info">
+        {/* Transformamos esta área em um link para a página de Editar Perfil */}
+        <Link to="/editar-perfil" className="user-info" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <motion.div
             className="avatar"
             whileHover={{ scale: 1.1 }}
@@ -91,8 +94,8 @@ function HeaderUser({ usuario }: HeaderUserProps) {
             {usuario?.nome ? usuario.nome.charAt(0).toUpperCase() : "U"}
           </motion.div>
 
-          <span>{usuario?.nome || "Usuário"}</span>
-        </div>
+          <span style={{ color: '#fff' }}>{usuario?.nome || "Usuário"}</span>
+        </Link>
 
         <motion.button
           className="logout"
