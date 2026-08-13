@@ -16,16 +16,10 @@ export async function AbrirNovoChamado(req, res) {
     contato,
   } = req.body;
 
-  // 🏢 Pegando id do cliente E o id da organização vindo do token JWT
   const fk_cliente = req.usuario.id_usuario;
   const fk_organizacao = req.usuario.fk_organizacao || 1;
 
-  console.log(
-    `👉 CHAMADO DA ORG ${fk_organizacao} CRIADO PELO CLIENTE ${fk_cliente}`,
-  );
-
   try {
-    // 1. Validação dos campos obrigatórios
     if (
       !titulo ||
       !categoria ||
@@ -39,9 +33,8 @@ export async function AbrirNovoChamado(req, res) {
       });
     }
 
-    // 2. Montando o objeto que o Model espera receber (incluindo fk_organizacao)
     const dadosChamado = {
-      fk_organizacao, // 👈 Crucial para o SaaS!
+      fk_organizacao,
       titulo,
       descricao,
       categoria,
@@ -56,10 +49,8 @@ export async function AbrirNovoChamado(req, res) {
       fk_cliente,
     };
 
-    // 3. Chamando a função do Model
     await chamadoModel.abrirChamado(dadosChamado);
 
-    // 4. Retornando sucesso
     return res.status(201).json({
       mensagem: "Chamado criado com sucesso!",
     });
@@ -76,7 +67,6 @@ export async function listarMeusChamados(req, res) {
   const fk_organizacao = req.usuario.fk_organizacao || 1;
 
   try {
-    // 🏢 Garante que só busca chamados do cliente DENTRO da empresa dele
     const listaChamados =
       await chamadoModel.listarChamadosPorClienteEOrganizacao(
         fk_cliente,
@@ -86,25 +76,20 @@ export async function listarMeusChamados(req, res) {
     return res.status(200).json(listaChamados);
   } catch (erro) {
     console.error(erro);
-
     return res.status(500).json({
       erro: "Erro ao buscar chamados.",
     });
   }
 }
 
-// 👨‍💻 Função para a visão do TÉCNICO
 export async function listarChamadosTecnico(req, res) {
   const fk_organizacao = req.usuario.fk_organizacao || 1;
 
   try {
-    // 🏢 Busca TODOS os chamados da empresa (sem filtrar por id_cliente)
     const listaChamados = await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
-
     return res.status(200).json(listaChamados);
   } catch (erro) {
     console.error(erro);
-
     return res.status(500).json({
       erro: "Erro ao buscar chamados do técnico.",
     });
@@ -116,7 +101,6 @@ export async function buscarChamadoPorId(req, res) {
     const { id } = req.params;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
 
-    // 🏢 Valida o ID do chamado + a Empresa do usuário logado (Isolamento SaaS)
     const chamado = await chamadoModel.buscarChamadoPorIdEOrganizacao(
       id,
       fk_organizacao,
@@ -138,33 +122,30 @@ export async function buscarChamadoPorId(req, res) {
   }
 }
 
-// 🛠️ NOVO: Função para o técnico atualizar/responder o chamado e disparar a Notificação Push
+// 🛠️ Atualização via PUT e disparo da Notificação Push
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
     const dadosAtualizacao = req.body;
 
-    // 1. Atualiza o chamado no banco via Model (você já deve ter essa função no seu model)
     const atualizado = await chamadoModel.atualizarChamadoSaaS(id, fk_organizacao, dadosAtualizacao);
 
     if (!atualizado) {
       return res.status(404).json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
-    // 2. Descobre quem é o cliente dono deste chamado para mandar a notificação para ele
     const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
 
     if (clienteDono && clienteDono.fk_cliente) {
-      // 🚀 Dispara a notificação push para o celular do cliente
       await enviarNotificacaoParaUsuario(
         clienteDono.fk_cliente,
         "SuporTec - Chamado Atualizado",
-        "O técnico respondeu ou atualizou o seu chamado!"
+        "O técnico alterou o status do seu chamado!"
       );
     }
 
-    return res.status(200).json({ mensagem: "Chamado atualizado com sucesso e notificação disparada!" });
+    return res.status(200).json({ mensagem: "Chamado atualizado com sucesso!" });
   } catch (error) {
     console.error("Erro ao atualizar chamado:", error);
     return res.status(500).json({
@@ -180,7 +161,6 @@ export async function cancelarChamadoPorId(req, res) {
     const fk_cliente = req.usuario.id_usuario;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
 
-    // 🏢 Cancela validando cliente E empresa
     const canceladoComSucesso = await chamadoModel.cancelarChamadoSaaS(
       id,
       fk_cliente,
@@ -189,8 +169,7 @@ export async function cancelarChamadoPorId(req, res) {
 
     if (!canceladoComSucesso) {
       return res.status(400).json({
-        mensagem:
-          "Não foi possível cancelar o chamado. Ele pode não existir, não pertencer a você ou já estar finalizado/cancelado.",
+        mensagem: "Não foi possível cancelar o chamado.",
       });
     }
 

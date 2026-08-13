@@ -16,10 +16,10 @@ router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 // 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
-// 5. PATCH /api/chamados/:id -> Atualizar/responder chamado pelo técnico
-router.patch("/:id", verificarToken, chamadoController.atualizarChamado);
+// 🛠️ ROTA PUT ATUALIZADA: Compatível com a requisição do front-end
+router.put("/:id", verificarToken, chamadoController.atualizarChamado);
 
-// 6. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
+// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch(
   "/:id/cancelar",
   verificarToken,

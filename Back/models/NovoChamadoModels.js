@@ -2,7 +2,7 @@ import pool from "../config/database.js";
 
 export async function abrirChamado(chamado) {
   const {
-    fk_organizacao, // 🏢 Campo indispensável para o SaaS
+    fk_organizacao,
     titulo,
     descricao,
     categoria,
@@ -45,22 +45,16 @@ export async function abrirChamado(chamado) {
   return resultado;
 }
 
-// 🏢 Busca os chamados do cliente restritos à sua organização (empresa)
-export async function listarChamadosPorClienteEOrganizacao(
-  fk_cliente,
-  fk_organizacao,
-) {
+export async function listarChamadosPorClienteEOrganizacao(fk_cliente, fk_organizacao) {
   const [rows] = await pool.query(
     `SELECT * FROM chamado 
      WHERE fk_cliente = ? AND fk_organizacao = ?
      ORDER BY data_abertura DESC`,
     [fk_cliente, fk_organizacao],
   );
-
   return rows;
 }
 
-// 👨‍💻 NOVO (SaaS): Busca TODOS os chamados da organização para a visão do Técnico
 export async function listarChamadosPorOrganizacao(fk_organizacao) {
   const [rows] = await pool.query(
     `SELECT 
@@ -72,57 +66,32 @@ export async function listarChamadosPorOrganizacao(fk_organizacao) {
      ORDER BY c.data_abertura DESC`,
     [fk_organizacao],
   );
-
   return rows;
 }
 
-// 🏢 Busca chamado por ID validando o isolamento da organização
 export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
   const [rows] = await pool.query(
     `SELECT 
-      id_chamado, 
-      fk_organizacao,
-      titulo, 
-      descricao, 
-      categoria, 
-      prioridade, 
-      situacao, 
-      tipo_atendimento,
-      endereco,
-      empresa,
-      setor,
-      sala,
-      tipo_contato,
-      contato,
-      data_abertura,
-      data_fechamento,
-      fk_cliente,
-      fk_tecnico
+      id_chamado, fk_organizacao, titulo, descricao, categoria, prioridade, 
+      situacao, tipo_atendimento, endereco, empresa, setor, sala, 
+      tipo_contato, contato, data_abertura, data_fechamento, fk_cliente, fk_tecnico
      FROM chamado 
      WHERE id_chamado = ? AND fk_organizacao = ?`,
     [id, fk_organizacao],
   );
-
-  return rows[0]; // Retorna o chamado encontrado ou undefined
+  return rows[0];
 }
 
-// 🏢 Cancela o chamado validando cliente e organização
-export async function cancelarChamadoSaaS(
-  id_chamado,
-  fk_cliente,
-  fk_organizacao,
-) {
+export async function cancelarChamadoSaaS(id_chamado, fk_cliente, fk_organizacao) {
   const [resultado] = await pool.query(
     `UPDATE chamado 
      SET situacao = 'Cancelado' 
      WHERE id_chamado = ? AND fk_cliente = ? AND fk_organizacao = ? AND situacao != 'Resolvido'`,
     [id_chamado, fk_cliente, fk_organizacao],
   );
-
   return resultado.affectedRows > 0;
 }
 
-// 🛠️ NOVO: Atualiza o chamado pelo técnico (respeitando o SaaS)
 export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   const { situacao, fk_tecnico } = dados;
 
@@ -137,12 +106,10 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   return resultado.affectedRows > 0;
 }
 
-// 🔔 NOVO: Descobre quem é o cliente dono do chamado para enviar a notificação Push
 export async function buscarClienteDoChamado(id_chamado) {
   const [rows] = await pool.query(
     `SELECT fk_cliente FROM chamado WHERE id_chamado = ?`,
     [id_chamado]
   );
-
-  return rows[0]; // Retorna { fk_cliente: X }
+  return rows[0];
 }
