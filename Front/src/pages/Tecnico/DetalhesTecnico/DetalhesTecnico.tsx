@@ -133,7 +133,17 @@ function DetalhesTecnico() {
 
     setEnviandoMensagem(true);
     const token = localStorage.getItem("token");
-    const fk_usuario = localStorage.getItem("id_usuario") || "1";
+
+    // CORREÇÃO CRUCIAL AQUI: Buscando o ID correto do técnico no localStorage
+    // Verifique qual é a chave exata que o seu login usa (ex: 'id_usuario', 'usuario_id', 'user')
+    const usuarioSalvo = localStorage.getItem("id_usuario") || localStorage.getItem("usuario_id");
+    const fk_usuario = usuarioSalvo ? Number(usuarioSalvo) : null;
+
+    if (!fk_usuario) {
+      alert("Erro: ID do técnico não encontrado no navegador. Faça login novamente.");
+      setEnviandoMensagem(false);
+      return;
+    }
 
     try {
       const resposta = await fetch(`${baseUrl}/api/chat`, {
@@ -144,7 +154,7 @@ function DetalhesTecnico() {
         },
         body: JSON.stringify({
           mensagem: novaResposta.trim(),
-          fk_usuario: Number(fk_usuario),
+          fk_usuario: fk_usuario,
           fk_chamado: Number(id),
         }),
       });
@@ -295,9 +305,7 @@ function DetalhesTecnico() {
             ) : (
               mensagens.map((msg) => {
                 const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const idUsuarioLogado = Number(localStorage.getItem("id_usuario")) || 0;
-
-                const isTecnico = tipoStr === "tecnico" || Number(msg.fk_usuario) === idUsuarioLogado;
+                const isTecnico = tipoStr === "tecnico";
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"
