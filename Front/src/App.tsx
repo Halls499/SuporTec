@@ -26,6 +26,7 @@ import Detalhes from "./pages/ComLogin/Detalhes/Detalhes";
 import DashboardTecnico from "./pages/Tecnico/DashboardTecnico/DashboardTecnico";
 import ChamadosTecnico from "./pages/Tecnico/ChamadosTecnico/ChamadosTecnico";
 import DetalhesTecnico from "./pages/Tecnico/DetalhesTecnico/DetalhesTecnico";
+import { EditarPerfil } from "./pages/Usuario/EditarPerfil";
 
 // Helper para parse seguro do usuário do localStorage
 function obterUsuarioSalvo() {
@@ -67,6 +68,9 @@ function App() {
         {/* Login / Cadastro */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+
+        {/* Editar Perfil */}
+        <Route path="/editar-perfil" element={<EditarPerfil />} />
 
         {/* Usuário (Cliente) */}
         <Route

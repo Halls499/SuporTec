@@ -85,7 +85,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
 
       <div className="user">
         {/* Transformamos esta área em um link para a página de Editar Perfil */}
-        <Link to="/editar-perfil" className="user-info" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Link to="/EditarPerfil" className="user-info" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <motion.div
             className="avatar"
             whileHover={{ scale: 1.1 }}
