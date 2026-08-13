@@ -52,6 +52,28 @@ const itemVariants: Variants = {
   },
 };
 
+// Função auxiliar para ler o ID do usuário de dentro do Token JWT guardado no navegador
+function obterIdUsuarioDoToken(): number | null {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    
+    // O token JWT é dividido por pontos (Header.Payload.Signature)
+    const payloadBase64 = token.split(".")[1];
+    if (!payloadBase64) return null;
+
+    // Decodifica o payload de Base64 para JSON
+    const payloadJson = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(payloadJson);
+
+    // Retorna o ID (pode vir como id_usuario, id ou userId dependendo de como gerou o token)
+    return Number(payload.id_usuario || payload.id || payload.userId) || null;
+  } catch (e) {
+    console.error("Erro ao decodificar o token:", e);
+    return null;
+  }
+}
+
 function DetalhesTecnico() {
   const { id } = useParams<{ id: string }>();
   const [chamado, setChamado] = useState<ChamadoDetalhes | null>(null);
@@ -134,13 +156,11 @@ function DetalhesTecnico() {
     setEnviandoMensagem(true);
     const token = localStorage.getItem("token");
 
-    // CORREÇÃO CRUCIAL AQUI: Buscando o ID correto do técnico no localStorage
-    // Verifique qual é a chave exata que o seu login usa (ex: 'id_usuario', 'usuario_id', 'user')
-    const usuarioSalvo = localStorage.getItem("id_usuario") || localStorage.getItem("usuario_id");
-    const fk_usuario = usuarioSalvo ? Number(usuarioSalvo) : null;
+    // Pega o ID diretamente do token JWT ou do localStorage como plano B
+    const fk_usuario = obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || localStorage.getItem("usuario_id") || 0);
 
     if (!fk_usuario) {
-      alert("Erro: ID do técnico não encontrado no navegador. Faça login novamente.");
+      alert("Erro: Sessão inválida. Faça login novamente.");
       setEnviandoMensagem(false);
       return;
     }
@@ -305,7 +325,10 @@ function DetalhesTecnico() {
             ) : (
               mensagens.map((msg) => {
                 const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const isTecnico = tipoStr === "tecnico";
+                const idLogado = obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || 0);
+
+                // É técnico se o banco diz que é técnico OU se o ID da mensagem bate com o ID logado
+                const isTecnico = tipoStr === "tecnico" || Number(msg.fk_usuario) === idLogado;
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"
