@@ -19,6 +19,7 @@ interface HeaderUserProps {
   usuario: {
     nome: string;
     tipo_usuario: string;
+    foto?: string;
   };
 }
 
@@ -54,7 +55,7 @@ function HeaderUser({ usuario }: HeaderUserProps) {
           <h1>SuporTec</h1>
         </motion.div>
       </Link>
-      
+
       <nav className="user-actions">
         {usuario.tipo_usuario === "tecnico" ? (
           <>
@@ -85,16 +86,40 @@ function HeaderUser({ usuario }: HeaderUserProps) {
 
       <div className="user">
         {/* Transformamos esta área em um link para a página de Editar Perfil */}
-        <Link to="/EditarPerfil" className="user-info" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <Link
+          to="/editar-perfil"
+          className="user-info"
+          style={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           <motion.div
-            className="avatar"
+            className="avatar-container"
             whileHover={{ scale: 1.1 }}
             transition={{ duration: 0.2 }}
           >
-            {usuario?.nome ? usuario.nome.charAt(0).toUpperCase() : "U"}
+            {usuario?.foto ? (
+              <img
+                src={usuario.foto}
+                alt="Foto de Perfil"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                }}
+              />
+            ) : (
+              <div className="avatar">
+                {usuario?.nome ? usuario.nome.charAt(0).toUpperCase() : "U"}
+              </div>
+            )}
           </motion.div>
 
-          <span style={{ color: '#fff' }}>{usuario?.nome || "Usuário"}</span>
+          <span style={{ color: "#fff" }}>{usuario?.nome || "Usuário"}</span>
         </Link>
 
         <motion.button
