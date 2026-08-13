@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { Toaster } from 'react-hot-toast';
 
 import Header from "./components/Header/Header";
 import HeaderUser from "./components/HeaderUser/HeaderUser";
@@ -141,6 +142,7 @@ function App() {
         {/* Redirecionamento padrão para rotas inexistentes */}
         <Route path="*" element={<Home />} />
       </Routes>
+      <Toaster position="top-right" reverseOrder={false} />
     </BrowserRouter>
   );
 }

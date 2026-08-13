@@ -34,7 +34,69 @@ function Dashboard() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
 
+  async function ativarNotificacoesPush() {
+    // 1. Verifica se o navegador suporta
+    if (
+      !("Notification" in window) ||
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window)
+    ) {
+      console.log("Este navegador não suporta notificações Push.");
+      return;
+    }
+
+    // 2. Pede a permissão caso ainda não tenha sido concedida
+    let permissao = Notification.permission;
+
+    if (permissao === "default") {
+      permissao = await Notification.requestPermission();
+    }
+
+    if (permissao !== "granted") {
+      console.log("Usuário negou a permissão de notificação.");
+      return;
+    }
+
+    try {
+      // 3. Registra o Service Worker (sw.js)
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      console.log("Service Worker registrado com sucesso!");
+
+      // 4. Faz a inscrição no PushManager
+      const publicVapidKey = "BEVANANHE89wDqDfDCKtDZSwi6uSPD8NIrxcbgRIQxeZpzo_Bl5acZ5L8Wh-SlpAZAas_lhNIRdvP8BL9iEUJl0";
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: publicVapidKey,
+      });
+
+      // 5. Pega o token salvo no login e envia a inscrição para o MySQL via backend
+      const token = localStorage.getItem("token");
+      const baseUrl = (
+        import.meta.env.VITE_API_URL || "http://localhost:3000"
+      ).replace(/\/$/, "");
+
+      await fetch(`${baseUrl}/api/salvar-inscricao`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(subscription),
+      });
+
+      console.log(
+        "Notificações Push configuradas e salvas no banco com sucesso!",
+      );
+    } catch (err) {
+      console.error("Erro ao ativar notificações push:", err);
+    }
+  }
+
+  // useEffect para buscar chamados e solicitar notificação ao carregar a página
   useEffect(() => {
+    ativarNotificacoesPush(); // Função para ativar notificações push 
+
     const buscarChamados = async () => {
       const token = localStorage.getItem("token");
       const baseUrl = (
@@ -178,9 +240,7 @@ function Dashboard() {
                 Carregando seus chamados...
               </p>
             ) : recentes.length === 0 ? (
-              <p className="dashboard-msg-status">
-                Nenhum chamado encontrado.
-              </p>
+              <p className="dashboard-msg-status">Nenhum chamado encontrado.</p>
             ) : (
               recentes.map((ticket) => (
                 <MotionLink

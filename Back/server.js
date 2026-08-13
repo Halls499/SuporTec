@@ -5,6 +5,7 @@ import pool from "./config/database.js";
 import usuarioRoutes from "./routes/UsuariosRoutes.js";
 import chamadosRoutes from "./routes/NovoChamadoRoutes.js";
 import chatRoutes from "./routes/ChatRoutes.js";
+import pushRoutes from "./routes/PushRoutes.js";
 
 dotenv.config();
 
@@ -14,14 +15,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rota de Healthcheck (Ótima para validar se o servidor e banco estão ok)
+// Rota de Healthcheck
 app.get("/health", async (req, res) => {
   try {
     const connection = await pool.getConnection();
     connection.release();
-    res
-      .status(200)
-      .json({ status: "OK", message: "API e Banco rodando liso!" });
+    res.status(200).json({ status: "OK", message: "API e Banco rodando liso!" });
   } catch (error) {
     res.status(500).json({ status: "ERROR", message: error.message });
   }
@@ -30,7 +29,8 @@ app.get("/health", async (req, res) => {
 // Registra as Rotas da API
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/chamados", chamadosRoutes);
-app.use("/api/chat", chatRoutes); // 👈 Registra o prefixo das rotas do chat
+app.use("/api/chat", chatRoutes);
+app.use("/api/push", pushRoutes); 
 
 // Middleware para rotas não encontradas (404)
 app.use((req, res) => {
@@ -48,7 +48,6 @@ pool
     console.error("❌ Erro ao conectar no banco de dados:", err.message);
   });
 
-// Porta do servidor (pega do ambiente ou usa 3000 local)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
