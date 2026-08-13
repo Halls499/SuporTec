@@ -63,7 +63,8 @@ function Dashboard() {
       console.log("Service Worker registrado com sucesso!");
 
       // 4. Faz a inscrição no PushManager
-      const publicVapidKey = "BEVANANHE89wDqDfDCKtDZSwi6uSPD8NIrxcbgRIQxeZpzo_Bl5acZ5L8Wh-SlpAZAas_lhNIRdvP8BL9iEUJl0";
+      const publicVapidKey =
+        "BEVANANHE89wDqDfDCKtDZSwi6uSPD8NIrxcbgRIQxeZpzo_Bl5acZ5L8Wh-SlpAZAas_lhNIRdvP8BL9iEUJl0";
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -76,7 +77,7 @@ function Dashboard() {
         import.meta.env.VITE_API_URL || "http://localhost:3000"
       ).replace(/\/$/, "");
 
-      await fetch(`${baseUrl}/api/salvar-inscricao`, {
+      await fetch(`${baseUrl}/api/push/salvar-inscricao`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,7 +85,6 @@ function Dashboard() {
         },
         body: JSON.stringify(subscription),
       });
-
       console.log(
         "Notificações Push configuradas e salvas no banco com sucesso!",
       );
@@ -95,7 +95,7 @@ function Dashboard() {
 
   // useEffect para buscar chamados e solicitar notificação ao carregar a página
   useEffect(() => {
-    ativarNotificacoesPush(); // Função para ativar notificações push 
+    ativarNotificacoesPush(); // Função para ativar notificações push
 
     const buscarChamados = async () => {
       const token = localStorage.getItem("token");
