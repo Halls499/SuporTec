@@ -317,13 +317,20 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
+                // Pega o ID de quem está logado como cliente
                 const idUsuarioLogado =
                   Number(localStorage.getItem("id_usuario")) || 0;
 
-                // NO PAINEL DO CLIENTE:
-                // Se o ID da mensagem for IGUAL ao meu ID, fui eu (Cliente).
-                // Se for DIFERENTE, foi o Técnico.
-                const isTecnico = Number(msg.fk_usuario) !== idUsuarioLogado;
+                // Se a mensagem veio do ID do cliente logado, é ele mesmo.
+                // Se o fk_usuario for diferente (ou se o tipo escrito for técnico), é o técnico.
+                const tipoStr = String(
+                  msg.tipo_usuario || msg.tipo || "",
+                ).toLowerCase();
+                const isTecnico =
+                  tipoStr.includes("tecnico") ||
+                  tipoStr.includes("técnico") ||
+                  (idUsuarioLogado > 0 &&
+                    Number(msg.fk_usuario) !== idUsuarioLogado);
 
                 const classeItem = isTecnico
                   ? "chat-mensagem-item tecnico"

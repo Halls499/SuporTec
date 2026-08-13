@@ -310,20 +310,17 @@ function DetalhesTecnico() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const tipoStr = String(
-                  msg.tipo_usuario || msg.tipo || "",
-                ).toLowerCase();
-                const nomeStr = String(msg.nome_usuario || "").toLowerCase();
                 const idUsuarioLogado =
                   Number(localStorage.getItem("id_usuario")) || 0;
 
-                // NO PAINEL DO TÉCNICO:
-                // É considerado técnico se a API especificar, ou se o ID do remetente for IGUAL ao do técnico logado.
+                const tipoStr = String(
+                  msg.tipo_usuario || msg.tipo || "",
+                ).toLowerCase();
+
+                // No painel do técnico: é técnico se a API disser explicitamente OU se o ID da mensagem bater com o meu ID logado
                 const isTecnico =
                   tipoStr.includes("tecnico") ||
                   tipoStr.includes("técnico") ||
-                  nomeStr.includes("tecnico") ||
-                  nomeStr.includes("técnico") ||
                   tipoStr === "2" ||
                   tipoStr === "admin" ||
                   (idUsuarioLogado > 0 &&
