@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 interface Chamado {
   id_chamado: number;
   situacao: string;
+  id_tecnico?: number; // Adicionado para garantir a tipagem correta
 }
 
 interface ConquistaAPI {
@@ -52,6 +53,7 @@ function DashboardTecnico() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [conquistasBanco, setConquistasBanco] = useState<ConquistaAPI[]>([]);
   const [nomeTecnico, setNomeTecnico] = useState("Técnico");
+  const [idTecnicoLogado, setIdTecnicoLogado] = useState<number | null>(null);
 
   useEffect(() => {
     const usuarioSalvo = localStorage.getItem("usuario");
@@ -59,6 +61,9 @@ function DashboardTecnico() {
       try {
         const parsed = JSON.parse(usuarioSalvo);
         if (parsed.nome) setNomeTecnico(parsed.nome);
+        // Captura o ID do técnico logado
+        if (parsed.id_usuario) setIdTecnicoLogado(Number(parsed.id_usuario));
+        else if (parsed.id) setIdTecnicoLogado(Number(parsed.id));
       } catch {
         // ignora
       }
@@ -98,21 +103,30 @@ function DashboardTecnico() {
     }
 
     buscarChamados();
-    buscarConquistas();
+    buscarConquistas(); 
   }, []);
 
-  const novos = chamados.filter((c) =>
+  // Filtra os chamados do técnico logado
+  const chamadosDoTecnico = chamados.filter((c: any) => 
+    idTecnicoLogado ? c.id_tecnico === idTecnicoLogado : true
+  );
+
+  // Contagem baseada nos chamados filtrados do técnico
+  const novos = chamadosDoTecnico.filter((c) =>
     c.situacao?.toLowerCase().includes("novo"),
   ).length;
-  const resolvidos = chamados.filter((c) =>
+  
+  const resolvidos = chamadosDoTecnico.filter((c) =>
     c.situacao?.toLowerCase().includes("resolvido"),
   ).length;
-  const emAndamento = chamados.filter(
+  
+  const emAndamento = chamadosDoTecnico.filter(
     (c) =>
       c.situacao?.toLowerCase().includes("andamento") ||
       c.situacao?.toLowerCase().includes("atendimento"),
   ).length;
-  const aguardando = chamados.filter((c) =>
+  
+  const aguardando = chamadosDoTecnico.filter((c) =>
     c.situacao?.toLowerCase().includes("aguardando"),
   ).length;
 
