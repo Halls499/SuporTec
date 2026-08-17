@@ -6,6 +6,7 @@ import usuarioRoutes from "./routes/UsuariosRoutes.js";
 import chamadosRoutes from "./routes/NovoChamadoRoutes.js";
 import chatRoutes from "./routes/ChatRoutes.js";
 import pushRoutes from "./routes/PushRoutes.js";
+import conquistasRoutes from "./routes/ConquistasRoutes.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/chamados", chamadosRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/push", pushRoutes); 
+app.use("/api/conquistas", conquistasRoutes); // 👈 2. Registre a rota aqui
 
 // Middleware para rotas não encontradas (404)
 app.use((req, res) => {

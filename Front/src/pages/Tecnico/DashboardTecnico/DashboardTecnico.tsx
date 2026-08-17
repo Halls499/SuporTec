@@ -98,6 +98,33 @@ function DashboardTecnico() {
     c.situacao?.toLowerCase().includes("aguardando"),
   ).length;
 
+  // 🏆 Lista dinâmica de conquistas baseada nas métricas reais
+  const listaConquistas = [
+    // --- Suporte Geral ---
+    { id: "mestre", categoria: "Suporte Geral", ico: "🏆", tit: "Mestre do Suporte", desc: "Resolva mais de 100 chamados.", status: resolvidos >= 100 ? "desbloqueada" : "bloqueada" },
+    { id: "agil", categoria: "Suporte Geral", ico: "⚡", tit: "Atendimento Ágil", desc: "Resolva 10 chamados em menos de 3 horas.", status: "bloqueada" },
+    { id: "precisao", categoria: "Suporte Geral", ico: "🎯", tit: "Precisão no Diagnóstico", desc: "Resolva 95% dos chamados corretamente.", status: "bloqueada" },
+    { id: "comunicador", categoria: "Suporte Geral", ico: "💬", tit: "Comunicador", desc: "Responda 50 chamados em menos de 1 hora.", status: "bloqueada" },
+    { id: "descanso", categoria: "Suporte Geral", ico: "🔥", tit: "Sem Descanso", desc: "Resolva chamados durante 7 dias consecutivos.", status: "bloqueada" },
+
+    // --- Especializações ---
+    { id: "hardware", categoria: "Especializações", ico: "💻", tit: "Especialista em Hardware", desc: "Conclua 50 chamados de Hardware.", status: "bloqueada" },
+    { id: "software", categoria: "Especializações", ico: "🖥️", tit: "Especialista em Software", desc: "Conclua 50 chamados de Software.", status: "bloqueada" },
+    { id: "redes", categoria: "Especializações", ico: "🌐", tit: "Especialista em Redes", desc: "Conclua 50 chamados de Redes.", status: "bloqueada" },
+    { id: "impressoras", categoria: "Especializações", ico: "🖨️", tit: "Especialista em Impressoras", desc: "Conclua 50 chamados de Impressoras.", status: "bloqueada" },
+    { id: "seguranca", categoria: "Especializações", ico: "🔐", tit: "Especialista em Segurança", desc: "Conclua 30 chamados relacionados à segurança.", status: "bloqueada" },
+
+    // --- Qualidade ---
+    { id: "excelencia", categoria: "Qualidade", ico: "⭐", tit: "Excelência no Atendimento", desc: "Receba média superior a 4,5 estrelas.", status: "bloqueada" },
+    { id: "cliente", categoria: "Qualidade", ico: "🤝", tit: "Cliente Satisfeito", desc: "Receba 50 avaliações com 5 estrelas.", status: "bloqueada" },
+    { id: "plantonista", categoria: "Qualidade", ico: "🌙", tit: "Plantonista", desc: "Resolva 10 chamados fora do horário comercial.", status: "bloqueada" },
+    { id: "primeiro", categoria: "Qualidade", ico: "🚀", tit: "Primeiro Atendimento", desc: "Conclua seu primeiro chamado.", status: resolvidos >= 1 ? "desbloqueada" : "bloqueada" },
+    { id: "cem", categoria: "Qualidade", ico: "💯", tit: "Cem por Cento", desc: "Receba 10 avaliações cinco estrelas consecutivas.", status: "bloqueada" },
+  ];
+
+  // Conta dinamicamente quantas conquistas estão desbloqueadas
+  const totalDesbloqueadas = listaConquistas.filter(c => c.status === "desbloqueada").length;
+
   return (
     <main className="home-login-page">
       <motion.section
@@ -157,112 +184,55 @@ function DashboardTecnico() {
         <motion.div className="conquistas" variants={containerVariants}>
           <motion.h2 variants={itemVariants}>🏆 Conquistas</motion.h2>
           <motion.h3 variants={itemVariants}>
-            8 de 15 conquistas desbloqueadas
+            {totalDesbloqueadas} de {listaConquistas.length} conquistas desbloqueadas
           </motion.h3>
 
           {/* Seção Suporte Geral */}
           <motion.h4 variants={itemVariants}>📋 Suporte Geral</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
-            <ConquistaCard
-              ico="🏆"
-              tit="Mestre do Suporte"
-              desc="Resolva mais de 100 chamados."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="⚡"
-              tit="Atendimento Ágil"
-              desc="Resolva 10 chamados em menos de 3 horas."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="🎯"
-              tit="Precisão no Diagnóstico"
-              desc="Resolva 95% dos chamados corretamente."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="💬"
-              tit="Comunicador"
-              desc="Responda 50 chamados em menos de 1 hora."
-              status="bloqueada"
-            />
-            <ConquistaCard
-              ico="🔥"
-              tit="Sem Descanso"
-              desc="Resolva chamados durante 7 dias consecutivos."
-              status="bloqueada"
-            />
+            {listaConquistas
+              .filter((c) => c.categoria === "Suporte Geral")
+              .map((conquista) => (
+                <ConquistaCard
+                  key={conquista.id}
+                  ico={conquista.ico}
+                  tit={conquista.tit}
+                  desc={conquista.desc}
+                  status={conquista.status}
+                />
+              ))}
           </motion.div>
 
           {/* Seção Especializações */}
           <motion.h4 variants={itemVariants}>💻 Especializações</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
-            <ConquistaCard
-              ico="💻"
-              tit="Especialista em Hardware"
-              desc="Conclua 50 chamados de Hardware."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="🖥️"
-              tit="Especialista em Software"
-              desc="Conclua 50 chamados de Software."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="🌐"
-              tit="Especialista em Redes"
-              desc="Conclua 50 chamados de Redes."
-              status="bloqueada"
-            />
-            <ConquistaCard
-              ico="🖨️"
-              tit="Especialista em Impressoras"
-              desc="Conclua 50 chamados de Impressoras."
-              status="bloqueada"
-            />
-            <ConquistaCard
-              ico="🔐"
-              tit="Especialista em Segurança"
-              desc="Conclua 30 chamados relacionados à segurança."
-              status="bloqueada"
-            />
+            {listaConquistas
+              .filter((c) => c.categoria === "Especializações")
+              .map((conquista) => (
+                <ConquistaCard
+                  key={conquista.id}
+                  ico={conquista.ico}
+                  tit={conquista.tit}
+                  desc={conquista.desc}
+                  status={conquista.status}
+                />
+              ))}
           </motion.div>
 
           {/* Seção Qualidade */}
           <motion.h4 variants={itemVariants}>⭐ Qualidade</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
-            <ConquistaCard
-              ico="⭐"
-              tit="Excelência no Atendimento"
-              desc="Receba média superior a 4,5 estrelas."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="🤝"
-              tit="Cliente Satisfeito"
-              desc="Receba 50 avaliações com 5 estrelas."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="🌙"
-              tit="Plantonista"
-              desc="Resolva 10 chamados fora do horário comercial."
-              status="bloqueada"
-            />
-            <ConquistaCard
-              ico="🚀"
-              tit="Primeiro Atendimento"
-              desc="Conclua seu primeiro chamado."
-              status="desbloqueada"
-            />
-            <ConquistaCard
-              ico="💯"
-              tit="Cem por Cento"
-              desc="Receba 10 avaliações cinco estrelas consecutivas."
-              status="bloqueada"
-            />
+            {listaConquistas
+              .filter((c) => c.categoria === "Qualidade")
+              .map((conquista) => (
+                <ConquistaCard
+                  key={conquista.id}
+                  ico={conquista.ico}
+                  tit={conquista.tit}
+                  desc={conquista.desc}
+                  status={conquista.status}
+                />
+              ))}
           </motion.div>
         </motion.div>
 
@@ -271,7 +241,6 @@ function DashboardTecnico() {
           style={{ marginTop: "30px", textAlign: "center" }}
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            {/* 🎯 Ajuste o caminho conforme declarado no seu App.tsx */}
             <Link to="/chamados-tecnico" className="new-ticket">
               Ver todos os chamados
             </Link>
