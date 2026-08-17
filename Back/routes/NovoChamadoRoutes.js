@@ -26,4 +26,7 @@ router.patch(
   chamadoController.cancelarChamadoPorId,
 );
 
+// Rota para o técnico aceitar um chamado
+router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
+
 export default router;

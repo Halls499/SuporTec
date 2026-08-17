@@ -114,7 +114,7 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
      SET situacao = ?, 
          fk_tecnico = ?
      WHERE id_chamado = ? AND fk_organizacao = ?`,
-    [situacao, fk_tecnico || null, id_chamado, fk_organizacao]
+    [situacao, fk_tecnico || null, id_chamado, fk_organizacao],
   );
 
   return resultado.affectedRows > 0;
@@ -126,4 +126,13 @@ export async function buscarClienteDoChamado(id_chamado) {
     [id_chamado],
   );
   return rows[0];
+}
+
+export async function aceitarChamadoModel(id_tecnico, id_chamado) {
+  const query = `
+    UPDATE chamados 
+    SET id_tecnico = ?, situacao = 'Em andamento' 
+    WHERE id_chamado = ?
+  `;
+  return await conexao.execute(query, [id_tecnico, id_chamado]);
 }

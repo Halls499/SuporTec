@@ -5,8 +5,10 @@ import { useState, useEffect } from "react";
 
 interface Chamado {
   id_chamado: number;
-  situacao: string;
-  id_tecnico?: number; // Adicionado para garantir a tipagem correta
+  titulo?: string;
+  descricao?: string;
+  situacao: 'Novo' | 'Em andamento' | 'Aguardando cliente' | 'Resolvido' | 'Cancelado';
+  id_tecnico?: number | null;
 }
 
 interface ConquistaAPI {
@@ -53,7 +55,49 @@ function DashboardTecnico() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [conquistasBanco, setConquistasBanco] = useState<ConquistaAPI[]>([]);
   const [nomeTecnico, setNomeTecnico] = useState("Técnico");
-  const [idTecnicoLogado, setIdTecnicoLogado] = useState<number | null>(null);
+
+  const [idTecnicoLogado] = useState<number | null>(() => {
+    const usuarioSalvo = localStorage.getItem("usuario");
+    if (usuarioSalvo) {
+      try {
+        const parsed = JSON.parse(usuarioSalvo);
+        return Number(parsed.id_usuario || parsed.id) || null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const token = localStorage.getItem("token");
+  const baseUrl = (
+    import.meta.env.VITE_API_URL || "http://localhost:3000"
+  ).replace(/\/$/, "");
+
+  async function buscarDados() {
+    try {
+      const [resChamados, resConquistas] = await Promise.all([
+        fetch(`${baseUrl}/api/chamados/tecnico`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${baseUrl}/api/conquistas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (resChamados.ok) {
+        const dadosChamados = await resChamados.json();
+        setChamados(Array.isArray(dadosChamados) ? dadosChamados : []);
+      }
+
+      if (resConquistas.ok) {
+        const dadosConquistas = await resConquistas.json();
+        setConquistasBanco(Array.isArray(dadosConquistas) ? dadosConquistas : []);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar dados:", err);
+    }
+  }
 
   useEffect(() => {
     const usuarioSalvo = localStorage.getItem("usuario");
@@ -61,73 +105,44 @@ function DashboardTecnico() {
       try {
         const parsed = JSON.parse(usuarioSalvo);
         if (parsed.nome) setNomeTecnico(parsed.nome);
-        // Captura o ID do técnico logado
-        if (parsed.id_usuario) setIdTecnicoLogado(Number(parsed.id_usuario));
-        else if (parsed.id) setIdTecnicoLogado(Number(parsed.id));
       } catch {
         // ignora
       }
     }
 
-    const token = localStorage.getItem("token");
-    const baseUrl = (
-      import.meta.env.VITE_API_URL || "http://localhost:3000"
-    ).replace(/\/$/, "");
+    buscarDados();
+  }, [idTecnicoLogado]);
 
-    async function buscarChamados() {
-      try {
-        const resposta = await fetch(`${baseUrl}/api/chamados`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          setChamados(Array.isArray(dados) ? dados : []);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar chamados:", err);
+  // Função para o técnico aceitar um chamado específico
+  async function handleAceitarChamado(id_chamado: number) {
+    try {
+      const response = await fetch(`${baseUrl}/api/chamados/${id_chamado}/aceitar`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        // Atualiza a lista localmente para refletir a mudança instantaneamente
+        buscarDados();
+      } else {
+        alert("Não foi possível aceitar o chamado.");
       }
+    } catch (error) {
+      console.error("Erro ao aceitar chamado:", error);
     }
+  }
 
-    async function buscarConquistas() {
-      try {
-        const resposta = await fetch(`${baseUrl}/api/conquistas`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (resposta.ok) {
-          const dados = await resposta.json();
-          setConquistasBanco(Array.isArray(dados) ? dados : []);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar conquistas:", err);
-      }
-    }
+  // Exibe todos os chamados retornados pela rota de técnico
+  const chamadosDoTecnico = chamados;
 
-    buscarChamados();
-    buscarConquistas();
-  }, []);
+  const novos = chamadosDoTecnico.filter((c) => c.situacao === "Novo").length;
+  const resolvidos = chamadosDoTecnico.filter((c) => c.situacao === "Resolvido").length;
+  const emAndamento = chamadosDoTecnico.filter((c) => c.situacao === "Em andamento").length;
+  const aguardando = chamadosDoTecnico.filter((c) => c.situacao === "Aguardando cliente").length;
 
-  const chamadosDoTecnico = chamados.filter((c: any) =>
-    idTecnicoLogado ? c.id_tecnico === idTecnicoLogado : true,
-  );
-
-  // Contagem baseada nos chamados filtrados do técnico
-  const novos = chamadosDoTecnico.filter((c) =>
-    c.situacao?.includes("Novo"),
-  ).length;
-
-  const resolvidos = chamadosDoTecnico.filter((c) =>
-    c.situacao?.includes("Resolvido"),
-  ).length;
-
-  const aguardando = chamadosDoTecnico.filter((c) =>
-    c.situacao?.includes("Aguardando cliente"),
-  ).length;
-
-  const emAndamento = chamadosDoTecnico.filter((c) =>
-    c.situacao?.includes("Em andamento"),
-  ).length;
-
-  // Mapeamento inteligente que categoriza com base no ID ou no nome da conquista
   const listaConquistas = conquistasBanco.map((c) => {
     let ico = "🏅";
     let categoria = "Suporte Geral";
@@ -172,7 +187,7 @@ function DashboardTecnico() {
   });
 
   const totalDesbloqueadas = listaConquistas.filter(
-    (c) => c.status === "desbloqueada",
+    (c) => c.status === "desbloqueada"
   ).length;
 
   return (
@@ -200,13 +215,15 @@ function DashboardTecnico() {
             Gerencie os chamados atribuídos a você e acompanhe o andamento dos
             atendimentos.
           </p>
-          <motion.p
-            animate={{ x: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 2 }}
-          >
-            ⚠️ Você possui {novos} chamado{novos === 1 ? "" : "s"} novo
-            {novos === 1 ? "" : "s"} aguardando atendimento.
-          </motion.p>
+          {novos > 0 && (
+            <motion.p
+              animate={{ x: [0, 5, 0] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+            >
+              ⚠️ Você possui {novos} chamado{novos === 1 ? "" : "s"} novo
+              {novos === 1 ? "" : "s"} aguardando atendimento.
+            </motion.p>
+          )}
         </motion.div>
 
         <motion.div className="summary-cards" variants={containerVariants}>
@@ -214,7 +231,7 @@ function DashboardTecnico() {
             { ico: "📥", txt: "Novos", total: novos },
             { ico: "✅", txt: "Resolvidos", total: resolvidos },
             { ico: "⏳", txt: "Em andamento", total: emAndamento },
-            { ico: "💬", txt: "Aguardando resposta", total: aguardando },
+            { ico: "💬", txt: "Aguardando cliente", total: aguardando },
           ].map((item, index) => (
             <motion.div
               key={index}
@@ -227,6 +244,29 @@ function DashboardTecnico() {
               <p>{item.txt}</p>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Seção opcional para listar chamados novos e permitir aceitá-los diretamente */}
+        <motion.div className="chamados-recentes" variants={containerVariants} style={{ marginTop: "20px" }}>
+          <motion.h3 variants={itemVariants}>📥 Chamados Disponíveis para Aceitar</motion.h3>
+          <div style={{ display: "grid", gap: "10px", marginTop: "10px" }}>
+            {chamadosDoTecnico
+              .filter((c) => c.situacao === "Novo" && (!c.id_tecnico || c.id_tecnico === idTecnicoLogado))
+              .map((chamado) => (
+                <div key={chamado.id_chamado} style={{ background: "#1e1e2f", padding: "15px", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h4 style={{ margin: 0, color: "#fff" }}>Chamado #{chamado.id_chamado}</h4>
+                    <p style={{ margin: "5px 0 0 0", color: "#aaa" }}>{chamado.descricao || "Sem descrição"}</p>
+                  </div>
+                  <button 
+                    onClick={() => handleAceitarChamado(chamado.id_chamado)}
+                    style={{ background: "#4f46e5", color: "#fff", border: "none", padding: "8px 15px", borderRadius: "5px", cursor: "pointer" }}
+                  >
+                    Aceitar Chamado
+                  </button>
+                </div>
+              ))}
+          </div>
         </motion.div>
 
         <motion.div className="conquistas" variants={containerVariants}>
