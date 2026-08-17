@@ -10,6 +10,8 @@ interface Chamado {
   prioridade: string;
   situacao: string;
   data_abertura: string;
+  id_tecnico?: number | null;
+  fk_tecnico?: number | null;
 }
 
 const containerVariants: Variants = {
@@ -37,12 +39,29 @@ const cardVariants: Variants = {
   },
 };
 
+// Função auxiliar para pegar o ID do técnico logado através do token
+function obterIdUsuarioDoToken(): number | null {
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return null;
+    const payloadBase64 = token.split(".")[1];
+    if (!payloadBase64) return null;
+    const payloadJson = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"));
+    const payload = JSON.parse(payloadJson);
+    return Number(payload.id_usuario || payload.id || payload.userId) || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function ChamadosTecnico() {
   const navigate = useNavigate();
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔄 Busca todos os chamados da organização para o técnico
+  const idTecnicoLogado = obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || 0);
+
+  // 🔄 Busca todos os chamados e filtra apenas os do técnico logado
   useEffect(() => {
     async function carregarChamados() {
       const token = localStorage.getItem("token");
@@ -62,7 +81,15 @@ function ChamadosTecnico() {
         const dados = await resposta.json();
 
         if (resposta.ok) {
-          setChamados(Array.isArray(dados) ? dados : []);
+          const listaRecebida = Array.isArray(dados) ? dados : [];
+          
+          // 🔍 FILTRO ESSENCIAL: Mantém apenas os chamados do técnico logado
+          const chamadosFiltrados = listaRecebida.filter((c) => {
+            const tecnicoId = Number(c.id_tecnico || c.fk_tecnico || 0);
+            return tecnicoId === Number(idTecnicoLogado);
+          });
+
+          setChamados(chamadosFiltrados);
         }
       } catch (erro) {
         console.error("Erro ao buscar chamados do técnico:", erro);
@@ -72,7 +99,7 @@ function ChamadosTecnico() {
     }
 
     carregarChamados();
-  }, []);
+  }, [idTecnicoLogado]);
 
   const formatarData = (dataIso: string) => {
     if (!dataIso) return "Data indisponível";

@@ -213,19 +213,24 @@ export async function cancelarChamadoPorId(req, res) {
 }
 
 export async function aceitarChamado(req, res) {
-  const { id } = req.params; // ID do chamado vindo da URL
-  const id_tecnico = req.usuario.id_usuario || req.usuario.id; // ID do técnico autenticado
+  const { id } = req.params; 
+  const id_tecnico = req.usuario.id_usuario || req.usuario.id; 
 
   try {
-    const [resultado] = await chamadoModel.aceitarChamadoModel(id_tecnico, id);
+    console.log(`[ACEITAR] Tentando aceitar chamado ${id} para o técnico ${id_tecnico}`);
+    
+    const resultado = await chamadoModel.aceitarChamadoModel(id_tecnico, id);
 
-    if (resultado.affectedRows === 0) {
+    // Como o pool.query retorna um array [result, fields], verificamos o affectedRows
+    const affectedRows = resultado[0]?.affectedRows || resultado.affectedRows;
+
+    if (!affectedRows || affectedRows === 0) {
       return res.status(404).json({ erro: "Chamado não encontrado." });
     }
 
     return res.status(200).json({ mensagem: "Chamado aceito com sucesso!" });
   } catch (error) {
-    console.error("Erro ao aceitar chamado:", error);
-    return res.status(500).json({ erro: "Erro interno no servidor." });
+    console.error("ERRO DETALHADO AO ACEITAR CHAMADO:", error);
+    return res.status(500).json({ erro: "Erro interno no servidor.", detalhes: error.message });
   }
 }

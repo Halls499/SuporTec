@@ -1,434 +1,92 @@
-import "./DetalhesTecnico.css";
 import { Link, useParams } from "react-router-dom";
+import "./DetalhesTecnico.css";
 import { motion, type Variants } from "framer-motion";
 import { useState, useEffect } from "react";
 
-interface ChamadoDetalhes {
+interface Chamado {
   id_chamado: number;
-  titulo: string;
-  descricao: string;
-  categoria: string;
-  prioridade: string;
+  titulo?: string;
+  descricao?: string;
   situacao: string;
   data_abertura?: string;
-  criado_em?: string;
-  data?: string;
-  nome_solicitante?: string;
-  contato?: string;
-  fk_usuario?: number;
-}
-
-interface Mensagem {
-  id_mensagem: number;
-  mensagem: string;
-  data_envio?: string;
-  criado_em?: string;
-  data?: string;
-  fk_usuario: number;
-  fk_chamado: number;
-  nome_usuario?: string;
-  tipo_usuario?: string;
 }
 
 const containerVariants: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut",
-      staggerChildren: 0.1,
-    },
-  },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Função auxiliar para ler o ID do usuário de dentro do Token JWT guardado no navegador
-function obterIdUsuarioDoToken(): number | null {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-
-    const payloadBase64 = token.split(".")[1];
-    if (!payloadBase64) return null;
-
-    const payloadJson = atob(
-      payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
-    );
-    const payload = JSON.parse(payloadJson);
-
-    return Number(payload.id_usuario || payload.id || payload.userId) || null;
-  } catch (e) {
-    console.error("Erro ao decodificar o token:", e);
-    return null;
-  }
-}
-
-function DetalhesTecnico() {
-  const { id } = useParams<{ id: string }>();
-  const [chamado, setChamado] = useState<ChamadoDetalhes | null>(null);
-  const [mensagens, setMensagens] = useState<Mensagem[]>([]);
+export default function DetalhesTecnico() {
+  const { id } = useParams();
+  const [chamado, setChamado] = useState<Chamado | null>(null);
   const [loading, setLoading] = useState(true);
-  const [novaResposta, setNovaResposta] = useState("");
-  const [novoStatus, setNovoStatus] = useState("");
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
-  const [enviandoMensagem, setEnviandoMensagem] = useState(false);
-
-  // Configuração limpa da URL base (suporta ambiente local e online via VITE_API_URL)
+  const token = localStorage.getItem("token");
   const baseUrl = (
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function carregarDadosTecnico() {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        if (isMounted) setLoading(false);
-        return;
-      }
-
+    async function buscarDetalhes() {
       try {
-        const respostaChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+        const res = await fetch(`${baseUrl}/api/chamados/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        let dadosChamadoFinal = null;
-        if (respostaChamado.ok) {
-          const dados = await respostaChamado.json();
-          dadosChamadoFinal = Array.isArray(dados) ? dados[0] : dados;
-          if (isMounted) {
-            setChamado(dadosChamadoFinal || null);
-            setNovoStatus(dadosChamadoFinal?.situacao || "Novo");
-          }
-        }
-
-        const respostaChat = await fetch(`${baseUrl}/api/chat/${id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (respostaChat.ok) {
-          const dadosChat = await respostaChat.json();
-          if (isMounted) {
-            setMensagens(Array.isArray(dadosChat) ? dadosChat : []);
-          }
+        if (res.ok) {
+          const data = await res.json();
+          setChamado(data);
         }
       } catch (err) {
-        console.error("Erro ao carregar detalhes técnicos:", err);
+        console.error("Erro ao buscar detalhes do chamado:", err);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     }
-
-    if (id) {
-      carregarDadosTecnico();
-    } else {
-      setLoading(false);
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [id, baseUrl]);
-
-  const handleEnviarResposta = async () => {
-    if (!novaResposta.trim() || !id) return;
-
-    setEnviandoMensagem(true);
-    const token = localStorage.getItem("token");
-
-    const fk_usuario =
-      obterIdUsuarioDoToken() ||
-      Number(
-        localStorage.getItem("id_usuario") ||
-          localStorage.getItem("usuario_id") ||
-          0,
-      );
-
-    if (!fk_usuario) {
-      alert("Erro: Sessão inválida. Faça login novamente.");
-      setEnviandoMensagem(false);
-      return;
-    }
-
-    try {
-      const resposta = await fetch(`${baseUrl}/api/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mensagem: novaResposta.trim(),
-          fk_usuario: fk_usuario,
-          fk_chamado: Number(id),
-        }),
-      });
-
-      if (resposta.ok) {
-        const novaMensagemCriada = await resposta.json();
-        setMensagens((prev) => [...prev, novaMensagemCriada]);
-        setNovaResposta("");
-      } else {
-        alert("Erro ao enviar resposta.");
-      }
-    } catch (err) {
-      console.error("Erro ao enviar mensagem:", err);
-      alert("Falha de comunicação com o servidor.");
-    } finally {
-      setEnviandoMensagem(false);
-    }
-  };
-
-  const handleAtualizarStatus = async () => {
-    if (!id) return;
-    setIsUpdatingStatus(true);
-    const token = localStorage.getItem("token");
-
-    const idTecnicoLogado =
-      obterIdUsuarioDoToken() ||
-      Number(
-        localStorage.getItem("id_usuario") ||
-          localStorage.getItem("usuario_id") ||
-          0,
-      );
-
-    try {
-      // Envia explicitamente o status e o ID do técnico para o backend
-      const resposta = await fetch(`${baseUrl}/api/chamados/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          situacao: novoStatus,
-          fk_tecnico: idTecnicoLogado,
-        }),
-      });
-
-      if (resposta.ok) {
-        alert("Status atualizado com sucesso!");
-        if (chamado) {
-          setChamado({ ...chamado, situacao: novoStatus });
-        }
-      } else {
-        const dadosErro = await resposta.json().catch(() => ({}));
-        alert(dadosErro?.mensagem || "Erro ao atualizar o status.");
-      }
-    } catch (err) {
-      console.error("Erro na requisição de atualização:", err);
-      alert("Falha de comunicação com o servidor.");
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
-
-  const formatarData = (dataIso?: string) => {
-    if (!dataIso) return "Data não disponível";
-    const data = new Date(dataIso);
-    if (isNaN(data.getTime())) return dataIso;
-    return data.toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+    if (id) buscarDetalhes();
+  }, [id, baseUrl, token]);
 
   if (loading) {
-    return (
-      <main className="detalhes-tecnico-page">
-        <p className="detalhes-tecnico-loading">
-          Carregando informações do chamado...
-        </p>
-      </main>
-    );
+    return <div className="detalhes-tecnico-loading">Carregando detalhes...</div>;
   }
-
-  if (!chamado) {
-    return (
-      <main className="detalhes-tecnico-page">
-        <p className="detalhes-tecnico-loading">Chamado não encontrado.</p>
-        <div className="detalhes-tecnico-erro-acao">
-          <Link to="/chamados-tecnico" className="btn-voltar">
-            ← Voltar aos chamados
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const dataAbertoChamado =
-    chamado.data_abertura || chamado.criado_em || chamado.data;
 
   return (
     <main className="detalhes-tecnico-page">
-      <motion.div
+      <motion.section
         className="detalhes-tecnico-container"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.h1 variants={itemVariants}>Detalhes do chamado</motion.h1>
-
-        <motion.p className="subtitle" variants={itemVariants}>
-          Visualize as informações do chamado, responda o cliente e atualize o
-          status do atendimento.
-        </motion.p>
-
-        {/* Informações */}
-        <motion.section className="detalhes-card" variants={itemVariants}>
-          <h2>Chamado #{String(chamado.id_chamado || 0).padStart(3, "0")}</h2>
-          <div className="info-group">
-            <p>
-              <strong>👤 Cliente:</strong>{" "}
-              {chamado.nome_solicitante || "Não informado"}
-            </p>
-            <p>
-              <strong>📞 Contato:</strong> {chamado.contato || "Não informado"}
-            </p>
-            <p>
-              <strong>💻 Problema:</strong> {chamado.titulo || "Sem título"}
-            </p>
-            <p>
-              <strong>📂 Categoria:</strong>{" "}
-              {chamado.categoria || "Não informada"}
-            </p>
-            <p>
-              <strong>🚨 Prioridade:</strong> {chamado.prioridade || "Normal"}
-            </p>
-            <p>
-              <strong>📌 Status:</strong> {chamado.situacao || "Novo"}
-            </p>
-            <p>
-              <strong>📅 Aberto em:</strong> {formatarData(dataAbertoChamado)}
-            </p>
-            <p>
-              <strong>📝 Descrição inicial:</strong>
-            </p>
-            <p className="descricao">{chamado.descricao || "Sem descrição"}</p>
-          </div>
-        </motion.section>
-
-        {/* Histórico do Chat */}
-        <motion.section className="detalhes-card" variants={itemVariants}>
-          <h2>Histórico de mensagens</h2>
-          <div className="chat-box">
-            {mensagens.length === 0 ? (
-              <p className="chat-vazio">
-                Ainda não há mensagens nesta conversa.
-              </p>
-            ) : (
-              mensagens.map((msg) => {
-                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const idLogado =
-                  obterIdUsuarioDoToken() ||
-                  Number(localStorage.getItem("id_usuario") || 0);
-
-                const isTecnico =
-                  tipoStr === "tecnico" || Number(msg.fk_usuario) === idLogado;
-
-                const classeMensagem = isTecnico
-                  ? "mensagem tecnico"
-                  : "mensagem cliente";
-
-                const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
-                const dataMsg = msg.data_envio || msg.criado_em || msg.data;
-
-                return (
-                  <motion.div
-                    key={msg.id_mensagem || Math.random()}
-                    className={classeMensagem}
-                    initial={{ opacity: 0, x: isTecnico ? 20 : -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                  >
-                    <strong>{rotuloUsuario}</strong>
-                    <p>{msg.mensagem || ""}</p>
-                    <span>{formatarData(dataMsg)}</span>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
-        </motion.section>
-
-        {/* Resposta */}
-        <motion.section className="detalhes-card" variants={itemVariants}>
-          <h2>Responder chamado</h2>
-          <motion.textarea
-            className="textarea-resposta"
-            placeholder="Digite uma resposta ao cliente..."
-            value={novaResposta}
-            onChange={(e) => setNovaResposta(e.target.value)}
-            whileFocus={{ scale: 1.01, borderColor: "#3b82f6" }}
-            disabled={enviandoMensagem}
-          />
-          <motion.button
-            className="btn-enviar"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleEnviarResposta}
-            disabled={enviandoMensagem}
-          >
-            {enviandoMensagem ? "Enviando..." : "Enviar resposta"}
-          </motion.button>
-        </motion.section>
-
-        {/* Status */}
-        <motion.section className="detalhes-card" variants={itemVariants}>
-          <h2>Atualizar status</h2>
-          <motion.select
-            className="select-status"
-            value={novoStatus}
-            onChange={(e) => setNovoStatus(e.target.value)}
-            whileFocus={{ scale: 1.01 }}
-          >
-            <option value="Novo">Novo</option>
-            <option value="Em andamento">Em andamento</option>
-            <option value="Aguardando cliente">Aguardando cliente</option>
-            <option value="Resolvido">Resolvido</option>
-            <option value="Cancelado">Cancelado</option>
-          </motion.select>
-          <motion.button
-            className="btn-salvar"
-            onClick={handleAtualizarStatus}
-            disabled={isUpdatingStatus}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isUpdatingStatus ? "Salvando..." : "Salvar alterações"}
-          </motion.button>
-        </motion.section>
-
-        <motion.div variants={itemVariants} className="voltar-container">
-          <Link to="/chamados-tecnico" className="btn-voltar">
-            ← Voltar aos chamados
-          </Link>
+        <motion.div variants={itemVariants}>
+          <h1>Detalhes do Chamado #{id}</h1>
+          <p className="subtitle">Acompanhe as informações e interações deste atendimento.</p>
         </motion.div>
-      </motion.div>
+
+        {chamado ? (
+          <>
+            <motion.div className="detalhes-card" variants={itemVariants}>
+              <h2>Informações do Chamado</h2>
+              <p><strong>Título:</strong> {chamado.titulo || "Sem título"}</p>
+              <p className="descricao"><strong>Descrição:</strong> {chamado.descricao || "Sem descrição"}</p>
+              <p><strong>Situação:</strong> {chamado.situacao}</p>
+            </motion.div>
+          </>
+        ) : (
+          <div className="detalhes-card">
+            <p className="chat-vazio">Chamado não encontrado.</p>
+          </div>
+        )}
+
+        <div className="voltar-container">
+          <Link to="/dashboard-tecnico" className="btn-voltar">
+            ← Voltar para o Dashboard
+          </Link>
+        </div>
+      </motion.section>
     </main>
   );
 }
-
-export default DetalhesTecnico;
