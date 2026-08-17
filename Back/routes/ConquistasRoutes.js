@@ -1,13 +1,12 @@
 import express from "express";
 import pool from "../config/database.js"; 
-import { verificarAutenticacao } from "../middlewares/auth.js";
+import { verificarToken } from "../middleware/authMiddleware.js"; // Garanta que o nome do middleware/import bate com o que você usa no projeto
 
 const router = express.Router();
 
 router.get("/", verificarToken, async (req, res) => {
-  const idTecnico = req.usuario.id_usuario || req.usuario.id;
-  // Exemplo temporário para teste: pegando via query ou req.usuario.id
-  const idTecnico = req.user?.id || req.query.id_tecnico; 
+  // Pega o ID do técnico de forma segura a partir do token decodificado pelo middleware
+  const idTecnico = req.usuario?.id_usuario || req.usuario?.id || req.user?.id;
 
   if (!idTecnico) {
     return res.status(400).json({ erro: "ID do técnico não informado ou usuário não autenticado." });

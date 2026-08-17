@@ -8,6 +8,13 @@ interface Chamado {
   situacao: string;
 }
 
+interface ConquistaAPI {
+  id_conquista: number;
+  titulo: string;
+  descricao: string;
+  status: "desbloqueada" | "bloqueada";
+}
+
 interface ConquistaProps {
   ico: string;
   tit: string;
@@ -43,46 +50,57 @@ const cardHover = {
 
 function DashboardTecnico() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
+  const [conquistasBanco, setConquistasBanco] = useState<ConquistaAPI[]>([]);
   const [nomeTecnico, setNomeTecnico] = useState("Técnico");
 
   useEffect(() => {
-    // Tenta obter o nome do usuário logado se salvo no login
     const usuarioSalvo = localStorage.getItem("usuario");
     if (usuarioSalvo) {
       try {
         const parsed = JSON.parse(usuarioSalvo);
         if (parsed.nome) setNomeTecnico(parsed.nome);
       } catch {
-        // ignora erro de parse se for string simples
+        // ignora
       }
     }
 
-    async function buscarChamados() {
-      const token = localStorage.getItem("token");
-      const baseUrl = (
-        import.meta.env.VITE_API_URL || "http://localhost:3000"
-      ).replace(/\/$/, "");
+    const token = localStorage.getItem("token");
+    const baseUrl = (
+      import.meta.env.VITE_API_URL || "http://localhost:3000"
+    ).replace(/\/$/, "");
 
+    async function buscarChamados() {
       try {
         const resposta = await fetch(`${baseUrl}/api/chamados`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         if (resposta.ok) {
           const dados = await resposta.json();
           setChamados(Array.isArray(dados) ? dados : []);
         }
       } catch (err) {
-        console.error("Erro ao carregar dados do dashboard técnico:", err);
+        console.error("Erro ao carregar chamados:", err);
+      }
+    }
+
+    async function buscarConquistas() {
+      try {
+        const resposta = await fetch(`${baseUrl}/api/conquistas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (resposta.ok) {
+          const dados = await resposta.json();
+          setConquistasBanco(Array.isArray(dados) ? dados : []);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar conquistas:", err);
       }
     }
 
     buscarChamados();
+    buscarConquistas();
   }, []);
 
-  // 📊 Cálculo dinâmico dos totais com base na base de dados
   const novos = chamados.filter((c) =>
     c.situacao?.toLowerCase().includes("novo"),
   ).length;
@@ -98,32 +116,53 @@ function DashboardTecnico() {
     c.situacao?.toLowerCase().includes("aguardando"),
   ).length;
 
-  // 🏆 Lista dinâmica de conquistas baseada nas métricas reais
-  const listaConquistas = [
-    // --- Suporte Geral ---
-    { id: "mestre", categoria: "Suporte Geral", ico: "🏆", tit: "Mestre do Suporte", desc: "Resolva mais de 100 chamados.", status: resolvidos >= 100 ? "desbloqueada" : "bloqueada" },
-    { id: "agil", categoria: "Suporte Geral", ico: "⚡", tit: "Atendimento Ágil", desc: "Resolva 10 chamados em menos de 3 horas.", status: "bloqueada" },
-    { id: "precisao", categoria: "Suporte Geral", ico: "🎯", tit: "Precisão no Diagnóstico", desc: "Resolva 95% dos chamados corretamente.", status: "bloqueada" },
-    { id: "comunicador", categoria: "Suporte Geral", ico: "💬", tit: "Comunicador", desc: "Responda 50 chamados em menos de 1 hora.", status: "bloqueada" },
-    { id: "descanso", categoria: "Suporte Geral", ico: "🔥", tit: "Sem Descanso", desc: "Resolva chamados durante 7 dias consecutivos.", status: "bloqueada" },
+  // Mapeamento inteligente que categoriza com base no ID ou no nome da conquista
+  const listaConquistas = conquistasBanco.map((c) => {
+    let ico = "🏅";
+    let categoria = "Suporte Geral";
 
-    // --- Especializações ---
-    { id: "hardware", categoria: "Especializações", ico: "💻", tit: "Especialista em Hardware", desc: "Conclua 50 chamados de Hardware.", status: "bloqueada" },
-    { id: "software", categoria: "Especializações", ico: "🖥️", tit: "Especialista em Software", desc: "Conclua 50 chamados de Software.", status: "bloqueada" },
-    { id: "redes", categoria: "Especializações", ico: "🌐", tit: "Especialista em Redes", desc: "Conclua 50 chamados de Redes.", status: "bloqueada" },
-    { id: "impressoras", categoria: "Especializações", ico: "🖨️", tit: "Especialista em Impressoras", desc: "Conclua 50 chamados de Impressoras.", status: "bloqueada" },
-    { id: "seguranca", categoria: "Especializações", ico: "🔐", tit: "Especialista em Segurança", desc: "Conclua 30 chamados relacionados à segurança.", status: "bloqueada" },
+    const tituloLower = c.titulo.toLowerCase();
 
-    // --- Qualidade ---
-    { id: "excelencia", categoria: "Qualidade", ico: "⭐", tit: "Excelência no Atendimento", desc: "Receba média superior a 4,5 estrelas.", status: "bloqueada" },
-    { id: "cliente", categoria: "Qualidade", ico: "🤝", tit: "Cliente Satisfeito", desc: "Receba 50 avaliações com 5 estrelas.", status: "bloqueada" },
-    { id: "plantonista", categoria: "Qualidade", ico: "🌙", tit: "Plantonista", desc: "Resolva 10 chamados fora do horário comercial.", status: "bloqueada" },
-    { id: "primeiro", categoria: "Qualidade", ico: "🚀", tit: "Primeiro Atendimento", desc: "Conclua seu primeiro chamado.", status: resolvidos >= 1 ? "desbloqueada" : "bloqueada" },
-    { id: "cem", categoria: "Qualidade", ico: "💯", tit: "Cem por Cento", desc: "Receba 10 avaliações cinco estrelas consecutivas.", status: "bloqueada" },
-  ];
+    if (
+      tituloLower.includes("hardware") ||
+      tituloLower.includes("software") ||
+      tituloLower.includes("redes") ||
+      tituloLower.includes("impressora")
+    ) {
+      categoria = "Especializações";
+    } else if (
+      tituloLower.includes("primeiro") ||
+      tituloLower.includes("qualidade") ||
+      tituloLower.includes("estrelas") ||
+      tituloLower.includes("satisfeto")
+    ) {
+      categoria = "Qualidade";
+    }
 
-  // Conta dinamicamente quantas conquistas estão desbloqueadas
-  const totalDesbloqueadas = listaConquistas.filter(c => c.status === "desbloqueada").length;
+    if (tituloLower.includes("hardware")) ico = "💻";
+    else if (tituloLower.includes("software")) ico = "🖥️";
+    else if (tituloLower.includes("redes")) ico = "🌐";
+    else if (tituloLower.includes("mestre")) ico = "🏆";
+    else if (tituloLower.includes("primeiro")) ico = "🚀";
+    else if (
+      tituloLower.includes("estrela") ||
+      tituloLower.includes("qualidade")
+    )
+      ico = "⭐";
+
+    return {
+      id: c.id_conquista,
+      categoria,
+      ico,
+      tit: c.titulo,
+      desc: c.descricao,
+      status: c.status,
+    };
+  });
+
+  const totalDesbloqueadas = listaConquistas.filter(
+    (c) => c.status === "desbloqueada",
+  ).length;
 
   return (
     <main className="home-login-page">
@@ -136,7 +175,6 @@ function DashboardTecnico() {
         <motion.div className="welcome" variants={itemVariants}>
           <h1>Bem-vindo, {nomeTecnico}</h1>
 
-          {/* Barra de XP Animada */}
           <div className="xp-bar">
             <motion.div
               className="xp-progress"
@@ -160,7 +198,6 @@ function DashboardTecnico() {
           </motion.p>
         </motion.div>
 
-        {/* Cards de Métricas com Dados Dinâmicos da API */}
         <motion.div className="summary-cards" variants={containerVariants}>
           {[
             { ico: "📥", txt: "Novos", total: novos },
@@ -184,10 +221,10 @@ function DashboardTecnico() {
         <motion.div className="conquistas" variants={containerVariants}>
           <motion.h2 variants={itemVariants}>🏆 Conquistas</motion.h2>
           <motion.h3 variants={itemVariants}>
-            {totalDesbloqueadas} de {listaConquistas.length} conquistas desbloqueadas
+            {totalDesbloqueadas} de {listaConquistas.length} conquistas
+            desbloqueadas
           </motion.h3>
 
-          {/* Seção Suporte Geral */}
           <motion.h4 variants={itemVariants}>📋 Suporte Geral</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
             {listaConquistas
@@ -203,7 +240,6 @@ function DashboardTecnico() {
               ))}
           </motion.div>
 
-          {/* Seção Especializações */}
           <motion.h4 variants={itemVariants}>💻 Especializações</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
             {listaConquistas
@@ -219,7 +255,6 @@ function DashboardTecnico() {
               ))}
           </motion.div>
 
-          {/* Seção Qualidade */}
           <motion.h4 variants={itemVariants}>⭐ Qualidade</motion.h4>
           <motion.div className="conquistas-grid" variants={containerVariants}>
             {listaConquistas
@@ -251,7 +286,6 @@ function DashboardTecnico() {
   );
 }
 
-// Sub-componente com tipagem explícita
 function ConquistaCard({ ico, tit, desc, status }: ConquistaProps) {
   return (
     <motion.div

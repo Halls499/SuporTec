@@ -57,16 +57,15 @@ function obterIdUsuarioDoToken(): number | null {
   try {
     const token = localStorage.getItem("token");
     if (!token) return null;
-    
-    // O token JWT é dividido por pontos (Header.Payload.Signature)
+
     const payloadBase64 = token.split(".")[1];
     if (!payloadBase64) return null;
 
-    // Decodifica o payload de Base64 para JSON
-    const payloadJson = atob(payloadBase64.replace(/-/g, "+").replace(/_/g, "/"));
+    const payloadJson = atob(
+      payloadBase64.replace(/-/g, "+").replace(/_/g, "/"),
+    );
     const payload = JSON.parse(payloadJson);
 
-    // Retorna o ID (pode vir como id_usuario, id ou userId dependendo de como gerou o token)
     return Number(payload.id_usuario || payload.id || payload.userId) || null;
   } catch (e) {
     console.error("Erro ao decodificar o token:", e);
@@ -84,6 +83,7 @@ function DetalhesTecnico() {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [enviandoMensagem, setEnviandoMensagem] = useState(false);
 
+  // Configuração limpa da URL base (suporta ambiente local e online via VITE_API_URL)
   const baseUrl = (
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
@@ -156,8 +156,13 @@ function DetalhesTecnico() {
     setEnviandoMensagem(true);
     const token = localStorage.getItem("token");
 
-    // Pega o ID diretamente do token JWT ou do localStorage como plano B
-    const fk_usuario = obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || localStorage.getItem("usuario_id") || 0);
+    const fk_usuario =
+      obterIdUsuarioDoToken() ||
+      Number(
+        localStorage.getItem("id_usuario") ||
+          localStorage.getItem("usuario_id") ||
+          0,
+      );
 
     if (!fk_usuario) {
       alert("Erro: Sessão inválida. Faça login novamente.");
@@ -199,14 +204,26 @@ function DetalhesTecnico() {
     setIsUpdatingStatus(true);
     const token = localStorage.getItem("token");
 
+    const idTecnicoLogado =
+      obterIdUsuarioDoToken() ||
+      Number(
+        localStorage.getItem("id_usuario") ||
+          localStorage.getItem("usuario_id") ||
+          0,
+      );
+
     try {
+      // Envia explicitamente o status e o ID do técnico para o backend
       const resposta = await fetch(`${baseUrl}/api/chamados/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ situacao: novoStatus }),
+        body: JSON.stringify({
+          situacao: novoStatus,
+          fk_tecnico: idTecnicoLogado,
+        }),
       });
 
       if (resposta.ok) {
@@ -251,7 +268,7 @@ function DetalhesTecnico() {
 
   if (!chamado) {
     return (
-      <main className="detlhes-tecnico-page">
+      <main className="detalhes-tecnico-page">
         <p className="detalhes-tecnico-loading">Chamado não encontrado.</p>
         <div className="detalhes-tecnico-erro-acao">
           <Link to="/chamados-tecnico" className="btn-voltar">
@@ -325,10 +342,12 @@ function DetalhesTecnico() {
             ) : (
               mensagens.map((msg) => {
                 const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const idLogado = obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || 0);
+                const idLogado =
+                  obterIdUsuarioDoToken() ||
+                  Number(localStorage.getItem("id_usuario") || 0);
 
-                // É técnico se o banco diz que é técnico OU se o ID da mensagem bate com o ID logado
-                const isTecnico = tipoStr === "tecnico" || Number(msg.fk_usuario) === idLogado;
+                const isTecnico =
+                  tipoStr === "tecnico" || Number(msg.fk_usuario) === idLogado;
 
                 const classeMensagem = isTecnico
                   ? "mensagem tecnico"

@@ -45,7 +45,10 @@ export async function abrirChamado(chamado) {
   return resultado;
 }
 
-export async function listarChamadosPorClienteEOrganizacao(fk_cliente, fk_organizacao) {
+export async function listarChamadosPorClienteEOrganizacao(
+  fk_cliente,
+  fk_organizacao,
+) {
   const [rows] = await pool.query(
     `SELECT * FROM chamado 
      WHERE fk_cliente = ? AND fk_organizacao = ?
@@ -82,7 +85,11 @@ export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
   return rows[0];
 }
 
-export async function cancelarChamadoSaaS(id_chamado, fk_cliente, fk_organizacao) {
+export async function cancelarChamadoSaaS(
+  id_chamado,
+  fk_cliente,
+  fk_organizacao,
+) {
   const [resultado] = await pool.query(
     `UPDATE chamado 
      SET situacao = 'Cancelado' 
@@ -93,14 +100,21 @@ export async function cancelarChamadoSaaS(id_chamado, fk_cliente, fk_organizacao
 }
 
 export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
-  const { situacao, fk_tecnico } = dados;
+  const situacao = dados.situacao;
+  const fk_tecnico = dados.fk_tecnico;
+
+  // 🔍 OLHA ISSO AQUI: Vamos debugar o que o Model recebeu de fato
+  console.log("-----------------------------------------");
+  console.log("CHEGOU NO MODEL - situacao:", situacao);
+  console.log("CHEGOU NO MODEL - fk_tecnico:", fk_tecnico);
+  console.log("-----------------------------------------");
 
   const [resultado] = await pool.query(
     `UPDATE chamado 
-     SET situacao = COALESCE(?, situacao), 
-         fk_tecnico = COALESCE(?, fk_tecnico)
+     SET situacao = ?, 
+         fk_tecnico = ?
      WHERE id_chamado = ? AND fk_organizacao = ?`,
-    [situacao || null, fk_tecnico || null, id_chamado, fk_organizacao]
+    [situacao, fk_tecnico || null, id_chamado, fk_organizacao]
   );
 
   return resultado.affectedRows > 0;
@@ -109,7 +123,7 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
 export async function buscarClienteDoChamado(id_chamado) {
   const [rows] = await pool.query(
     `SELECT fk_cliente FROM chamado WHERE id_chamado = ?`,
-    [id_chamado]
+    [id_chamado],
   );
   return rows[0];
 }

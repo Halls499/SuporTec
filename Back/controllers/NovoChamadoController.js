@@ -86,7 +86,8 @@ export async function listarChamadosTecnico(req, res) {
   const fk_organizacao = req.usuario.fk_organizacao || 1;
 
   try {
-    const listaChamados = await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
+    const listaChamados =
+      await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
     return res.status(200).json(listaChamados);
   } catch (erro) {
     console.error(erro);
@@ -122,44 +123,58 @@ export async function buscarChamadoPorId(req, res) {
   }
 }
 
-// 🛠️ Atualização via PUT com Rastreamento de Logs
+// 🛠️ Atualização direta: o back-end apenas trabalha com o que o front-end mandou no body
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
-    const idTecnicoLogado = req.usuario.id_usuario; // 👈 Pega o ID do técnico logado
-    const dadosAtualizacao = req.body;
+    const dadosAtualizacao = req.body; // Contém situacao e fk_tecnico vindos diretamente do front
 
-    // Se estiver mudando para Resolvido, injeta o técnico logado automaticamente
-    if (dadosAtualizacao.situacao === 'Resolvido') {
-      dadosAtualizacao.fk_tecnico = idTecnicoLogado;
-    }
+    // LOG DE VERIFICAÇÃO
+    console.log("--- DEBUG ATUALIZAÇÃO ---");
+    console.log("Dados recebidos do front:", dadosAtualizacao);
+    console.log("-------------------------");
+    console.log(`[PUSH TEST] Iniciando atualização do chamado ID: ${id}`);
 
-    const atualizado = await chamadoModel.atualizarChamadoSaaS(id, fk_organizacao, dadosAtualizacao);
+    const atualizado = await chamadoModel.atualizarChamadoSaaS(
+      id,
+      fk_organizacao,
+      dadosAtualizacao,
+    );
 
     if (!atualizado) {
-      return res.status(404).json({ mensagem: "Chamado não encontrado para atualização." });
+      console.log(`[PUSH TEST] Chamado ${id} não encontrado.`);
+      return res
+        .status(404)
+        .json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
-    // Envio de Push para o cliente dono do chamado
     const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
     console.log("[PUSH TEST] Cliente dono encontrado:", clienteDono);
 
     if (clienteDono && clienteDono.fk_cliente) {
-      console.log(`[PUSH TEST] Tentando enviar push para o usuário: ${clienteDono.fk_cliente}`);
-      
+      console.log(
+        `[PUSH TEST] Tentando enviar push para o usuário: ${clienteDono.fk_cliente}`,
+      );
+
       await enviarNotificacaoParaUsuario(
         clienteDono.fk_cliente,
         "SuporTec - Chamado Atualizado",
-        "O técnico alterou o status do seu chamado!"
+        "O técnico alterou o status do seu chamado!",
       );
-      
-      console.log("[PUSH TEST] Comando de envio de push disparado com sucesso!");
+
+      console.log(
+        "[PUSH TEST] Comando de envio de push disparado com sucesso!",
+      );
     } else {
-      console.log("[PUSH TEST] Cliente não encontrado ou ID do usuário inválido para push.");
+      console.log(
+        "[PUSH TEST] Cliente não encontrado ou ID do usuário inválido para push.",
+      );
     }
 
-    return res.status(200).json({ mensagem: "Chamado atualizado com sucesso!" });
+    return res
+      .status(200)
+      .json({ mensagem: "Chamado atualizado com sucesso!" });
   } catch (error) {
     console.error("[PUSH TEST] Erro crítico ao atualizar chamado:", error);
     return res.status(500).json({
