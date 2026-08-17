@@ -103,31 +103,28 @@ function DashboardTecnico() {
     }
 
     buscarChamados();
-    buscarConquistas(); 
+    buscarConquistas();
   }, []);
 
-  // Filtra os chamados do técnico logado
-  const chamadosDoTecnico = chamados.filter((c: any) => 
-    idTecnicoLogado ? c.id_tecnico === idTecnicoLogado : true
+  const chamadosDoTecnico = chamados.filter((c: any) =>
+    idTecnicoLogado ? c.id_tecnico === idTecnicoLogado : true,
   );
 
   // Contagem baseada nos chamados filtrados do técnico
   const novos = chamadosDoTecnico.filter((c) =>
-    c.situacao?.toLowerCase().includes("novo"),
+    c.situacao?.includes("Novo"),
   ).length;
-  
+
   const resolvidos = chamadosDoTecnico.filter((c) =>
-    c.situacao?.toLowerCase().includes("resolvido"),
+    c.situacao?.includes("Resolvido"),
   ).length;
-  
-  const emAndamento = chamadosDoTecnico.filter(
-    (c) =>
-      c.situacao?.toLowerCase().includes("andamento") ||
-      c.situacao?.toLowerCase().includes("atendimento"),
-  ).length;
-  
+
   const aguardando = chamadosDoTecnico.filter((c) =>
-    c.situacao?.toLowerCase().includes("aguardando"),
+    c.situacao?.includes("Aguardando cliente"),
+  ).length;
+
+  const emAndamento = chamadosDoTecnico.filter((c) =>
+    c.situacao?.includes("Em andamento"),
   ).length;
 
   // Mapeamento inteligente que categoriza com base no ID ou no nome da conquista
