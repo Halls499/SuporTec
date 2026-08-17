@@ -127,17 +127,21 @@ export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
+    const idTecnicoLogado = req.usuario.id_usuario; // 👈 Pega o ID do técnico logado
     const dadosAtualizacao = req.body;
 
-    console.log(`[PUSH TEST] Iniciando atualização do chamado ID: ${id}`);
+    // Se estiver mudando para Resolvido, injeta o técnico logado automaticamente
+    if (dadosAtualizacao.situacao === 'Resolvido') {
+      dadosAtualizacao.fk_tecnico = idTecnicoLogado;
+    }
 
     const atualizado = await chamadoModel.atualizarChamadoSaaS(id, fk_organizacao, dadosAtualizacao);
 
     if (!atualizado) {
-      console.log(`[PUSH TEST] Chamado ${id} não encontrado.`);
       return res.status(404).json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
+    // Envio de Push para o cliente dono do chamado
     const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
     console.log("[PUSH TEST] Cliente dono encontrado:", clienteDono);
 
