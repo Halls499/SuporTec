@@ -75,9 +75,9 @@ export async function listarChamadosPorOrganizacao(fk_organizacao) {
 export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
   const [rows] = await pool.query(
     `SELECT 
-      id_chamado, fk_organizacao, titulo, descricao, categoria, prioridade, 
-      situacao, tipo_atendimento, endereco, empresa, setor, sala, 
-      tipo_contato, contato, data_abertura, data_fechamento, fk_cliente, fk_tecnico
+     id_chamado, fk_organizacao, titulo, descricao, categoria, prioridade, 
+     situacao, tipo_atendimento, endereco, empresa, setor, sala, 
+     tipo_contato, contato, data_abertura, data_fechamento, fk_cliente, fk_tecnico
      FROM chamado 
      WHERE id_chamado = ? AND fk_organizacao = ?`,
     [id, fk_organizacao],
@@ -103,7 +103,6 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   const situacao = dados.situacao;
   const fk_tecnico = dados.fk_tecnico;
 
-  // 🔍 OLHA ISSO AQUI: Vamos debugar o que o Model recebeu de fato
   console.log("-----------------------------------------");
   console.log("CHEGOU NO MODEL - situacao:", situacao);
   console.log("CHEGOU NO MODEL - fk_tecnico:", fk_tecnico);
@@ -129,10 +128,11 @@ export async function buscarClienteDoChamado(id_chamado) {
 }
 
 export async function aceitarChamadoModel(id_tecnico, id_chamado) {
+  // Nota: Verifique se o nome da sua tabela no banco é 'chamado' ou 'chamados' (suas outras queries usam 'chamado')
   const query = `
-    UPDATE chamados 
-    SET id_tecnico = ?, situacao = 'Em andamento' 
+    UPDATE chamado 
+    SET fk_tecnico = ?, situacao = 'Em andamento' 
     WHERE id_chamado = ?
   `;
-  return await conexao.execute(query, [id_tecnico, id_chamado]);
+  return await pool.query(query, [id_tecnico, id_chamado]);
 }
