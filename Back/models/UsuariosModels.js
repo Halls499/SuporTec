@@ -57,7 +57,7 @@ export async function buscarUsuarioPorEmail(email) {
   return rows;
 }
 
-// 🎮 NOVO (Gamificação): Atualiza XP e Nível do Técnico
+// Atualiza XP e Nível do Técnico
 export async function atualizarXpENivelTecnico(id_usuario, novoXp, novoNivel) {
   const [resultado] = await pool.query(
     `

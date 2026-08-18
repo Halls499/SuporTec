@@ -235,7 +235,7 @@ export async function atualizarStatusChamado(req, res) {
       id,
     ]);
 
-    // Bloco de XP seguro (só roda se houver técnico e a coluna existir)
+    // Bloco de XP seguro e Verificação de Conquistas
     if (situacao === "Resolvido" && tecnicoId) {
       try {
         let xpGanho = 50;
@@ -262,9 +262,10 @@ export async function atualizarStatusChamado(req, res) {
             [novoXp, novoNivel, tecnicoId],
           );
         }
+        await checarRegrasDeConquistas(tecnicoId, id);
       } catch (xpError) {
         console.warn(
-          "Aviso: Sistema de XP ignorado devido a colunas ausentes no banco.",
+          "Aviso: Sistema de XP/Conquistas ignorado devido a erro.",
           xpError,
         );
       }
@@ -278,7 +279,11 @@ export async function atualizarStatusChamado(req, res) {
       .json({ erro: "Erro interno no servidor", detalhes: erro.message });
   }
 }
-// Funções de Mensagens do Chamado (Chat)
+
+// ==========================================
+// FUNÇÕES DO CHAT
+// ==========================================
+
 export async function buscarMensagensChamado(req, res) {
   const { id } = req.params;
   try {
@@ -312,5 +317,270 @@ export async function enviarMensagemChamado(req, res) {
   } catch (error) {
     console.error("Erro ao enviar mensagem:", error);
     return res.status(500).json({ erro: "Erro ao enviar mensagem no chat." });
+  }
+}
+
+// ==========================================
+// FUNÇÕES AUXILIARES DE CONQUISTAS
+// ==========================================
+
+// Função principal que vai rodar as regras para o técnico
+async function checarRegrasDeConquistas(idTecnico, idChamado) {
+  try {
+    // 1. Primeiro Atendimento: Conclua seu primeiro chamado
+    const [totalChamadosResolvidos] = await pool.query(
+      "SELECT COUNT(*) as total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido'",
+      [idTecnico],
+    );
+
+    if (totalChamadosResolvidos[0].total === 1) {
+      await desbloquearConquista(idTecnico, 1);
+    }
+
+    // 2. Atendimento Ágil: Resolva 10 chamados em menos de 5 horas
+    const [chamadosAgeis] = await pool.query(
+      `SELECT COUNT(*) as total FROM chamado 
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
+       AND TIMESTAMPDIFF(HOUR, data_abertura, data_fechamento) < 5`,
+      [idTecnico],
+    );
+
+    if (chamadosAgeis[0].total >= 10) {
+      await desbloquearConquista(idTecnico, 2);
+    }
+
+    // 3. Maratona Semanal: Resolva pelo menos 10 chamados no decorrer de uma semana
+    const [chamadosSemanais] = await pool.query(
+      `SELECT COUNT(*) as total FROM chamado 
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
+       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 1 WEEK)`,
+      [idTecnico],
+    );
+
+    if (chamadosSemanais[0].total >= 10) {
+      await desbloquearConquista(idTecnico, 3);
+    }
+
+    // 4. Mestre do Suporte: Resolva mais de 100 chamados
+    if (totalChamadosResolvidos[0].total >= 100) {
+      await desbloquearConquista(idTecnico, 4);
+    }
+
+    // 5. Abertura Rápida: Abra e resolva um chamado em menos de 1 hora.
+    const [chamadoRapidoAlta] = await pool.query(
+      `SELECT id_chamado FROM chamado 
+       WHERE id_chamado = ? AND fk_tecnico = ?  
+       AND TIMESTAMPDIFF(MINUTE, data_abertura, data_fechamento) <= 60`,
+      [idChamado, idTecnico],
+    );
+
+    if (chamadoRapidoAlta.length > 0) {
+      await desbloquearConquista(idTecnico, 5);
+    }
+
+    // 6. Sem Descanso: Resolva chamados durante 7 dias consecutivos
+    const [chamadosConsecutivos] = await pool.query(
+      `SELECT COUNT(DISTINCT DATE(data_fechamento)) as dias_consecutivos 
+       FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 7 DAY)`,
+      [idTecnico],
+    );
+
+    if (chamadosConsecutivos[0].dias_consecutivos >= 7) {
+      await desbloquearConquista(idTecnico, 6);
+    }
+
+    // 7. Hora Extra: Resolva um chamado fora do horário comercial padrão
+    const [chamadosForaHorario] = await pool.query(
+      `SELECT id_chamado FROM chamado 
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       AND (HOUR(data_fechamento) < 8 OR HOUR(data_fechamento) >= 18 OR DAYOFWEEK(data_fechamento) IN (1, 7))`,
+      [idTecnico],
+    );
+
+    if (chamadosForaHorario.length > 0) {
+      await desbloquearConquista(idTecnico, 7);
+    }
+
+    // 8. Alerta Vermelho: Resolva um chamado de alta prioridade em menos de 15 minutos.
+    const [chamadosAltaPrioridade] = await pool.query(
+      `SELECT id_chamado FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND prioridade = 'Alta'
+       AND TIMESTAMPDIFF(MINUTE, data_abertura, data_fechamento) <= 15`,
+      [idTecnico],
+    );
+
+    if (chamadosAltaPrioridade.length > 0) {
+      await desbloquearConquista(idTecnico, 8);
+    }
+
+    // 9. Especialidades e Áreas Técnicas: Conclua 50 chamados por categoria.
+    const [chamadosPorCategoria] = await pool.query(
+      `SELECT categoria, COUNT(*) as total FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       GROUP BY categoria`,
+      [idTecnico],
+    );
+
+    if (chamadosPorCategoria.length > 0) {
+      for (const cat of chamadosPorCategoria) {
+        if (cat.total >= 50) {
+          switch (cat.categoria) {
+            case "Hardware":
+              await desbloquearConquista(idTecnico, 9);
+              break;
+            case "Software":
+              await desbloquearConquista(idTecnico, 10);
+              break;
+            case "Redes":
+              await desbloquearConquista(idTecnico, 11);
+              break;
+            case "Impressoras":
+              await desbloquearConquista(idTecnico, 12);
+              break;
+          }
+        }
+      }
+    }
+
+    // 10. Tríplice Coroa: Resolva 3 chamados de categorias distintas na mesma semana.
+    const [chamadosSemana] = await pool.query(
+      `SELECT COUNT(DISTINCT categoria) as categorias_distintas
+       FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 1 WEEK)
+       GROUP BY YEARWEEK(data_fechamento)`,
+      [idTecnico],
+    );
+
+    if (chamadosSemana.some((semana) => semana.categorias_distintas >= 3)) {
+      await desbloquearConquista(idTecnico, 13);
+    }
+
+    // 11. Triagem Completa: Resolva um chamado de cada prioridade: baixa, média e alta.
+    const [chamadosPrioridades] = await pool.query(
+      `SELECT DISTINCT prioridade FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'`,
+      [idTecnico],
+    );
+
+    const prioridades = chamadosPrioridades.map((c) => c.prioridade);
+    if (
+      prioridades.includes("Baixa") &&
+      prioridades.includes("Media") &&
+      prioridades.includes("Alta")
+    ) {
+      await desbloquearConquista(idTecnico, 14);
+    }
+
+    // 12. Raio-X Técnico: Resolva Hardware e Software no mesmo dia.
+    const [chamadosMesmoDia] = await pool.query(
+      `SELECT DATE(data_fechamento) as dia, categoria
+       FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       GROUP BY DATE(data_fechamento), categoria`,
+      [idTecnico],
+    );
+
+    const diasCategorias = {};
+    for (const chamado of chamadosMesmoDia) {
+      if (!diasCategorias[chamado.dia]) diasCategorias[chamado.dia] = new Set();
+      diasCategorias[chamado.dia].add(chamado.categoria);
+    }
+
+    if (
+      Object.values(diasCategorias).some(
+        (set) => set.has("Hardware") && set.has("Software"),
+      )
+    ) {
+      await desbloquearConquista(idTecnico, 15);
+    }
+
+    // 13. Versatilidade Total: Presencial e Remoto no mesmo dia.
+    const [chamadosTipoMesmoDia] = await pool.query(
+      `SELECT DATE(data_fechamento) as dia, tipo_atendimento
+       FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       GROUP BY DATE(data_fechamento), tipo_atendimento`,
+      [idTecnico],
+    );
+
+    const diasTipos = {};
+    for (const chamado of chamadosTipoMesmoDia) {
+      if (!diasTipos[chamado.dia]) diasTipos[chamado.dia] = new Set();
+      diasTipos[chamado.dia].add(chamado.tipo_atendimento);
+    }
+
+    if (
+      Object.values(diasTipos).some(
+        (set) => set.has("Presencial") && set.has("Remoto"),
+      )
+    ) {
+      await desbloquearConquista(idTecnico, 16);
+    }
+
+    // Dados do usuário (Nível e Contagem de Conquistas para as próximas regras)
+    const [usuario] = await pool.query(
+      "SELECT nivel FROM usuario WHERE id_usuario = ?",
+      [idTecnico],
+    );
+
+    // 14. Lenda do Suporte: Alcance o nível 5.
+    if (usuario.length > 0 && usuario[0].nivel >= 5) {
+      await desbloquearConquista(idTecnico, 17);
+    }
+
+    // 15. Especialista Dedicado: Conclua 7 chamados seguidos da mesma categoria.
+    const [chamadosSeguidos] = await pool.query(
+      `SELECT COUNT(*) as total FROM chamado
+       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
+       GROUP BY categoria
+       HAVING total >= 7`,
+      [idTecnico],
+    );
+
+    if (chamadosSeguidos.length > 0) {
+      await desbloquearConquista(idTecnico, 18);
+    }
+
+    // 16. Emblema Inicial: Desbloqueie suas primeiras 3 conquistas.
+    const [conquistasUsuario] = await pool.query(
+      "SELECT COUNT(*) as total FROM usuario_conquista WHERE fk_usuario = ?",
+      [idTecnico],
+    );
+
+    if (conquistasUsuario[0].total >= 3) {
+      await desbloquearConquista(idTecnico, 19);
+    }
+
+    // 17. Meio do Caminho: Alcance o nível 250.
+    if (usuario.length > 0 && usuario[0].nivel >= 250) {
+      await desbloquearConquista(idTecnico, 20);
+    }
+  } catch (erro) {
+    console.error("Erro na verificação de regras de conquista: ", erro);
+  }
+}
+
+// Função que salva no banco a nova conquista (se ele já não a tiver)
+async function desbloquearConquista(idTecnico, idConquista) {
+  try {
+    const [jaTem] = await pool.query(
+      "SELECT * FROM usuario_conquista WHERE fk_usuario = ? AND fk_conquista = ?",
+      [idTecnico, idConquista],
+    );
+
+    if (jaTem.length === 0) {
+      await pool.query(
+        "INSERT INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, ?)",
+        [idTecnico, idConquista],
+      );
+      console.log(
+        `Conquista ID ${idConquista} desbloqueada para o técnico ${idTecnico}!`,
+      );
+    }
+  } catch (erro) {
+    console.error("Erro ao inserir desbloqueio de conquista: ", erro);
   }
 }

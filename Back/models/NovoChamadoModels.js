@@ -128,7 +128,6 @@ export async function buscarClienteDoChamado(id_chamado) {
 }
 
 export async function aceitarChamadoModel(id_tecnico, id_chamado) {
-  // Nota: Verifique se o nome da sua tabela no banco é 'chamado' ou 'chamados' (suas outras queries usam 'chamado')
   const query = `
     UPDATE chamado 
     SET fk_tecnico = ?, situacao = 'Em andamento' 
