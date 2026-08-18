@@ -1,6 +1,7 @@
 import { Router } from "express";
 import * as chamadoController from "../controllers/NovoChamadoController.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
+import pool from "../config/database.js";
 
 const router = Router();
 
@@ -13,26 +14,11 @@ router.get("/", verificarToken, chamadoController.listarMeusChamados);
 // 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
 router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 
-// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
-router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
-
-// 🛠️ ROTA PUT ATUALIZADA: Compatível com a requisição do front-end
-router.put("/:id", verificarToken, chamadoController.atualizarChamado);
-
-// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
-router.patch(
-  "/:id/cancelar",
-  verificarToken,
-  chamadoController.cancelarChamadoPorId,
-);
-
-// Rota para o técnico aceitar um chamado
-router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
-
+// Perfil do técnico
 router.get('/tecnicos/perfil', verificarToken, async (req, res) => {
   try {
-    const idUsuario = req.usuario.id; // ID extraído do token JWT
-    const [resultado] = await db.query(
+    const idUsuario = req.usuario.id || req.usuario.id_usuario; 
+    const [resultado] = await pool.query(
       'SELECT id_usuario, nome, email, xp, nivel FROM usuario WHERE id_usuario = ?', 
       [idUsuario]
     );
@@ -44,13 +30,12 @@ router.get('/tecnicos/perfil', verificarToken, async (req, res) => {
   }
 });
 
-// Rota para atualizar o perfil do técnico
 router.put('/tecnicos/perfil', verificarToken, async (req, res) => {
   try {
-    const idUsuario = req.usuario.id; // ID extraído do token JWT
+    const idUsuario = req.usuario.id || req.usuario.id_usuario;
     const { nome, email } = req.body;
 
-    const [resultado] = await db.query(
+    const [resultado] = await pool.query(
       'UPDATE usuario SET nome = ?, email = ? WHERE id_usuario = ?',
       [nome, email, idUsuario]
     );
@@ -65,7 +50,23 @@ router.put('/tecnicos/perfil', verificarToken, async (req, res) => {
   }
 });
 
-// Rota para atualizar o status do chamado
+// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
+router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
+
+// 🛠️ ROTA PUT ATUALIZADA
+router.put("/:id", verificarToken, chamadoController.atualizarChamado);
+
+// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
+router.patch("/:id/cancelar", verificarToken, chamadoController.cancelarChamadoPorId);
+
+// Rota para o técnico aceitar um chamado
+router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
+
+// Rota para atualizar o status do chamado (Resolvido / Andamento / etc)
 router.patch("/:id/status", verificarToken, chamadoController.atualizarStatusChamado);
+
+// Rotas de Mensagens do Chamado (Chat interno do chamado)
+router.get("/:id/mensagens", verificarToken, chamadoController.buscarMensagensChamado);
+router.post("/:id/mensagens", verificarToken, chamadoController.enviarMensagemChamado);
 
 export default router;

@@ -1,5 +1,6 @@
 import * as chamadoModel from "../models/NovoChamadoModels.js";
 import { enviarNotificacaoParaUsuario } from "../routes/PushRoutes.js";
+import pool from "../config/database.js";
 
 export async function AbrirNovoChamado(req, res) {
   const {
@@ -123,18 +124,11 @@ export async function buscarChamadoPorId(req, res) {
   }
 }
 
-// 🛠️ Atualização direta: o back-end apenas trabalha com o que o front-end mandou no body
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
     const fk_organizacao = req.usuario.fk_organizacao || 1;
-    const dadosAtualizacao = req.body; // Contém situacao e fk_tecnico vindos diretamente do front
-
-    // LOG DE VERIFICAÇÃO
-    console.log("--- DEBUG ATUALIZAÇÃO ---");
-    console.log("Dados recebidos do front:", dadosAtualizacao);
-    console.log("-------------------------");
-    console.log(`[PUSH TEST] Iniciando atualização do chamado ID: ${id}`);
+    const dadosAtualizacao = req.body;
 
     const atualizado = await chamadoModel.atualizarChamadoSaaS(
       id,
@@ -143,32 +137,18 @@ export async function atualizarChamado(req, res) {
     );
 
     if (!atualizado) {
-      console.log(`[PUSH TEST] Chamado ${id} não encontrado.`);
       return res
         .status(404)
         .json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
     const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
-    console.log("[PUSH TEST] Cliente dono encontrado:", clienteDono);
 
     if (clienteDono && clienteDono.fk_cliente) {
-      console.log(
-        `[PUSH TEST] Tentando enviar push para o usuário: ${clienteDono.fk_cliente}`,
-      );
-
       await enviarNotificacaoParaUsuario(
         clienteDono.fk_cliente,
         "SuporTec - Chamado Atualizado",
         "O técnico alterou o status do seu chamado!",
-      );
-
-      console.log(
-        "[PUSH TEST] Comando de envio de push disparado com sucesso!",
-      );
-    } else {
-      console.log(
-        "[PUSH TEST] Cliente não encontrado ou ID do usuário inválido para push.",
       );
     }
 
@@ -176,7 +156,7 @@ export async function atualizarChamado(req, res) {
       .status(200)
       .json({ mensagem: "Chamado atualizado com sucesso!" });
   } catch (error) {
-    console.error("[PUSH TEST] Erro crítico ao atualizar chamado:", error);
+    console.error("Erro crítico ao atualizar chamado:", error);
     return res.status(500).json({
       mensagem: "Erro interno no servidor ao atualizar chamado.",
       erro: error.message,
@@ -217,13 +197,7 @@ export async function aceitarChamado(req, res) {
   const id_tecnico = req.usuario.id_usuario || req.usuario.id;
 
   try {
-    console.log(
-      `[ACEITAR] Tentando aceitar chamado ${id} para o técnico ${id_tecnico}`,
-    );
-
     const resultado = await chamadoModel.aceitarChamadoModel(id_tecnico, id);
-
-    // Como o pool.query retorna um array [result, fields], verificamos o affectedRows
     const affectedRows = resultado[0]?.affectedRows || resultado.affectedRows;
 
     if (!affectedRows || affectedRows === 0) {
@@ -241,11 +215,10 @@ export async function aceitarChamado(req, res) {
 
 export async function atualizarStatusChamado(req, res) {
   const { id } = req.params;
-  const { situacao } = req.body; // Ex: 'Resolvido'
+  const { situacao } = req.body;
 
   try {
-    // 1. Busca o chamado para saber quem é o técnico responsável e a prioridade
-    const [chamados] = await db.query(
+    const [chamados] = await pool.query(
       "SELECT * FROM chamado WHERE id_chamado = ?",
       [id],
     );
@@ -256,20 +229,17 @@ export async function atualizarStatusChamado(req, res) {
     const chamado = chamados[0];
     const tecnicoId = chamado.fk_tecnico;
 
-    // 2. Atualiza a situação do chamado
-    await db.query("UPDATE chamado SET situacao = ? WHERE id_chamado = ?", [
+    await pool.query("UPDATE chamado SET situacao = ? WHERE id_chamado = ?", [
       situacao,
       id,
     ]);
 
-    // 3. Se o chamado foi resolvido E tem um técnico atribuído, dá XP!
     if (situacao === "Resolvido" && tecnicoId) {
-      let xpGanho = 50; // Padrão
+      let xpGanho = 50;
       if (chamado.prioridade === "Media") xpGanho = 80;
       if (chamado.prioridade === "Alta") xpGanho = 120;
 
-      // Busca XP e Nível atuais do técnico
-      const [usuarios] = await db.query(
+      const [usuarios] = await pool.query(
         "SELECT xp, nivel FROM usuario WHERE id_usuario = ?",
         [tecnicoId],
       );
@@ -284,8 +254,7 @@ export async function atualizarStatusChamado(req, res) {
           novoNivel += 1;
         }
 
-        // Atualiza no banco
-        await db.query(
+        await pool.query(
           "UPDATE usuario SET xp = ?, nivel = ? WHERE id_usuario = ?",
           [novoXp, novoNivel, tecnicoId],
         );
@@ -296,5 +265,42 @@ export async function atualizarStatusChamado(req, res) {
   } catch (erro) {
     console.error("Erro ao atualizar status e XP:", erro);
     return res.status(500).json({ erro: "Erro interno no servidor" });
+  }
+}
+
+// Funções de Mensagens do Chamado (Chat)
+export async function buscarMensagensChamado(req, res) {
+  const { id } = req.params;
+  try {
+    const [mensagens] = await pool.query(
+      "SELECT * FROM mensagem WHERE fk_chamado = ? ORDER BY data_envio ASC",
+      [id],
+    );
+    return res.status(200).json(mensagens);
+  } catch (error) {
+    console.error("Erro ao buscar mensagens:", error);
+    return res.status(500).json({ erro: "Erro ao buscar mensagens do chat." });
+  }
+}
+
+export async function enviarMensagemChamado(req, res) {
+  const { id } = req.params;
+  const { mensagem } = req.body;
+  const id_remetente = req.usuario.id_usuario || req.usuario.id;
+
+  try {
+    if (!mensagem) {
+      return res.status(400).json({ erro: "A mensagem não pode estar vazia." });
+    }
+
+    await pool.query(
+      "INSERT INTO mensagem (fk_chamado, fk_remetente, texto, data_envio) VALUES (?, ?, ?, NOW())",
+      [id, id_remetente, mensagem],
+    );
+
+    return res.status(201).json({ mensagem: "Mensagem enviada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao enviar mensagem:", error);
+    return res.status(500).json({ erro: "Erro ao enviar mensagem no chat." });
   }
 }
