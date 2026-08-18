@@ -32,6 +32,10 @@ function Cadastro() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [tipoUsuario, setTipoUsuario] = useState("cliente");
 
+  // 🎯 Novos estados para gerenciar a organização
+  const [possuiOrganizacao, setPossuiOrganizacao] = useState(false);
+  const [nomeOrganizacao, setNomeOrganizacao] = useState("");
+
   async function handleCadastro(e: React.FormEvent) {
     e.preventDefault();
 
@@ -43,7 +47,6 @@ function Cadastro() {
     try {
       const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-      // 🎯 Rota corrigida de '/api/usuarios/cadastrar' para '/api/usuarios'
       const resposta = await fetch(`${baseUrl}/api/usuarios`, {
         method: "POST",
         headers: {
@@ -54,7 +57,8 @@ function Cadastro() {
           email,
           senha,
           tipo_usuario: tipoUsuario,
-          fk_organizacao: 1,
+          // Se possui organização, envia o nome/dado digitado, senão envia null
+          organizacao: possuiOrganizacao ? nomeOrganizacao : null,
         }),
       });
 
@@ -150,6 +154,46 @@ function Cadastro() {
                 <option value="tecnico">Técnico (Suporte)</option>
               </select>
             </motion.div>
+
+            {/* 🎯 Checkbox para perguntar se faz parte de uma organização */}
+            <motion.div
+              className="input-group checkbox-group"
+              variants={fieldVariants}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                margin: "10px 0",
+              }}
+            >
+              <input
+                type="checkbox"
+                id="possui_org"
+                checked={possuiOrganizacao}
+                onChange={(e) => setPossuiOrganizacao(e.target.checked)}
+                style={{ width: "auto", cursor: "pointer" }}
+              />
+              <label
+                htmlFor="possui_org"
+                style={{ cursor: "pointer", fontSize: "0.9rem" }}
+              >
+                Faço parte de uma organização
+              </label>
+            </motion.div>
+
+            {/* 🎯 Campo condicional: só aparece se o checkbox estiver marcado */}
+            {possuiOrganizacao && (
+              <motion.input
+                type="text"
+                placeholder="Nome da organização"
+                required={possuiOrganizacao}
+                value={nomeOrganizacao}
+                onChange={(e) => setNomeOrganizacao(e.target.value)}
+                variants={fieldVariants}
+                initial="hidden"
+                animate="visible"
+              />
+            )}
 
             <motion.button
               type="submit"

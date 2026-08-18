@@ -2,10 +2,10 @@ import * as usuarioModel from "../models/UsuariosModels.js";
 import bcrypt from "bcrypt";
 import UsuarioSeguro from "../utils/UsuarioSeguro.js";
 import jwt from "jsonwebtoken";
+import * as organizacaoModel from "../models/OrganizacaoModel.js";
 
 export async function listarUsuarios(req, res) {
   try {
-    // Busca a organização priorizando o token do usuário logado, com fallback para o body/query
     let organizacao =
       req.usuario?.fk_organizacao ||
       req.body?.fk_organizacao ||
@@ -34,7 +34,7 @@ export async function listarUsuarios(req, res) {
 
 export async function cadastrarUsuario(req, res) {
   try {
-    const { nome, email, senha, tipo_usuario, fk_organizacao } = req.body;
+    const { nome, email, senha, tipo_usuario, organizacao } = req.body;
 
     if (!nome || !email || !senha || !tipo_usuario) {
       return res.status(400).json({
@@ -42,7 +42,6 @@ export async function cadastrarUsuario(req, res) {
       });
     }
 
-    // Validação dos papéis permitidos no SaaS
     const tiposPermitidos = ["cliente", "tecnico", "admin_empresa"];
     if (!tiposPermitidos.includes(tipo_usuario)) {
       return res.status(400).json({
@@ -60,9 +59,23 @@ export async function cadastrarUsuario(req, res) {
 
     const hash = await bcrypt.hash(senha, 10);
 
-    // Define a organização (usa a enviada ou null como padrão)
-    const orgId = fk_organizacao || null;
+    let orgId = null;
 
+    // Se o usuário digitou o nome de uma organização
+    if (organizacao && organizacao.trim() !== "") {
+      // 1. Verifica se a organização já existe no banco pelo nome
+      let orgCadastrada = await organizacaoModel.buscarOrganizacaoPorNome(organizacao.trim());
+
+      if (!orgCadastrada || orgCadastrada.length === 0) {
+        // 2. Se não existir, cria a organização automaticamente e obtém o ID gerado
+        const novaOrg = await organizacaoModel.criarOrganizacao(organizacao.trim());
+        orgId = novaOrg.insertId || novaOrg.id_organizacao; // Ajuste conforme o retorno do seu banco/model
+      } else {
+        orgId = orgCadastrada[0].id_organizacao;
+      }
+    }
+
+    // Cria o usuário vinculando o ID da organização (ou null)
     await usuarioModel.criarUsuario(nome, email, hash, tipo_usuario, orgId);
 
     return res.status(201).json({
@@ -129,12 +142,11 @@ export async function loginUsuario(req, res) {
 
     const usuarioPublico = UsuarioSeguro(usuario);
 
-    // 🔑 O SEGREDO DO SAAS: Incluir fk_organizacao no payload do JWT
     const token = jwt.sign(
       {
         id_usuario: usuario.id_usuario,
         tipo_usuario: usuario.tipo_usuario,
-        fk_organizacao: usuario.fk_organizacao, // <- Crucial para o SaaS!
+        fk_organizacao: usuario.fk_organizacao,
       },
       process.env.JWT_SECRET,
       {
