@@ -27,7 +27,7 @@ export async function abrirChamado(chamado) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
-        fk_organizacao || 1,
+        fk_organizacao !== undefined ? fk_organizacao : null, // 🎯 Agora aceita null corretamente
         titulo,
         descricao || "",
         categoria,
@@ -57,9 +57,9 @@ export async function listarChamadosPorClienteEOrganizacao(
   try {
     const [rows] = await pool.query(
       `SELECT * FROM chamado 
-       WHERE fk_cliente = ? AND fk_organizacao = ?
+       WHERE fk_cliente = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))
        ORDER BY data_abertura DESC`,
-      [fk_cliente, fk_organizacao],
+      [fk_cliente, fk_organizacao, fk_organizacao],
     );
     return Array.isArray(rows) ? rows : [];
   } catch (error) {
@@ -95,8 +95,8 @@ export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
        situacao, tipo_atendimento, endereco, empresa, setor, sala, 
        tipo_contato, contato, data_abertura, data_fechamento, fk_cliente, fk_tecnico
        FROM chamado 
-       WHERE id_chamado = ? AND fk_organizacao = ?`,
-      [id, fk_organizacao],
+       WHERE id_chamado = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))`,
+      [id, fk_organizacao, fk_organizacao],
     );
     return rows[0] || null;
   } catch (error) {
@@ -114,8 +114,8 @@ export async function cancelarChamadoSaaS(
     const [resultado] = await pool.query(
       `UPDATE chamado 
        SET situacao = 'Cancelado' 
-       WHERE id_chamado = ? AND fk_cliente = ? AND fk_organizacao = ? AND situacao != 'Resolvido'`,
-      [id_chamado, fk_cliente, fk_organizacao],
+       WHERE id_chamado = ? AND fk_cliente = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL)) AND situacao != 'Resolvido'`,
+      [id_chamado, fk_cliente, fk_organizacao, fk_organizacao],
     );
     return resultado.affectedRows > 0;
   } catch (error) {
@@ -133,8 +133,14 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
       `UPDATE chamado 
        SET situacao = ?, 
            fk_tecnico = ?
-       WHERE id_chamado = ? AND fk_organizacao = ?`,
-      [situacao, fk_tecnico || null, id_chamado, fk_organizacao],
+       WHERE id_chamado = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))`,
+      [
+        situacao,
+        fk_tecnico || null,
+        id_chamado,
+        fk_organizacao,
+        fk_organizacao,
+      ],
     );
 
     return resultado.affectedRows > 0;
