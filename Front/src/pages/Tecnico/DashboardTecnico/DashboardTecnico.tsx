@@ -17,6 +17,14 @@ interface Chamado {
   fk_tecnico?: number | null;
 }
 
+interface TecnicoPerfil {
+  id_usuario: number;
+  nome: string;
+  email: string;
+  xp: number;
+  nivel: number;
+}
+
 interface ConquistaAPI {
   id_conquista: number;
   titulo: string;
@@ -77,7 +85,7 @@ function obterIdUsuarioDoToken(): number | null {
 function DashboardTecnico() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [conquistasBanco, setConquistasBanco] = useState<ConquistaAPI[]>([]);
-  const [nomeTecnico, setNomeTecnico] = useState("Técnico");
+  const [perfil, setPerfil] = useState<TecnicoPerfil | null>(null);
 
   const idTecnicoLogado =
     obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || 0);
@@ -89,11 +97,14 @@ function DashboardTecnico() {
 
   async function buscarDados() {
     try {
-      const [resChamados, resConquistas] = await Promise.all([
+      const [resChamados, resConquistas, resPerfil] = await Promise.all([
         fetch(`${baseUrl}/api/chamados/tecnico`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch(`${baseUrl}/api/conquistas`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${baseUrl}/api/chamados/tecnicos/perfil`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -109,22 +120,17 @@ function DashboardTecnico() {
           Array.isArray(dadosConquistas) ? dadosConquistas : [],
         );
       }
+
+      if (resPerfil.ok) {
+        const dadosPerfil = await resPerfil.json();
+        setPerfil(dadosPerfil);
+      }
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
     }
   }
 
   useEffect(() => {
-    const usuarioSalvo = localStorage.getItem("usuario");
-    if (usuarioSalvo) {
-      try {
-        const parsed = JSON.parse(usuarioSalvo);
-        if (parsed.nome) setNomeTecnico(parsed.nome);
-      } catch {
-        // ignora
-      }
-    }
-
     buscarDados();
   }, []);
 
@@ -151,7 +157,7 @@ function DashboardTecnico() {
     }
   }
 
-  // 🔍 FILTRO ESSENCIAL: Separa apenas os chamados que pertences ao técnico logado
+  // 🔍 FILTRO ESSENCIAL: Separa apenas os chamados que pertencem ao técnico logado
   const chamadosDoTecnico = chamados.filter((c) => {
     const tecnicoId = Number(c.id_tecnico || c.fk_tecnico || 0);
     return tecnicoId === Number(idTecnicoLogado);
@@ -172,6 +178,15 @@ function DashboardTecnico() {
   // Chamados disponíveis para aceitar (status Novo e sem técnico atribuído)
   const chamadosDisponiveis = chamados.filter(
     (c) => c.situacao === "Novo" && !c.id_tecnico && !c.fk_tecnico,
+  );
+
+  // Cálculos de XP e Nível
+  const nivelAtual = perfil?.nivel || 1;
+  const xpAtual = perfil?.xp || 0;
+  const xpNecessario = nivelAtual * 100;
+  const porcentagemXp = Math.min(
+    Math.round((xpAtual / xpNecessario) * 100),
+    100,
   );
 
   const listaConquistas = conquistasBanco.map((c) => {
@@ -226,19 +241,29 @@ function DashboardTecnico() {
         initial="hidden"
         animate="visible"
       >
+        {/* Seção de Boas-vindas */}
         <motion.div className="welcome" variants={itemVariants}>
-          <h1>Bem-vindo, {nomeTecnico}</h1>
+          <h1>Olá, {perfil?.nome || "Técnico"}! 🚀</h1>
+          <p>Bem-vindo ao seu painel de controle e evolução profissional.</p>
+          <p>
+            🌟 Nível Atual: <strong>Nível {nivelAtual}</strong> | XP Total:{" "}
+            <strong>{xpAtual} pts</strong>
+          </p>
+        </motion.div>
 
-          <div className="xp-bar">
-            <motion.div
-              className="xp-progress"
-              initial={{ width: 0 }}
-              animate={{ width: "80%" }}
-              transition={{ duration: 1.5, ease: "circOut", delay: 0.5 }}
-            >
-              Nível 4 - Especialista <br /> 320 / 400 XP
-            </motion.div>
+        {/* 📊 Barra de XP Dinâmica Corrigida */}
+        <motion.div className="xp-bar" variants={itemVariants}>
+          <div
+            className="xp-progress"
+            style={{ width: `${Math.max(porcentagemXp, 8)}%` }}
+          />
+          <div className="xp-text-overlay">
+            {porcentagemXp}% — {xpAtual} / {xpNecessario} XP (Nível {nivelAtual}
+            )
           </div>
+        </motion.div>
+
+        <motion.div className="welcome" variants={itemVariants}>
           <p>
             Gerencie os chamados atribuídos a você e acompanhe o andamento dos
             atendimentos.
