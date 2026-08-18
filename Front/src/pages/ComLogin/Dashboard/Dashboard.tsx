@@ -35,7 +35,6 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   async function ativarNotificacoesPush() {
-    // 1. Verifica se o navegador suporta
     if (
       !("Notification" in window) ||
       !("serviceWorker" in navigator) ||
@@ -45,7 +44,6 @@ function Dashboard() {
       return;
     }
 
-    // 2. Pede a permissão caso ainda não tenha sido concedida
     let permissao = Notification.permission;
 
     if (permissao === "default") {
@@ -58,11 +56,9 @@ function Dashboard() {
     }
 
     try {
-      // 3. Registra o Service Worker (sw.js)
       const registration = await navigator.serviceWorker.register("/sw.js");
       console.log("Service Worker registrado com sucesso!");
 
-      // 4. Faz a inscrição no PushManager
       const publicVapidKey =
         "BEVANANHE89wDqDfDCKtDZSwi6uSPD8NIrxcbgRIQxeZpzo_Bl5acZ5L8Wh-SlpAZAas_lhNIRdvP8BL9iEUJl0";
 
@@ -71,7 +67,6 @@ function Dashboard() {
         applicationServerKey: publicVapidKey,
       });
 
-      // 5. Pega o token salvo no login e envia a inscrição para o MySQL via backend
       const token = localStorage.getItem("token");
       const baseUrl = (
         import.meta.env.VITE_API_URL || "http://localhost:3000"
@@ -93,9 +88,8 @@ function Dashboard() {
     }
   }
 
-  // useEffect para buscar chamados e solicitar notificação ao carregar a página
   useEffect(() => {
-    ativarNotificacoesPush(); // Função para ativar notificações push
+    ativarNotificacoesPush();
 
     const buscarChamados = async () => {
       const token = localStorage.getItem("token");

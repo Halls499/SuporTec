@@ -1,3 +1,6 @@
+/* ==========================================
+   HERO SECTION
+   ========================================== */
 .hero {
   display: flex;
   justify-content: space-between;
@@ -17,10 +20,11 @@
   font-size: 48px;
   color: #fff;
   margin-bottom: 20px;
+  font-weight: 700;
 }
 
 .hero-text p {
-  font-size: 30px;
+  font-size: 20px; /* Ajustado de 30px para ficar proporcional a um parágrafo de introdução */
   color: #d1d5db;
   line-height: 1.6;
   margin-bottom: 30px;
@@ -34,8 +38,9 @@
   text-decoration: none;
   padding: 12px 28px;
   border-radius: 8px;
-  font-size: 30px;
-  transition: 0.2s;
+  font-size: 18px; /* Ajustado para padrão de botão */
+  font-weight: 600;
+  transition: background 0.2s;
   box-sizing: border-box;
 }
 
@@ -48,8 +53,60 @@
   width: 400px;
   max-width: 100%;
   border-radius: 12px;
-  opacity: 0.7;
+  opacity: 0.9; /* Levemente mais visível para destaque */
   display: block;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   SEÇÃO DE BENEFÍCIOS
+   ========================================== */
+.home-beneficios {
+  padding: 80px 40px;
+  background-color: #f9fafb;
+  text-align: center;
+}
+
+.home-beneficios h2 {
+  font-size: 36px;
+  color: #1f2937;
+  margin-bottom: 40px;
+  font-weight: 700;
+}
+
+.beneficios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.beneficio-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  text-align: left;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.beneficio-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
+}
+
+.beneficio-card h3 {
+  font-size: 20px;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.beneficio-card p {
+  font-size: 16px;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 /* ==========================================
@@ -72,17 +129,20 @@
   }
 
   .hero-text p {
-    font-size: 20px;
-  }
-
-  .btn-main {
-    font-size: 20px;
-    padding: 10px 24px;
+    font-size: 18px;
   }
 
   .hero-image img {
     width: 300px;
     margin: 0 auto;
+  }
+
+  .home-beneficios {
+    padding: 50px 20px;
+  }
+
+  .home-beneficios h2 {
+    font-size: 28px;
   }
 }
 
@@ -109,5 +169,9 @@
 
   .hero-image img {
     width: 100%;
+  }
+
+  .beneficios-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import './EditarPerfil.css';
 
@@ -6,22 +6,64 @@ export function EditarPerfil() {
   const [nome, setNome] = useState('');
   const [fotoUrl, setFotoUrl] = useState('');
   const [mensagemSucesso, setMensagemSucesso] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Carrega os dados atuais do localStorage para preencher os campos ou pegar o ID
+    const usuarioAtual = JSON.parse(localStorage.getItem('usuario') || '{}');
+    if (usuarioAtual) {
+      setUserId(usuarioAtual.id || usuarioAtual.id_usuario);
+      if (usuarioAtual.nome) setNome(usuarioAtual.nome);
+      if (usuarioAtual.foto) setFotoUrl(usuarioAtual.foto);
+    }
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const token = localStorage.getItem('token');
     const usuarioAtual = JSON.parse(localStorage.getItem('usuario') || '{}');
     
-    const usuarioAtualizado = {
-      ...usuarioAtual,
-      nome: nome || usuarioAtual.nome,
-      foto: fotoUrl || usuarioAtual.foto,
-    };
+    try {
+      const baseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
-    localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
+      // Se houver ID e rota no backend para atualizar perfil, fazemos a requisição:
+      if (userId) {
+        const resposta = await fetch(`${baseUrl}/api/usuarios/${userId}`, {
+          method: "PUT", // ou PATCH dependendo da sua API
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            nome: nome || usuarioAtual.nome,
+            foto: fotoUrl || usuarioAtual.foto,
+          }),
+        });
 
-    setMensagemSucesso(true);
-    setTimeout(() => setMensagemSucesso(false), 3000);
+        if (!resposta.ok) {
+          console.warn("Aviso: Não foi possível atualizar no backend, salvando apenas localmente.");
+        }
+      }
+
+      // Atualiza o localStorage com os novos dados
+      const usuarioAtualizado = {
+        ...usuarioAtual,
+        nome: nome || usuarioAtual.nome,
+        foto: fotoUrl || usuarioAtual.foto,
+      };
+
+      localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
+
+      // Dispara o evento para atualizar o Header em tempo real
+      window.dispatchEvent(new Event("login"));
+
+      setMensagemSucesso(true);
+      setTimeout(() => setMensagemSucesso(false), 3000);
+    } catch (erro) {
+      console.error("Erro ao atualizar perfil:", erro);
+      alert("Erro ao atualizar perfil no servidor.");
+    }
   };
 
   return (
@@ -82,3 +124,5 @@ export function EditarPerfil() {
     </div>
   );
 }
+
+export default EditarPerfil;

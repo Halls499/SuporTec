@@ -5,15 +5,23 @@ import jwt from "jsonwebtoken";
 
 export async function listarUsuarios(req, res) {
   try {
-    // Em um SaaS, listar usuários normalmente deve ser filtrado pela organização do usuário logado
-    // Se o token injetou o usuario no req (ex: req.usuario.fk_organizacao), podemos filtrar por ele
-    const fk_organizacao = req.usuario?.fk_organizacao;
+    // Busca a organização priorizando o token do usuário logado, com fallback para o body/query
+    let organizacao =
+      req.usuario?.fk_organizacao ||
+      req.body?.fk_organizacao ||
+      req.query?.fk_organizacao;
 
-    const lista = fk_organizacao
-      ? await usuarioModel.listarUsuariosPorOrganizacao(fk_organizacao)
+    if (organizacao === 1 || !organizacao) {
+      organizacao = null;
+    }
+
+    const lista = organizacao
+      ? await usuarioModel.listarUsuariosPorOrganizacao(organizacao)
       : await usuarioModel.listarUsuarios();
 
-    const listaSegura = lista.map((usuario) => UsuarioSeguro(usuario));
+    const listaSegura = Array.isArray(lista)
+      ? lista.map((usuario) => UsuarioSeguro(usuario))
+      : [];
 
     return res.status(200).json(listaSegura);
   } catch (erro) {
@@ -26,7 +34,6 @@ export async function listarUsuarios(req, res) {
 
 export async function cadastrarUsuario(req, res) {
   try {
-    // Agora aceitamos fk_organizacao no body (se não vier, default é 1)
     const { nome, email, senha, tipo_usuario, fk_organizacao } = req.body;
 
     if (!nome || !email || !senha || !tipo_usuario) {
@@ -45,7 +52,7 @@ export async function cadastrarUsuario(req, res) {
 
     const emailExistente = await usuarioModel.verificarEmailExistente(email);
 
-    if (emailExistente.length > 0) {
+    if (Array.isArray(emailExistente) && emailExistente.length > 0) {
       return res.status(409).json({
         erro: "Email já cadastrado.",
       });
@@ -53,8 +60,8 @@ export async function cadastrarUsuario(req, res) {
 
     const hash = await bcrypt.hash(senha, 10);
 
-    // Define a organização (usa a enviada ou 1 como padrão)
-    const orgId = fk_organizacao || 1;
+    // Define a organização (usa a enviada ou null como padrão)
+    const orgId = fk_organizacao || null;
 
     await usuarioModel.criarUsuario(nome, email, hash, tipo_usuario, orgId);
 
@@ -75,7 +82,7 @@ export async function buscarUsuarioPorId(req, res) {
 
     const usuario = await usuarioModel.buscarUsuarioPorId(id);
 
-    if (usuario.length === 0) {
+    if (!usuario || usuario.length === 0) {
       return res.status(404).json({
         erro: "Usuário não encontrado.",
       });
@@ -96,9 +103,15 @@ export async function loginUsuario(req, res) {
   try {
     const { email, senha } = req.body;
 
+    if (!email || !senha) {
+      return res.status(400).json({
+        erro: "E-mail e senha são obrigatórios para o login.",
+      });
+    }
+
     const usuarioEncontrado = await usuarioModel.buscarUsuarioPorEmail(email);
 
-    if (usuarioEncontrado.length === 0) {
+    if (!usuarioEncontrado || usuarioEncontrado.length === 0) {
       return res.status(401).json({
         erro: "Credenciais inválidas.",
       });
@@ -116,7 +129,7 @@ export async function loginUsuario(req, res) {
 
     const usuarioPublico = UsuarioSeguro(usuario);
 
-    // 🔑 O SEGREDO DO SAAS: Incluir fk_organizacao, xp e nivel no payload do JWT
+    // 🔑 O SEGREDO DO SAAS: Incluir fk_organizacao no payload do JWT
     const token = jwt.sign(
       {
         id_usuario: usuario.id_usuario,

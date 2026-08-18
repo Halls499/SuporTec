@@ -17,8 +17,8 @@ export async function AbrirNovoChamado(req, res) {
     contato,
   } = req.body;
 
-  const fk_cliente = req.usuario.id_usuario;
-  const fk_organizacao = req.usuario.fk_organizacao || 1;
+  const fk_cliente = req.usuario?.id_usuario;
+  const fk_organizacao = req.usuario?.fk_organizacao || 1;
 
   try {
     if (
@@ -27,17 +27,18 @@ export async function AbrirNovoChamado(req, res) {
       !prioridade ||
       !tipo_atendimento ||
       !tipo_contato ||
-      !contato
+      !contato ||
+      !fk_cliente
     ) {
       return res.status(400).json({
-        erro: "Campos obrigatórios não preenchidos.",
+        erro: "Campos obrigatórios não preenchidos ou usuário não autenticado.",
       });
     }
 
     const dadosChamado = {
       fk_organizacao,
       titulo,
-      descricao,
+      descricao: descricao || "",
       categoria,
       prioridade,
       tipo_atendimento,
@@ -56,7 +57,7 @@ export async function AbrirNovoChamado(req, res) {
       mensagem: "Chamado criado com sucesso!",
     });
   } catch (erro) {
-    console.error(erro);
+    console.error("Erro ao abrir chamado:", erro);
     return res.status(500).json({
       erro: "Erro interno ao abrir chamado.",
     });
@@ -64,8 +65,8 @@ export async function AbrirNovoChamado(req, res) {
 }
 
 export async function listarMeusChamados(req, res) {
-  const fk_cliente = req.usuario.id_usuario;
-  const fk_organizacao = req.usuario.fk_organizacao || 1;
+  const fk_cliente = req.usuario?.id_usuario;
+  const fk_organizacao = req.usuario?.fk_organizacao || 1;
 
   try {
     const listaChamados =
@@ -74,9 +75,11 @@ export async function listarMeusChamados(req, res) {
         fk_organizacao,
       );
 
-    return res.status(200).json(listaChamados);
+    return res
+      .status(200)
+      .json(Array.isArray(listaChamados) ? listaChamados : []);
   } catch (erro) {
-    console.error(erro);
+    console.error("Erro ao listar chamados:", erro);
     return res.status(500).json({
       erro: "Erro ao buscar chamados.",
     });
@@ -84,14 +87,16 @@ export async function listarMeusChamados(req, res) {
 }
 
 export async function listarChamadosTecnico(req, res) {
-  const fk_organizacao = req.usuario.fk_organizacao || 1;
+  const fk_organizacao = req.usuario?.fk_organizacao || 1;
 
   try {
     const listaChamados =
       await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
-    return res.status(200).json(listaChamados);
+    return res
+      .status(200)
+      .json(Array.isArray(listaChamados) ? listaChamados : []);
   } catch (erro) {
-    console.error(erro);
+    console.error("Erro ao listar chamados do técnico:", erro);
     return res.status(500).json({
       erro: "Erro ao buscar chamados do técnico.",
     });
@@ -101,7 +106,7 @@ export async function listarChamadosTecnico(req, res) {
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
-    const fk_organizacao = req.usuario.fk_organizacao || 1;
+    const fk_organizacao = req.usuario?.fk_organizacao || 1;
 
     const chamado = await chamadoModel.buscarChamadoPorIdEOrganizacao(
       id,
@@ -127,7 +132,7 @@ export async function buscarChamadoPorId(req, res) {
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
-    const fk_organizacao = req.usuario.fk_organizacao || 1;
+    const fk_organizacao = req.usuario?.fk_organizacao || 1;
     const dadosAtualizacao = req.body;
 
     const atualizado = await chamadoModel.atualizarChamadoSaaS(
@@ -167,8 +172,8 @@ export async function atualizarChamado(req, res) {
 export async function cancelarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
-    const fk_cliente = req.usuario.id_usuario;
-    const fk_organizacao = req.usuario.fk_organizacao || 1;
+    const fk_cliente = req.usuario?.id_usuario;
+    const fk_organizacao = req.usuario?.fk_organizacao || 1;
 
     const canceladoComSucesso = await chamadoModel.cancelarChamadoSaaS(
       id,
@@ -194,11 +199,11 @@ export async function cancelarChamadoPorId(req, res) {
 
 export async function aceitarChamado(req, res) {
   const { id } = req.params;
-  const id_tecnico = req.usuario.id_usuario || req.usuario.id;
+  const id_tecnico = req.usuario?.id_usuario || req.usuario?.id;
 
   try {
     const resultado = await chamadoModel.aceitarChamadoModel(id_tecnico, id);
-    const affectedRows = resultado[0]?.affectedRows || resultado.affectedRows;
+    const affectedRows = resultado[0]?.affectedRows || resultado?.affectedRows;
 
     if (!affectedRows || affectedRows === 0) {
       return res.status(404).json({ erro: "Chamado não encontrado." });
@@ -291,7 +296,7 @@ export async function buscarMensagensChamado(req, res) {
       "SELECT * FROM mensagem WHERE fk_chamado = ? ORDER BY data_envio ASC",
       [id],
     );
-    return res.status(200).json(mensagens);
+    return res.status(200).json(Array.isArray(mensagens) ? mensagens : []);
   } catch (error) {
     console.error("Erro ao buscar mensagens:", error);
     return res.status(500).json({ erro: "Erro ao buscar mensagens do chat." });
@@ -301,16 +306,16 @@ export async function buscarMensagensChamado(req, res) {
 export async function enviarMensagemChamado(req, res) {
   const { id } = req.params;
   const { mensagem } = req.body;
-  const id_remetente = req.usuario.id_usuario || req.usuario.id;
+  const id_remetente = req.usuario?.id_usuario || req.usuario?.id;
 
   try {
-    if (!mensagem) {
+    if (!mensagem || !String(mensagem).trim()) {
       return res.status(400).json({ erro: "A mensagem não pode estar vazia." });
     }
 
     await pool.query(
       "INSERT INTO mensagem (fk_chamado, fk_remetente, texto, data_envio) VALUES (?, ?, ?, NOW())",
-      [id, id_remetente, mensagem],
+      [id, id_remetente, String(mensagem).trim()],
     );
 
     return res.status(201).json({ mensagem: "Mensagem enviada com sucesso!" });
@@ -324,20 +329,17 @@ export async function enviarMensagemChamado(req, res) {
 // FUNÇÕES AUXILIARES DE CONQUISTAS
 // ==========================================
 
-// Função principal que vai rodar as regras para o técnico
 async function checarRegrasDeConquistas(idTecnico, idChamado) {
   try {
-    // 1. Primeiro Atendimento: Conclua seu primeiro chamado
     const [totalChamadosResolvidos] = await pool.query(
       "SELECT COUNT(*) as total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido'",
       [idTecnico],
     );
 
-    if (totalChamadosResolvidos[0].total === 1) {
+    if (totalChamadosResolvidos[0]?.total === 1) {
       await desbloquearConquista(idTecnico, 1);
     }
 
-    // 2. Atendimento Ágil: Resolva 10 chamados em menos de 5 horas
     const [chamadosAgeis] = await pool.query(
       `SELECT COUNT(*) as total FROM chamado 
        WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
@@ -345,11 +347,10 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       [idTecnico],
     );
 
-    if (chamadosAgeis[0].total >= 10) {
+    if (chamadosAgeis[0]?.total >= 10) {
       await desbloquearConquista(idTecnico, 2);
     }
 
-    // 3. Maratona Semanal: Resolva pelo menos 10 chamados no decorrer de uma semana
     const [chamadosSemanais] = await pool.query(
       `SELECT COUNT(*) as total FROM chamado 
        WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
@@ -357,16 +358,14 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       [idTecnico],
     );
 
-    if (chamadosSemanais[0].total >= 10) {
+    if (chamadosSemanais[0]?.total >= 10) {
       await desbloquearConquista(idTecnico, 3);
     }
 
-    // 4. Mestre do Suporte: Resolva mais de 100 chamados
-    if (totalChamadosResolvidos[0].total >= 100) {
+    if (totalChamadosResolvidos[0]?.total >= 100) {
       await desbloquearConquista(idTecnico, 4);
     }
 
-    // 5. Abertura Rápida: Abra e resolva um chamado em menos de 1 hora.
     const [chamadoRapidoAlta] = await pool.query(
       `SELECT id_chamado FROM chamado 
        WHERE id_chamado = ? AND fk_tecnico = ?  
@@ -378,7 +377,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 5);
     }
 
-    // 6. Sem Descanso: Resolva chamados durante 7 dias consecutivos
     const [chamadosConsecutivos] = await pool.query(
       `SELECT COUNT(DISTINCT DATE(data_fechamento)) as dias_consecutivos 
        FROM chamado
@@ -387,11 +385,10 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       [idTecnico],
     );
 
-    if (chamadosConsecutivos[0].dias_consecutivos >= 7) {
+    if (chamadosConsecutivos[0]?.dias_consecutivos >= 7) {
       await desbloquearConquista(idTecnico, 6);
     }
 
-    // 7. Hora Extra: Resolva um chamado fora do horário comercial padrão
     const [chamadosForaHorario] = await pool.query(
       `SELECT id_chamado FROM chamado 
        WHERE fk_tecnico = ? AND situacao = 'Resolvido'
@@ -403,7 +400,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 7);
     }
 
-    // 8. Alerta Vermelho: Resolva um chamado de alta prioridade em menos de 15 minutos.
     const [chamadosAltaPrioridade] = await pool.query(
       `SELECT id_chamado FROM chamado
        WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND prioridade = 'Alta'
@@ -415,7 +411,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 8);
     }
 
-    // 9. Especialidades e Áreas Técnicas: Conclua 50 chamados por categoria.
     const [chamadosPorCategoria] = await pool.query(
       `SELECT categoria, COUNT(*) as total FROM chamado
        WHERE fk_tecnico = ? AND situacao = 'Resolvido'
@@ -444,7 +439,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       }
     }
 
-    // 10. Tríplice Coroa: Resolva 3 chamados de categorias distintas na mesma semana.
     const [chamadosSemana] = await pool.query(
       `SELECT COUNT(DISTINCT categoria) as categorias_distintas
        FROM chamado
@@ -458,7 +452,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 13);
     }
 
-    // 11. Triagem Completa: Resolva um chamado de cada prioridade: baixa, média e alta.
     const [chamadosPrioridades] = await pool.query(
       `SELECT DISTINCT prioridade FROM chamado
        WHERE fk_tecnico = ? AND situacao = 'Resolvido'`,
@@ -474,7 +467,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 14);
     }
 
-    // 12. Raio-X Técnico: Resolva Hardware e Software no mesmo dia.
     const [chamadosMesmoDia] = await pool.query(
       `SELECT DATE(data_fechamento) as dia, categoria
        FROM chamado
@@ -497,7 +489,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 15);
     }
 
-    // 13. Versatilidade Total: Presencial e Remoto no mesmo dia.
     const [chamadosTipoMesmoDia] = await pool.query(
       `SELECT DATE(data_fechamento) as dia, tipo_atendimento
        FROM chamado
@@ -520,18 +511,15 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 16);
     }
 
-    // Dados do usuário (Nível e Contagem de Conquistas para as próximas regras)
     const [usuario] = await pool.query(
       "SELECT nivel FROM usuario WHERE id_usuario = ?",
       [idTecnico],
     );
 
-    // 14. Lenda do Suporte: Alcance o nível 5.
     if (usuario.length > 0 && usuario[0].nivel >= 5) {
       await desbloquearConquista(idTecnico, 17);
     }
 
-    // 15. Especialista Dedicado: Conclua 7 chamados seguidos da mesma categoria.
     const [chamadosSeguidos] = await pool.query(
       `SELECT COUNT(*) as total FROM chamado
        WHERE fk_tecnico = ? AND situacao = 'Resolvido'
@@ -544,17 +532,15 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
       await desbloquearConquista(idTecnico, 18);
     }
 
-    // 16. Emblema Inicial: Desbloqueie suas primeiras 3 conquistas.
     const [conquistasUsuario] = await pool.query(
       "SELECT COUNT(*) as total FROM usuario_conquista WHERE fk_usuario = ?",
       [idTecnico],
     );
 
-    if (conquistasUsuario[0].total >= 3) {
+    if (conquistasUsuario[0]?.total >= 3) {
       await desbloquearConquista(idTecnico, 19);
     }
 
-    // 17. Meio do Caminho: Alcance o nível 250.
     if (usuario.length > 0 && usuario[0].nivel >= 250) {
       await desbloquearConquista(idTecnico, 20);
     }
@@ -563,7 +549,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
   }
 }
 
-// Função que salva no banco a nova conquista (se ele já não a tiver)
 async function desbloquearConquista(idTecnico, idConquista) {
   try {
     const [jaTem] = await pool.query(

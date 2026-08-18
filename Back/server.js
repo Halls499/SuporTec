@@ -21,9 +21,9 @@ app.get("/health", async (req, res) => {
   try {
     const connection = await pool.getConnection();
     connection.release();
-    res.status(200).json({ status: "OK", message: "API e Banco rodando liso!" });
+    return res.status(200).json({ status: "OK", message: "API e Banco rodando liso!" });
   } catch (error) {
-    res.status(500).json({ status: "ERROR", message: error.message });
+    return res.status(500).json({ status: "ERROR", message: error.message });
   }
 });
 
@@ -32,11 +32,11 @@ app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/chamados", chamadosRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/push", pushRoutes); 
-app.use("/api/conquistas", conquistasRoutes); // 👈 2. Registre a rota aqui
+app.use("/api/conquistas", conquistasRoutes);
 
 // Middleware para rotas não encontradas (404)
 app.use((req, res) => {
-  res.status(404).json({ mensagem: "Rota não encontrada." });
+  return res.status(404).json({ mensagem: "Rota não encontrada." });
 });
 
 // Teste de conexão inicial com o MySQL

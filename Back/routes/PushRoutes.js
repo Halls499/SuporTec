@@ -31,10 +31,11 @@ router.post("/salvar-inscricao", verificarToken, async (req, res) => {
   try {
     const query = `REPLACE INTO push_subscriptions (id_usuario, endpoint, p256dh, auth) VALUES (?, ?, ?, ?)`;
     await pool.query(query, [id_usuario, endpoint, keys.p256dh, keys.auth]);
-    res.status(200).json({ mensagem: "Inscrição salva com sucesso!" });
+    
+    return res.status(200).json({ mensagem: "Inscrição salva com sucesso!" });
   } catch (err) {
     console.error("Erro ao salvar inscrição:", err);
-    res.status(500).json({ erro: "Erro ao salvar inscrição" });
+    return res.status(500).json({ erro: "Erro ao salvar inscrição" });
   }
 });
 
@@ -49,7 +50,7 @@ export async function enviarNotificacaoParaUsuario(
       [id_usuario],
     );
 
-    if (results.length === 0) return;
+    if (!Array.isArray(results) || results.length === 0) return;
 
     results.forEach((sub) => {
       const pushSubscription = {

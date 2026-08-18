@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS organizacao (
 -- 2. Tabela de Usuários (Clientes e Técnicos)
 CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    fk_organizacao INT NOT NULL,
+    fk_organizacao INT NULL,
     nome VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     CONSTRAINT fk_usuario_organizacao
         FOREIGN KEY (fk_organizacao)
         REFERENCES organizacao(id_organizacao)
+        ON DELETE SET NULL
 );
 
 -- 3. Tabela de Chamados
@@ -64,7 +65,7 @@ CREATE TABLE IF NOT EXISTS categorias (
     nome VARCHAR(100) NOT NULL
 );
 
--- 5. Tabela de Conquistas (Adicionado categoria_id e FK)
+-- 5. Tabela de Conquistas
 CREATE TABLE IF NOT EXISTS conquista (
     id_conquista INT AUTO_INCREMENT PRIMARY KEY,
     titulo VARCHAR(100) NOT NULL,
@@ -73,6 +74,7 @@ CREATE TABLE IF NOT EXISTS conquista (
     CONSTRAINT fk_conquista_categoria
         FOREIGN KEY (categoria_id)
         REFERENCES categorias(id)
+        ON DELETE SET NULL
 );
 
 -- 6. Tabela de Conquistas do Usuário (Relação N para N)
@@ -127,33 +129,17 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 
 --------------------------------------------------
--- COMANDOS DE VALIDAÇÃO E CONSULTA
+-- INSERT DE DADOS INICIAIS (Utilizando INSERT IGNORE para evitar duplicidade)
 --------------------------------------------------
 
-SHOW TABLES;
-
-SELECT * FROM usuario;
-SELECT * FROM chamado;
-SELECT * FROM conquista;
-SELECT * FROM historico_chamado;
-SELECT * FROM mensagem;
-SELECT * FROM organizacao;
-SELECT * FROM usuario_conquista;
-SELECT * FROM push_subscriptions;
-SELECT * FROM categorias;
-
---------------------------------------------------
--- INSERT
---------------------------------------------------
-
-INSERT INTO categorias (id, nome) VALUES 
+INSERT IGNORE INTO categorias (id, nome) VALUES 
 (1, 'Volume e Produtividade'),
 (2, 'Velocidade e Desempenho'),
 (3, 'Especialidades e Áreas Técnicas'),
 (4, 'Desafios Combinados e Estratégicos'),
 (5, 'Progressão Geral');
 
-INSERT INTO conquista (id_conquista, titulo, descricao, categoria_id) VALUES
+INSERT IGNORE INTO conquista (id_conquista, titulo, descricao, categoria_id) VALUES
 -- 1. Volume e Produtividade
 (1, 'Primeiro Atendimento', 'Conclua seu primeiro chamado.', 1),
 (2, 'Atendimento Ágil', 'Resolva 10 chamados em menos de 5 horas.', 1),

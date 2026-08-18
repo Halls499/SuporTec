@@ -1,6 +1,6 @@
 import express from "express";
-import pool from "../config/database.js"; 
-import { verificarToken } from "../middleware/authMiddleware.js"; 
+import pool from "../config/database.js";
+import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -8,64 +8,59 @@ router.get("/", verificarToken, async (req, res) => {
   const idTecnico = req.usuario?.id_usuario || req.usuario?.id || req.user?.id;
 
   if (!idTecnico) {
-    return res.status(400).json({ erro: "ID do técnico não informado ou usuário não autenticado." });
+    return res
+      .status(400)
+      .json({
+        erro: "ID do técnico não informado ou usuário não autenticado.",
+      });
   }
 
+  let connection;
+
   try {
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
 
-    // 1. Métricas principais do técnico
-    const [resResolvidos] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido'`,
-      [idTecnico]
+    // 1. Busca unificada de métricas (Total resolvido e contagem por categoria de uma só vez)
+    const [metricasChamados] = await connection.execute(
+      `SELECT 
+         SUM(CASE WHEN situacao = 'Resolvido' THEN 1 ELSE 0 END) AS total_resolvidos,
+         SUM(CASE WHEN situacao = 'Resolvido' AND categoria = 'Hardware' THEN 1 ELSE 0 END) AS total_hardware,
+         SUM(CASE WHEN situacao = 'Resolvido' AND categoria = 'Software' THEN 1 ELSE 0 END) AS total_software,
+         SUM(CASE WHEN situacao = 'Resolvido' AND categoria = 'Redes' THEN 1 ELSE 0 END) AS total_redes,
+         SUM(CASE WHEN situacao = 'Resolvido' AND categoria = 'Impressoras' THEN 1 ELSE 0 END) AS total_impressoras
+       FROM chamado 
+       WHERE fk_tecnico = ?`,
+      [idTecnico],
     );
-    const totalResolvidos = resResolvidos[0].total;
 
-    const [resHardware] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND categoria = 'Hardware'`,
-      [idTecnico]
-    );
-    const totalHardware = resHardware[0].total;
+    const dados = metricasChamados[0] || {};
+    const totalResolvidos = Number(dados.total_resolvidos) || 0;
+    const totalHardware = Number(dados.total_hardware) || 0;
+    const totalSoftware = Number(dados.total_software) || 0;
+    const totalRedes = Number(dados.total_redes) || 0;
+    const totalImpressoras = Number(dados.total_impressoras) || 0;
 
-    const [resSoftware] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND categoria = 'Software'`,
-      [idTecnico]
-    );
-    const totalSoftware = resSoftware[0].total;
-
-    const [resRedes] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND categoria = 'Redes'`,
-      [idTecnico]
-    );
-    const totalRedes = resRedes[0].total;
-
-    const [resImpressoras] = await connection.execute(
-      `SELECT COUNT(*) AS total FROM chamado WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND categoria = 'Impressoras'`,
-      [idTecnico]
-    );
-    const totalImpressoras = resImpressoras[0].total;
-
-    // Buscar nível atual do usuário para regras de nível (Lenda / Meio do Caminho)
+    // Buscar nível atual do usuário
     const [resUsuario] = await connection.execute(
       `SELECT nivel FROM usuario WHERE id_usuario = ?`,
-      [idTecnico]
+      [idTecnico],
     );
     const nivelUsuario = resUsuario[0]?.nivel || 1;
 
-    // Buscar total de conquistas já desbloqueadas (para a conquista de Emblema Inicial)
+    // Buscar total de conquistas já desbloqueadas
     const [resConquistasUsuario] = await connection.execute(
       `SELECT COUNT(*) AS total FROM usuario_conquista WHERE fk_usuario = ?`,
-      [idTecnico]
+      [idTecnico],
     );
-    const totalConquistasDesbloqueadas = resConquistasUsuario[0].total;
+    const totalConquistasDesbloqueadas = resConquistasUsuario[0]?.total || 0;
 
-    // 2. Regras de Desbloqueio Automático (Ajuste os IDs conforme o seu banco de dados)
-    
+    // 2. Regras de Desbloqueio Automático
+
     // ID 1: Primeiro Atendimento (>= 1 chamado resolvido)
     if (totalResolvidos >= 1) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 1)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -73,7 +68,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalResolvidos >= 100) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 4)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -81,7 +76,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalHardware >= 50) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 9)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -89,7 +84,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalSoftware >= 50) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 10)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -97,7 +92,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalRedes >= 50) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 11)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -105,7 +100,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalImpressoras >= 50) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 12)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -113,7 +108,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (nivelUsuario >= 500) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 17)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -121,7 +116,7 @@ router.get("/", verificarToken, async (req, res) => {
     if (totalConquistasDesbloqueadas >= 3) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 19)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
@@ -129,12 +124,13 @@ router.get("/", verificarToken, async (req, res) => {
     if (nivelUsuario >= 250) {
       await connection.execute(
         `INSERT IGNORE INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, 20)`,
-        [idTecnico]
+        [idTecnico],
       );
     }
 
     // 3. Buscar todas as conquistas e o status atualizado do técnico
-    const [todasConquistas] = await connection.execute(`
+    const [todasConquistas] = await connection.execute(
+      `
       SELECT 
         c.id_conquista, 
         c.titulo, 
@@ -142,14 +138,18 @@ router.get("/", verificarToken, async (req, res) => {
         CASE WHEN uc.fk_usuario IS NOT NULL THEN 'desbloqueada' ELSE 'bloqueada' END AS status
       FROM conquista c
       LEFT JOIN usuario_conquista uc ON c.id_conquista = uc.fk_conquista AND uc.fk_usuario = ?
-    `, [idTecnico]);
+    `,
+      [idTecnico],
+    );
 
-    connection.release();
-    res.json(todasConquistas);
-
+    return res
+      .status(200)
+      .json(Array.isArray(todasConquistas) ? todasConquistas : []);
   } catch (erro) {
     console.error("Erro ao processar conquistas:", erro);
-    res.status(500).json({ erro: "Erro interno ao buscar conquistas." });
+    return res.status(500).json({ erro: "Erro interno ao buscar conquistas." });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
