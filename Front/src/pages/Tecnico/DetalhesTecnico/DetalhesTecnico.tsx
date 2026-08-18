@@ -44,27 +44,37 @@ export default function DetalhesTecnico() {
     import.meta.env.VITE_API_URL || "http://localhost:3000"
   ).replace(/\/$/, "");
 
-  // 🔄 Buscar detalhes do chamado e as mensagens
+  // 🔄 Buscar detalhes do chamado e as mensagens de forma segura
   useEffect(() => {
     async function carregarDados() {
+      if (!id) return;
+      
       try {
-        // Busca o chamado
+        setLoading(true);
+        // 1. Busca o chamado primeiro
         const resChamado = await fetch(`${baseUrl}/api/chamados/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (resChamado.ok) {
-          const dataChamado = await resChamado.json();
-          setChamado(dataChamado);
-          setNovaSituacao(dataChamado.situacao || "");
+
+        if (!resChamado.ok) {
+          // Se o chamado não existe (404), para por aqui para evitar erros em cadeia
+          setChamado(null);
+          setLoading(false);
+          return;
         }
 
-        // Busca as mensagens/chat do chamado
+        const dataChamado = await resChamado.json();
+        setChamado(dataChamado);
+        setNovaSituacao(dataChamado.situacao || "");
+
+        // 2. Só busca as mensagens se o chamado realmente existir
         const resMensagens = await fetch(
           `${baseUrl}/api/chamados/${id}/mensagens`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
+        
         if (resMensagens.ok) {
           const dataMensagens = await resMensagens.json();
           setMensagens(Array.isArray(dataMensagens) ? dataMensagens : []);
@@ -76,7 +86,7 @@ export default function DetalhesTecnico() {
       }
     }
 
-    if (id) carregarDados();
+    carregarDados();
   }, [id, baseUrl, token]);
 
   // 📤 Enviar nova mensagem / resposta
@@ -133,6 +143,8 @@ export default function DetalhesTecnico() {
 
       if (res.ok) {
         alert("Status atualizado com sucesso!");
+      } else {
+        alert("Erro ao atualizar status.");
       }
     } catch (err) {
       console.error("Erro ao atualizar status:", err);
@@ -254,9 +266,11 @@ export default function DetalhesTecnico() {
             </motion.div>
           </>
         ) : (
-          <div className="detalhes-card">
-            <p className="chat-vazio">Chamado não encontrado.</p>
-          </div>
+          <motion.div className="detalhes-card" variants={itemVariants}>
+            <p className="chat-vazio">
+              Chamado não encontrado ou excluído do sistema.
+            </p>
+          </motion.div>
         )}
 
         <div className="voltar-container">

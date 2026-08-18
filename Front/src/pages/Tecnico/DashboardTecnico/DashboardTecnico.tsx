@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import "./DashboardTecnico.css";
 import { motion, type Variants } from "framer-motion";
 import { useState, useEffect } from "react";
+import { ConquistaCard } from "../ConquistasCard/ConquistasCard";
 
 interface Chamado {
   id_chamado: number;
@@ -30,13 +31,6 @@ interface ConquistaAPI {
   titulo: string;
   descricao: string;
   status: "desbloqueada" | "bloqueada";
-}
-
-interface ConquistaProps {
-  ico: string;
-  tit: string;
-  desc: string;
-  status: "desbloqueada" | "bloqueada" | string;
 }
 
 const containerVariants: Variants = {
@@ -86,6 +80,7 @@ function DashboardTecnico() {
   const [chamados, setChamados] = useState<Chamado[]>([]);
   const [conquistasBanco, setConquistasBanco] = useState<ConquistaAPI[]>([]);
   const [perfil, setPerfil] = useState<TecnicoPerfil | null>(null);
+  const [, setCarregando] = useState<boolean>(true);
 
   const idTecnicoLogado =
     obterIdUsuarioDoToken() || Number(localStorage.getItem("id_usuario") || 0);
@@ -96,6 +91,7 @@ function DashboardTecnico() {
   ).replace(/\/$/, "");
 
   async function buscarDados() {
+    setCarregando(true);
     try {
       const [resChamados, resConquistas, resPerfil] = await Promise.all([
         fetch(`${baseUrl}/api/chamados/tecnico`, {
@@ -127,6 +123,8 @@ function DashboardTecnico() {
       }
     } catch (err) {
       console.error("Erro ao carregar dados:", err);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -150,14 +148,16 @@ function DashboardTecnico() {
       if (response.ok) {
         buscarDados();
       } else {
-        alert("Não foi possível aceitar o chamado.");
+        const erroData = await response.json().catch(() => null);
+        alert(erroData?.mensagem || "Não foi possível aceitar o chamado.");
       }
     } catch (error) {
       console.error("Erro ao aceitar chamado:", error);
+      alert("Erro de conexão ao tentar aceitar o chamado.");
     }
   }
 
-  // 🔍 FILTRO ESSENCIAL: Separa apenas os chamados que pertencem ao técnico logado
+  // Filtro: Separa apenas os chamados que pertencem ao técnico logado
   const chamadosDoTecnico = chamados.filter((c) => {
     const tecnicoId = Number(c.id_tecnico || c.fk_tecnico || 0);
     return tecnicoId === Number(idTecnicoLogado);
@@ -233,6 +233,11 @@ function DashboardTecnico() {
     (c) => c.status === "desbloqueada",
   ).length;
 
+  // Extrai as categorias únicas dinamicamente
+  const categoriasUnicas = Array.from(
+    new Set(listaConquistas.map((c) => c.categoria))
+  );
+
   return (
     <main className="home-login-page">
       <motion.section
@@ -251,7 +256,7 @@ function DashboardTecnico() {
           </p>
         </motion.div>
 
-        {/* 📊 Barra de XP Dinâmica Corrigida */}
+        {/* Barra de XP Dinâmica */}
         <motion.div className="xp-bar" variants={itemVariants}>
           <div
             className="xp-progress"
@@ -279,7 +284,7 @@ function DashboardTecnico() {
           )}
         </motion.div>
 
-        {/* Cards de Resumo refletindo apenas os chamados do técnico */}
+        {/* Cards de Resumo */}
         <motion.div className="summary-cards" variants={containerVariants}>
           {[
             { ico: "📥", txt: "Novos", total: novos },
@@ -300,7 +305,7 @@ function DashboardTecnico() {
           ))}
         </motion.div>
 
-        {/* Seção de Chamados Disponíveis para o técnico aceitar */}
+        {/* Seção de Chamados Disponíveis */}
         <motion.div className="chamados-recentes" variants={containerVariants}>
           <motion.h3 variants={itemVariants}>
             📥 Chamados Disponíveis para Aceitar
@@ -336,7 +341,7 @@ function DashboardTecnico() {
           </div>
         </motion.div>
 
-        {/* Seção de Conquistas */}
+        {/* Seção de Conquistas Dinâmica por Categoria */}
         <motion.div className="conquistas" variants={containerVariants}>
           <motion.h2 variants={itemVariants}>🏆 Conquistas</motion.h2>
           <motion.h3 variants={itemVariants}>
@@ -344,20 +349,24 @@ function DashboardTecnico() {
             desbloqueadas
           </motion.h3>
 
-          <motion.h4 variants={itemVariants}>📋 Suporte Geral</motion.h4>
-          <motion.div className="conquistas-grid" variants={containerVariants}>
-            {listaConquistas
-              .filter((c) => c.categoria === "Suporte Geral")
-              .map((conquista) => (
-                <ConquistaCard
-                  key={conquista.id}
-                  ico={conquista.ico}
-                  tit={conquista.tit}
-                  desc={conquista.desc}
-                  status={conquista.status}
-                />
-              ))}
-          </motion.div>
+          {categoriasUnicas.map((cat) => (
+            <div key={cat} style={{ marginTop: "20px" }}>
+              <motion.h4 variants={itemVariants}>📋 {cat}</motion.h4>
+              <motion.div className="conquistas-grid" variants={containerVariants}>
+                {listaConquistas
+                  .filter((c) => c.categoria === cat)
+                  .map((conquista) => (
+                    <ConquistaCard
+                      key={conquista.id}
+                      ico={conquista.ico}
+                      tit={conquista.tit}
+                      desc={conquista.desc}
+                      status={conquista.status}
+                    />
+                  ))}
+              </motion.div>
+            </div>
+          ))}
         </motion.div>
 
         <motion.div
@@ -372,20 +381,6 @@ function DashboardTecnico() {
         </motion.div>
       </motion.section>
     </main>
-  );
-}
-
-function ConquistaCard({ ico, tit, desc, status }: ConquistaProps) {
-  return (
-    <motion.div
-      className={`conquista-card ${status}`}
-      variants={itemVariants}
-      whileHover={status === "desbloqueada" ? cardHover : {}}
-    >
-      <span>{ico}</span>
-      <h5>{tit}</h5>
-      <p>{desc}</p>
-    </motion.div>
   );
 }
 

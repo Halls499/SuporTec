@@ -213,12 +213,14 @@ export async function cancelarChamadoPorId(req, res) {
 }
 
 export async function aceitarChamado(req, res) {
-  const { id } = req.params; 
-  const id_tecnico = req.usuario.id_usuario || req.usuario.id; 
+  const { id } = req.params;
+  const id_tecnico = req.usuario.id_usuario || req.usuario.id;
 
   try {
-    console.log(`[ACEITAR] Tentando aceitar chamado ${id} para o técnico ${id_tecnico}`);
-    
+    console.log(
+      `[ACEITAR] Tentando aceitar chamado ${id} para o técnico ${id_tecnico}`,
+    );
+
     const resultado = await chamadoModel.aceitarChamadoModel(id_tecnico, id);
 
     // Como o pool.query retorna um array [result, fields], verificamos o affectedRows
@@ -231,6 +233,68 @@ export async function aceitarChamado(req, res) {
     return res.status(200).json({ mensagem: "Chamado aceito com sucesso!" });
   } catch (error) {
     console.error("ERRO DETALHADO AO ACEITAR CHAMADO:", error);
-    return res.status(500).json({ erro: "Erro interno no servidor.", detalhes: error.message });
+    return res
+      .status(500)
+      .json({ erro: "Erro interno no servidor.", detalhes: error.message });
+  }
+}
+
+export async function atualizarStatusChamado(req, res) {
+  const { id } = req.params;
+  const { situacao } = req.body; // Ex: 'Resolvido'
+
+  try {
+    // 1. Busca o chamado para saber quem é o técnico responsável e a prioridade
+    const [chamados] = await db.query(
+      "SELECT * FROM chamado WHERE id_chamado = ?",
+      [id],
+    );
+    if (chamados.length === 0) {
+      return res.status(404).json({ erro: "Chamado não encontrado" });
+    }
+
+    const chamado = chamados[0];
+    const tecnicoId = chamado.fk_tecnico;
+
+    // 2. Atualiza a situação do chamado
+    await db.query("UPDATE chamado SET situacao = ? WHERE id_chamado = ?", [
+      situacao,
+      id,
+    ]);
+
+    // 3. Se o chamado foi resolvido E tem um técnico atribuído, dá XP!
+    if (situacao === "Resolvido" && tecnicoId) {
+      let xpGanho = 50; // Padrão
+      if (chamado.prioridade === "Media") xpGanho = 80;
+      if (chamado.prioridade === "Alta") xpGanho = 120;
+
+      // Busca XP e Nível atuais do técnico
+      const [usuarios] = await db.query(
+        "SELECT xp, nivel FROM usuario WHERE id_usuario = ?",
+        [tecnicoId],
+      );
+      if (usuarios.length > 0) {
+        let novoXp = (usuarios[0].xp || 0) + xpGanho;
+        let nivelAtual = usuarios[0].nivel || 1;
+
+        let xpProximoNivel = nivelAtual * 100;
+        let novoNivel = nivelAtual;
+
+        if (novoXp >= xpProximoNivel) {
+          novoNivel += 1;
+        }
+
+        // Atualiza no banco
+        await db.query(
+          "UPDATE usuario SET xp = ?, nivel = ? WHERE id_usuario = ?",
+          [novoXp, novoNivel, tecnicoId],
+        );
+      }
+    }
+
+    return res.json({ mensagem: "Status atualizado com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao atualizar status e XP:", erro);
+    return res.status(500).json({ erro: "Erro interno no servidor" });
   }
 }
