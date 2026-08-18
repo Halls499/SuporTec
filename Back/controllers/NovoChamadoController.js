@@ -38,7 +38,7 @@ export async function AbrirNovoChamado(req, res) {
     }
 
     const dadosChamado = {
-      fk_organizacao, 
+      fk_organizacao,
       titulo,
       descricao: descricao || "",
       categoria,
@@ -68,7 +68,11 @@ export async function AbrirNovoChamado(req, res) {
 
 export async function listarMeusChamados(req, res) {
   const fk_cliente = req.usuario?.id_usuario;
-  const fk_organizacao = req.usuario?.fk_organizacao || 1;
+
+  // Tratamento blindado para usar null se o usuário não tiver organização
+  const fk_organizacao = req.usuario?.fk_organizacao
+    ? Number(req.usuario.fk_organizacao)
+    : null;
 
   try {
     const listaChamados =
