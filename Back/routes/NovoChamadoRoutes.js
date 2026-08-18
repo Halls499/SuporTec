@@ -50,12 +50,6 @@ router.put('/tecnicos/perfil', verificarToken, async (req, res) => {
   }
 });
 
-// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
-router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
-
-// 🛠️ ROTA PUT ATUALIZADA
-router.put("/:id", verificarToken, chamadoController.atualizarChamado);
-
 // 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch("/:id/cancelar", verificarToken, chamadoController.cancelarChamadoPorId);
 
@@ -68,5 +62,11 @@ router.patch("/:id/status", verificarToken, chamadoController.atualizarStatusCha
 // Rotas de Mensagens do Chamado (Chat interno do chamado)
 router.get("/:id/mensagens", verificarToken, chamadoController.buscarMensagensChamado);
 router.post("/:id/mensagens", verificarToken, chamadoController.enviarMensagemChamado);
+
+// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
+router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
+
+// 🛠️ ROTA PUT ATUALIZADA
+router.put("/:id", verificarToken, chamadoController.atualizarChamado);
 
 export default router;

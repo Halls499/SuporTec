@@ -229,45 +229,55 @@ export async function atualizarStatusChamado(req, res) {
     const chamado = chamados[0];
     const tecnicoId = chamado.fk_tecnico;
 
+    // Atualiza apenas o status do chamado primeiro
     await pool.query("UPDATE chamado SET situacao = ? WHERE id_chamado = ?", [
       situacao,
       id,
     ]);
 
+    // Bloco de XP seguro (só roda se houver técnico e a coluna existir)
     if (situacao === "Resolvido" && tecnicoId) {
-      let xpGanho = 50;
-      if (chamado.prioridade === "Media") xpGanho = 80;
-      if (chamado.prioridade === "Alta") xpGanho = 120;
+      try {
+        let xpGanho = 50;
+        if (chamado.prioridade === "Media") xpGanho = 80;
+        if (chamado.prioridade === "Alta") xpGanho = 120;
 
-      const [usuarios] = await pool.query(
-        "SELECT xp, nivel FROM usuario WHERE id_usuario = ?",
-        [tecnicoId],
-      );
-      if (usuarios.length > 0) {
-        let novoXp = (usuarios[0].xp || 0) + xpGanho;
-        let nivelAtual = usuarios[0].nivel || 1;
+        const [usuarios] = await pool.query(
+          "SELECT xp, nivel FROM usuario WHERE id_usuario = ?",
+          [tecnicoId],
+        );
 
-        let xpProximoNivel = nivelAtual * 100;
-        let novoNivel = nivelAtual;
+        if (usuarios.length > 0) {
+          let novoXp = (usuarios[0].xp || 0) + xpGanho;
+          let nivelAtual = usuarios[0].nivel || 1;
+          let xpProximoNivel = nivelAtual * 100;
+          let novoNivel = nivelAtual;
 
-        if (novoXp >= xpProximoNivel) {
-          novoNivel += 1;
+          if (novoXp >= xpProximoNivel) {
+            novoNivel += 1;
+          }
+
+          await pool.query(
+            "UPDATE usuario SET xp = ?, nivel = ? WHERE id_usuario = ?",
+            [novoXp, novoNivel, tecnicoId],
+          );
         }
-
-        await pool.query(
-          "UPDATE usuario SET xp = ?, nivel = ? WHERE id_usuario = ?",
-          [novoXp, novoNivel, tecnicoId],
+      } catch (xpError) {
+        console.warn(
+          "Aviso: Sistema de XP ignorado devido a colunas ausentes no banco.",
+          xpError,
         );
       }
     }
 
     return res.json({ mensagem: "Status atualizado com sucesso!" });
   } catch (erro) {
-    console.error("Erro ao atualizar status e XP:", erro);
-    return res.status(500).json({ erro: "Erro interno no servidor" });
+    console.error("Erro ao atualizar status:", erro);
+    return res
+      .status(500)
+      .json({ erro: "Erro interno no servidor", detalhes: erro.message });
   }
 }
-
 // Funções de Mensagens do Chamado (Chat)
 export async function buscarMensagensChamado(req, res) {
   const { id } = req.params;
