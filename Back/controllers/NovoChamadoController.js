@@ -18,7 +18,7 @@ export async function AbrirNovoChamado(req, res) {
   } = req.body;
 
   const fk_cliente = req.usuario?.id_usuario;
-  const fk_organizacao = req.usuario?.fk_organizacao || 1;
+  const fk_organizacao = req.usuario?.fk_organizacao || null;
 
   try {
     if (
