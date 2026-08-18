@@ -21,7 +21,7 @@ export async function criarUsuario(
   email,
   senha,
   tipo_usuario,
-  fk_organizacao = 1,
+  fk_organizacao = null,
 ) {
   const [resultado] = await pool.query(
     `
