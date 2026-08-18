@@ -1,5 +1,5 @@
 import { motion, type Variants } from "framer-motion";
-import "./ConquistasCard.css";
+import "./ConsquistaCard.css";
 
 interface ConquistaProps {
   ico: string;
