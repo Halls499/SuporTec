@@ -18,7 +18,9 @@ export async function AbrirNovoChamado(req, res) {
   } = req.body;
 
   const fk_cliente = req.usuario?.id_usuario;
-  const fk_organizacao = req.usuario?.fk_organizacao || null;
+  const fk_organizacao = req.usuario?.fk_organizacao
+    ? Number(req.usuario.fk_organizacao)
+    : null;
 
   try {
     if (
@@ -36,16 +38,16 @@ export async function AbrirNovoChamado(req, res) {
     }
 
     const dadosChamado = {
-      fk_organizacao,
+      fk_organizacao, 
       titulo,
       descricao: descricao || "",
       categoria,
       prioridade,
       tipo_atendimento,
-      endereco,
-      empresa,
-      setor,
-      sala,
+      endereco: endereco || null,
+      empresa: empresa || null,
+      setor: setor || null,
+      sala: sala || null,
       tipo_contato,
       contato,
       fk_cliente,
