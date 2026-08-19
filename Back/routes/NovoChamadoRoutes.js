@@ -6,7 +6,7 @@ import pool from "../config/database.js";
 const router = Router();
 
 // ==========================================
-// ROTAS FIXAS (DEVEM VIR ANTES DE /:id)
+// 1. ROTAS ESPECÍFICAS / FIXAS (PRIMEIRO)
 // ==========================================
 
 router.get("/tecnicos/perfil", verificarToken, async (req, res) => {
@@ -62,40 +62,36 @@ router.put("/tecnicos/perfil", verificarToken, async (req, res) => {
   }
 });
 
-// 1. POST /api/chamados -> Criar novo chamado
-router.post("/", verificarToken, chamadoController.AbrirNovoChamado);
-
-// 2. GET /api/chamados -> Listar chamados do cliente
-router.get("/", verificarToken, chamadoController.listarMeusChamados);
-
-// 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
+// Listar chamados do TÉCNICO (deve vir antes da rota raiz '/')
 router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 
+// Criar novo chamado
+router.post("/", verificarToken, chamadoController.AbrirNovoChamado);
+
+// Listar chamados do cliente
+router.get("/", verificarToken, chamadoController.listarMeusChamados);
+
+
 // ==========================================
-// ROTAS DINÂMICAS COM /:id (DEVEM VIR DEPOIS)
+// 2. ROTAS DINÂMICAS COM /:id (DEPOIS)
 // ==========================================
 
-// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
-// 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch(
   "/:id/cancelar",
   verificarToken,
   chamadoController.cancelarChamadoPorId,
 );
 
-// Rota para o técnico aceitar um chamado
 router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
 
-// Rota para atualizar o status do chamado
 router.patch(
   "/:id/status",
   verificarToken,
   chamadoController.atualizarStatusChamado,
 );
 
-// Rotas de Mensagens do Chamado (Corrigidas com o prefixo chamadoController)
 router.get(
   "/:id/mensagens",
   verificarToken,
@@ -108,7 +104,6 @@ router.post(
   chamadoController.enviarMensagemChamado,
 );
 
-// 🛠️ ROTA PUT ATUALIZADA
 router.put("/:id", verificarToken, chamadoController.atualizarChamado);
 
 export default router;

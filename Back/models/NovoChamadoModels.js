@@ -70,37 +70,38 @@ export async function listarChamadosPorClienteEOrganizacao(
 
 export async function listarChamadosPorOrganizacao(fk_organizacao) {
   try {
+    console.log(
+      "DEBUG: Iniciando busca de todos os chamados sem filtro de organização...",
+    );
+
+    // Query de teste: Traz TUDO sem filtros
     const [rows] = await pool.query(
-      `SELECT 
-          c.*, 
-          u.nome AS nome_solicitante 
+      `SELECT c.*, u.nome AS nome_solicitante 
        FROM chamado c
        LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
-       WHERE c.fk_organizacao = ?
        ORDER BY c.data_abertura DESC`,
-      [fk_organizacao],
     );
-    return Array.isArray(rows) ? rows : [];
+
+    console.log("DEBUG: Chamados encontrados:", rows.length);
+    return rows;
   } catch (error) {
-    console.error("Erro no model listarChamadosPorOrganizacao:", error);
+    console.error("ERRO NO MODEL:", error);
     throw error;
   }
 }
 
-export async function buscarChamadoPorIdEOrganizacao(id, fk_organizacao) {
+export async function buscarChamadoPorIdTecnico(id) {
   try {
     const [rows] = await pool.query(
-      `SELECT 
-       id_chamado, fk_organizacao, titulo, descricao, categoria, prioridade, 
-       situacao, tipo_atendimento, endereco, empresa, setor, sala, 
-       tipo_contato, contato, data_abertura, data_fechamento, fk_cliente, fk_tecnico
-       FROM chamado 
-       WHERE id_chamado = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))`,
-      [id, fk_organizacao, fk_organizacao],
+      `SELECT c.*, u.nome AS nome_solicitante 
+       FROM chamado c
+       LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
+       WHERE c.id_chamado = ?`,
+      [id]
     );
     return rows[0] || null;
   } catch (error) {
-    console.error("Erro no model buscarChamadoPorIdEOrganizacao:", error);
+    console.error("Erro no model buscarChamadoPorIdTecnico:", error);
     throw error;
   }
 }

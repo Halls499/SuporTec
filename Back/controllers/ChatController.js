@@ -1,26 +1,37 @@
 import * as mensagemModel from "../models/ChatModels.js";
 
 export async function NovaMensagem(req, res) {
-  const { mensagem, fk_usuario, fk_chamado } = req.body;
+  const { mensagem, texto, conteudo, fk_usuario, fk_chamado } = req.body;
+  const textoMensagem = mensagem || texto || conteudo;
+  const idUsuarioFinal =
+    fk_usuario || req.usuario?.id_usuario || req.usuario?.id;
 
   try {
-    // Validação robusta: verifica se os campos existem e se a mensagem não é apenas espaços vazios
-    if (!mensagem || !String(mensagem).trim() || !fk_usuario || !fk_chamado) {
+    if (
+      !textoMensagem ||
+      !String(textoMensagem).trim() ||
+      !idUsuarioFinal ||
+      !fk_chamado
+    ) {
       return res
         .status(400)
         .json({ error: "Dados incompletos ou mensagem vazia para enviar." });
     }
 
+    // Passa o fk_usuario e o fk_remetente juntos para evitar o erro do banco
     const novaMensagem = await mensagemModel.create({
-      mensagem: String(mensagem).trim(), // Remove espaços extras nas pontas
-      fk_usuario,
-      fk_chamado,
+      mensagem: String(textoMensagem).trim(),
+      fk_usuario: Number(idUsuarioFinal),
+      fk_remetente: Number(idUsuarioFinal),
+      fk_chamado: Number(fk_chamado),
     });
 
     return res.status(201).json(novaMensagem);
   } catch (error) {
     console.error("Erro ao criar nova mensagem:", error);
-    return res.status(500).json({ error: "Erro ao criar nova mensagem" });
+    return res
+      .status(500)
+      .json({ error: "Erro ao criar nova mensagem", detalhes: error.message });
   }
 }
 
@@ -37,10 +48,8 @@ export async function ListarMensagensPorChamado(req, res) {
     return res.status(200).json(Array.isArray(mensagens) ? mensagens : []);
   } catch (error) {
     console.error("Erro ao listar mensagens:", error);
-    return res
-      .status(500)
-      .json({
-        error: "Não foi possível encontrar as mensagens desta conversa",
-      });
+    return res.status(500).json({
+      error: "Não foi possível encontrar as mensagens desta conversa",
+    });
   }
 }

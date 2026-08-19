@@ -33,6 +33,7 @@ interface Chamado {
   situacao: string;
   prioridade: string;
   data_abertura: string;
+  nome_solicitante?: string;
 }
 
 function Chamados() {
@@ -46,8 +47,22 @@ function Chamados() {
       ).replace(/\/$/, "");
 
       try {
-        // 🏢 Endpoint atualizado para o prefixo /api/chamados
-        const resposta = await fetch(`${baseUrl}/api/chamados`, {
+        // Verifica se o usuário logado é técnico com base no objeto salvo no localStorage
+        const usuarioStr = localStorage.getItem("usuario");
+        const usuario = usuarioStr ? JSON.parse(usuarioStr) : null;
+
+        // Ajuste a verificação conforme a propriedade real do seu perfil (ex: tipo, cargo, id_perfil)
+        const isTecnico =
+          usuario?.tipo === "tecnico" ||
+          usuario?.perfil === "tecnico" ||
+          usuario?.cargo === "tecnico";
+
+        // Define o endpoint dinamicamente: técnico puxa da rota de técnico, cliente puxa da geral
+        const endpoint = isTecnico
+          ? `${baseUrl}/api/chamados/tecnico`
+          : `${baseUrl}/api/chamados`;
+
+        const resposta = await fetch(endpoint, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -104,7 +119,7 @@ function Chamados() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          Meus chamados
+          Painel de Chamados
         </motion.h1>
 
         <motion.h4
@@ -115,7 +130,7 @@ function Chamados() {
             delay: 0.1,
           }}
         >
-          Acompanhe o andamento dos seus chamados
+          Acompanhe o andamento dos chamados
         </motion.h4>
 
         <motion.div
@@ -126,7 +141,7 @@ function Chamados() {
         >
           {chamados.length === 0 ? (
             <motion.p variants={cardVariants} style={{ marginTop: "20px" }}>
-              Você ainda não abriu um chamado.
+              Nenhum chamado encontrado.
             </motion.p>
           ) : (
             chamados.map((chamado) => (
@@ -136,14 +151,17 @@ function Chamados() {
                 whileHover={{ scale: 1.02, y: -4 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {/* 🔗 Redireciona para o componente de detalhes mantendo a coerência das rotas */}
-
                 <Link
                   to={`/chamados/${chamado.id_chamado}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <div className="chamado-card">
                     <h2>Problema: {chamado.titulo}</h2>
+                    {chamado.nome_solicitante && (
+                      <p>
+                        <strong>Solicitante:</strong> {chamado.nome_solicitante}
+                      </p>
+                    )}
                     <p>
                       <strong>Status:</strong>{" "}
                       <span

@@ -93,21 +93,12 @@ export async function listarMeusChamados(req, res) {
 }
 
 export async function listarChamadosTecnico(req, res) {
-  const fk_organizacao = req.usuario?.fk_organizacao
-    ? Number(req.usuario.fk_organizacao)
-    : null;
-
   try {
-    const listaChamados =
-      await chamadoModel.listarChamadosPorOrganizacao(fk_organizacao);
-    return res
-      .status(200)
-      .json(Array.isArray(listaChamados) ? listaChamados : []);
+    const listaChamados = await chamadoModel.listarChamadosPorOrganizacao();
+    return res.status(200).json(Array.isArray(listaChamados) ? listaChamados : []);
   } catch (erro) {
     console.error("Erro ao listar chamados do técnico:", erro);
-    return res.status(500).json({
-      erro: "Erro ao buscar chamados do técnico.",
-    });
+    return res.status(500).json({ erro: "Erro ao buscar chamados do técnico." });
   }
 }
 
@@ -119,10 +110,7 @@ export async function buscarChamadoPorId(req, res) {
       ? Number(req.usuario.fk_organizacao)
       : null;
 
-    const chamado = await chamadoModel.buscarChamadoPorIdEOrganizacao(
-      id,
-      fk_organizacao,
-    );
+    const chamado = await chamadoModel.buscarChamadoPorIdTecnico(id);
 
     if (!chamado) {
       return res.status(404).json({
@@ -320,7 +308,6 @@ export async function buscarMensagensChamado(req, res) {
 
 export async function enviarMensagemChamado(req, res) {
   const { id } = req.params;
-  // Aceita qualquer variação que venha do front, mas garante que usa 'mensagem' no banco
   const { mensagem, texto, conteudo } = req.body;
   const textoMensagem = mensagem || texto || conteudo;
   const id_usuario = req.usuario?.id_usuario || req.usuario?.id;
@@ -334,24 +321,17 @@ export async function enviarMensagemChamado(req, res) {
       return res.status(401).json({ erro: "Usuário não autenticado." });
     }
 
-    // Passa explicitamente fk_usuario, fk_remetente E a coluna correta 'mensagem'
+    // <-- COLE O CÓDIGO AQUI DENTRO -->
     await pool.query(
-      "INSERT INTO mensagem (fk_chamado, fk_usuario, fk_remetente, mensagem, data_envio) VALUES (?, ?, ?, ?, NOW())",
+      `INSERT INTO mensagem (fk_chamado, fk_usuario, fk_remetente, mensagem, data_envio) 
+       VALUES (?, ?, ?, ?, NOW())`,
       [Number(id), Number(id_usuario), Number(id_usuario), String(textoMensagem).trim()]
     );
 
     return res.status(201).json({ mensagem: "Mensagem enviada com sucesso!" });
   } catch (error) {
-    console.error("--- ERRO EXATO DO MYSQL ---");
-    console.error("Código:", error.code);
-    console.error("Mensagem SQL:", error.sqlMessage);
-    console.error("SQL completo:", error.sql);
-    console.error("---------------------------");
-
-    return res.status(500).json({ 
-      erro: "Erro ao salvar mensagem no banco.", 
-      detalhes: error.sqlMessage || error.message 
-    });
+    console.error("Erro ao enviar mensagem:", error);
+    return res.status(500).json({ erro: "Erro ao salvar mensagem no banco." });
   }
 }
 
