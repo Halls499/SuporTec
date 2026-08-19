@@ -95,10 +95,15 @@ export async function listarMeusChamados(req, res) {
 export async function listarChamadosTecnico(req, res) {
   try {
     const listaChamados = await chamadoModel.listarChamadosPorOrganizacao();
-    return res.status(200).json(Array.isArray(listaChamados) ? listaChamados : []);
+    
+    // LOG DE SEGURANÇA
+    console.log("LOG DE DEBUG: O total de chamados encontrado no banco foi:", listaChamados.length);
+    console.log("LOG DE DEBUG: Conteúdo:", JSON.stringify(listaChamados));
+    
+    return res.status(200).json(listaChamados);
   } catch (erro) {
-    console.error("Erro ao listar chamados do técnico:", erro);
-    return res.status(500).json({ erro: "Erro ao buscar chamados do técnico." });
+    console.error("ERRO CRÍTICO NO CONTROLLER:", erro);
+    return res.status(500).json({ erro: "Erro ao buscar chamados." });
   }
 }
 
