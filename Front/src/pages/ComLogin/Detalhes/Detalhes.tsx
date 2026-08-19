@@ -83,13 +83,17 @@ function Detalhes() {
           setChamado(chamadoFinal || null);
         }
 
-        const responseMensagens = await fetch(`${baseUrl}/api/chat/${id}`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        // Rota corrigida para bater no endpoint correto do back-end
+        const responseMensagens = await fetch(
+          `${baseUrl}/api/chamados/${id}/mensagens`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           },
-        });
+        );
 
         if (responseMensagens.ok) {
           const dataMensagens = await responseMensagens.json();
@@ -125,12 +129,10 @@ function Detalhes() {
     if (!textoMensagem.trim() || !id) return;
 
     const token = localStorage.getItem("token");
-    const fk_usuario = localStorage.getItem("id_usuario") || "1";
-
     setEnviando(true);
 
     try {
-      const response = await fetch(`${baseUrl}/api/chat`, {
+      const response = await fetch(`${baseUrl}/api/chamados/${id}/mensagens`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -138,17 +140,26 @@ function Detalhes() {
         },
         body: JSON.stringify({
           mensagem: textoMensagem.trim(),
-          fk_usuario: Number(fk_usuario),
-          fk_chamado: Number(id),
         }),
       });
 
       if (response.ok) {
-        const novaMensagemCriada = await response.json();
-        setMensagens((prev) => [...prev, novaMensagemCriada]);
         setTextoMensagem("");
+
+        // Atualiza a lista de mensagens na tela imediatamente após o envio
+        const resMensagens = await fetch(
+          `${baseUrl}/api/chamados/${id}/mensagens`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        if (resMensagens.ok) {
+          const dadosNovos = await resMensagens.json();
+          setMensagens(Array.isArray(dadosNovos) ? dadosNovos : []);
+        }
       } else {
-        alert("Erro ao enviar mensagem. Tente novamente.");
+        const data = await response.json().catch(() => ({}));
+        alert(data?.erro || "Erro ao enviar mensagem. Tente novamente.");
       }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -169,7 +180,7 @@ function Detalhes() {
     try {
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${baseUrl}/api/chamados/cancelar/${id}`, {
+      const response = await fetch(`${baseUrl}/api/chamados/${id}/cancelar`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

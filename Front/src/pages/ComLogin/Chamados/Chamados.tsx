@@ -137,8 +137,9 @@ function Chamados() {
                 whileTap={{ scale: 0.98 }}
               >
                 {/* 🔗 Redireciona para o componente de detalhes mantendo a coerência das rotas */}
+
                 <Link
-                  to={`/detalhes/${chamado.id_chamado}`}
+                  to={`/chamados/${chamado.id_chamado}`}
                   style={{ textDecoration: "none", color: "inherit" }}
                 >
                   <div className="chamado-card">

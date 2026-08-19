@@ -5,6 +5,10 @@ import pool from "../config/database.js";
 
 const router = Router();
 
+// ==========================================
+// ROTAS FIXAS (DEVEM VIR ANTES DE /:id)
+// ==========================================
+
 router.get("/tecnicos/perfil", verificarToken, async (req, res) => {
   try {
     const idUsuario = req.usuario?.id_usuario || req.usuario?.id;
@@ -67,6 +71,13 @@ router.get("/", verificarToken, chamadoController.listarMeusChamados);
 // 3. GET /api/chamados/tecnico -> Listar todos os chamados para o TÉCNICO
 router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 
+// ==========================================
+// ROTAS DINÂMICAS COM /:id (DEVEM VIR DEPOIS)
+// ==========================================
+
+// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
+router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
+
 // 5. PATCH /api/chamados/:id/cancelar -> Cancelar chamado
 router.patch(
   "/:id/cancelar",
@@ -77,27 +88,25 @@ router.patch(
 // Rota para o técnico aceitar um chamado
 router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
 
-// Rota para atualizar o status do chamado (Resolvido / em andamento / etc)
+// Rota para atualizar o status do chamado
 router.patch(
   "/:id/status",
   verificarToken,
   chamadoController.atualizarStatusChamado,
 );
 
-// Rotas de Mensagens do Chamado (Chat interno do chamado)
+// Rotas de Mensagens do Chamado (Corrigidas com o prefixo chamadoController)
 router.get(
   "/:id/mensagens",
   verificarToken,
   chamadoController.buscarMensagensChamado,
 );
+
 router.post(
   "/:id/mensagens",
   verificarToken,
   chamadoController.enviarMensagemChamado,
 );
-
-// 4. GET /api/chamados/:id -> Buscar detalhes de um chamado
-router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
 // 🛠️ ROTA PUT ATUALIZADA
 router.put("/:id", verificarToken, chamadoController.atualizarChamado);

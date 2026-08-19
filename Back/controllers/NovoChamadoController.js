@@ -190,7 +190,6 @@ export async function cancelarChamadoPorId(req, res) {
       ? Number(req.usuario.fk_organizacao)
       : null;
 
-
     const canceladoComSucesso = await chamadoModel.cancelarChamadoSaaS(
       id,
       fk_cliente,
@@ -321,23 +320,37 @@ export async function buscarMensagensChamado(req, res) {
 
 export async function enviarMensagemChamado(req, res) {
   const { id } = req.params;
-  const { mensagem } = req.body;
-  const id_remetente = req.usuario?.id_usuario || req.usuario?.id;
+  const { mensagem, texto, conteudo } = req.body;
+  const textoMensagem = mensagem || texto || conteudo;
+  const id_usuario = req.usuario?.id_usuario || req.usuario?.id;
 
   try {
-    if (!mensagem || !String(mensagem).trim()) {
+    if (!textoMensagem || !String(textoMensagem).trim()) {
       return res.status(400).json({ erro: "A mensagem não pode estar vazia." });
     }
 
+    if (!id_usuario) {
+      return res.status(401).json({ erro: "Usuário não autenticado no token." });
+    }
+
     await pool.query(
-      "INSERT INTO mensagem (fk_chamado, fk_remetente, texto, data_envio) VALUES (?, ?, ?, NOW())",
-      [id, id_remetente, String(mensagem).trim()],
+      "INSERT INTO mensagem (fk_chamado, fk_usuario, mensagem, data_envio) VALUES (?, ?, ?, NOW())",
+      [Number(id), Number(id_usuario), String(textoMensagem).trim()]
     );
 
     return res.status(201).json({ mensagem: "Mensagem enviada com sucesso!" });
   } catch (error) {
-    console.error("Erro ao enviar mensagem:", error);
-    return res.status(500).json({ erro: "Erro ao enviar mensagem no chat." });
+    // Isso vai mostrar o erro exato do MySQL no seu terminal
+    console.error("--- ERRO EXATO DO MYSQL ---");
+    console.error("Código:", error.code);
+    console.error("Mensagem SQL:", error.sqlMessage);
+    console.error("SQL completo:", error.sql);
+    console.error("---------------------------");
+
+    return res.status(500).json({
+      erro: "Erro ao salvar mensagem no banco.",
+      detalhe: error.sqlMessage || error.message,
+    });
   }
 }
 
