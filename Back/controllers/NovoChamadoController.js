@@ -93,7 +93,9 @@ export async function listarMeusChamados(req, res) {
 }
 
 export async function listarChamadosTecnico(req, res) {
-  const fk_organizacao = req.usuario?.fk_organizacao || 1;
+  const fk_organizacao = req.usuario?.fk_organizacao
+    ? Number(req.usuario.fk_organizacao)
+    : null;
 
   try {
     const listaChamados =
@@ -112,7 +114,10 @@ export async function listarChamadosTecnico(req, res) {
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
-    const fk_organizacao = req.usuario?.fk_organizacao || 1;
+
+    const fk_organizacao = req.usuario?.fk_organizacao
+      ? Number(req.usuario.fk_organizacao)
+      : null;
 
     const chamado = await chamadoModel.buscarChamadoPorIdEOrganizacao(
       id,
@@ -138,7 +143,9 @@ export async function buscarChamadoPorId(req, res) {
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
-    const fk_organizacao = req.usuario?.fk_organizacao || 1;
+    const fk_organizacao = req.usuario?.fk_organizacao
+      ? Number(req.usuario.fk_organizacao)
+      : null;
     const dadosAtualizacao = req.body;
 
     const atualizado = await chamadoModel.atualizarChamadoSaaS(
@@ -179,7 +186,10 @@ export async function cancelarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
     const fk_cliente = req.usuario?.id_usuario;
-    const fk_organizacao = req.usuario?.fk_organizacao || 1;
+    const fk_organizacao = req.usuario?.fk_organizacao
+      ? Number(req.usuario.fk_organizacao)
+      : null;
+
 
     const canceladoComSucesso = await chamadoModel.cancelarChamadoSaaS(
       id,
