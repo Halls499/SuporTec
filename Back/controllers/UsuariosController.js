@@ -173,6 +173,9 @@ export async function atualizarPerfil(req, res) {
     const { id } = req.params;
     const { nome, email } = req.body; 
 
+    console.log("Tentando atualizar usuário:", id, "com nome:", nome); // Log para ver no Render
+    console.log("Pool está definido?:", !!pool); // Vai dizer true ou false no log
+
     const [resultado] = await pool.query(
       "UPDATE usuario SET nome = ?, email = ? WHERE id_usuario = ?",
       [nome, email, id]
