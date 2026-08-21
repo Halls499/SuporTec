@@ -65,11 +65,15 @@ export async function cadastrarUsuario(req, res) {
     // Se o usuário digitou o nome de uma organização
     if (organizacao && organizacao.trim() !== "") {
       // 1. Verifica se a organização já existe no banco pelo nome
-      let orgCadastrada = await organizacaoModel.buscarOrganizacaoPorNome(organizacao.trim());
+      let orgCadastrada = await organizacaoModel.buscarOrganizacaoPorNome(
+        organizacao.trim(),
+      );
 
       if (!orgCadastrada || orgCadastrada.length === 0) {
         // 2. Se não existir, cria a organização automaticamente e obtém o ID gerado
-        const novaOrg = await organizacaoModel.criarOrganizacao(organizacao.trim());
+        const novaOrg = await organizacaoModel.criarOrganizacao(
+          organizacao.trim(),
+        );
         orgId = novaOrg.insertId || novaOrg.id_organizacao; // Ajuste conforme o retorno do seu banco/model
       } else {
         orgId = orgCadastrada[0].id_organizacao;
@@ -171,21 +175,21 @@ export async function loginUsuario(req, res) {
 export async function atualizarPerfil(req, res) {
   try {
     const { id } = req.params;
-    const { nome, email } = req.body; 
+    const { nome, email, foto } = req.body;
 
-    console.log("Tentando atualizar usuário:", id, "com nome:", nome); // Log para ver no Render
-    console.log("Pool está definido?:", !!pool); // Vai dizer true ou false no log
+    // Busca o usuário atual antes para pegar o email original, caso o novo venha vazio
+    const [usuarioExistente] = await pool.query(
+      "SELECT email FROM usuario WHERE id_usuario = ?",
+      [id],
+    );
+    const emailFinal = email || usuarioExistente[0].email;
 
     const [resultado] = await pool.query(
-      "UPDATE usuario SET nome = ?, email = ? WHERE id_usuario = ?",
-      [nome, email, id]
+      "UPDATE usuario SET nome = ?, email = ?, foto = ? WHERE id_usuario = ?",
+      [nome, emailFinal, foto, id],
     );
 
-    if (resultado.affectedRows === 0) {
-      return res.status(404).json({ erro: "Usuário não encontrado." });
-    }
-
-    return res.status(200).json({ mensagem: "Perfil atualizado com sucesso!" });
+    return res.status(200).json({ mensagem: "Perfil atualizado!" });
   } catch (erro) {
     console.error("Erro ao atualizar perfil:", erro);
     return res.status(500).json({ erro: "Erro ao atualizar perfil." });
