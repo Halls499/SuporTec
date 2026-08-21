@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import UsuarioSeguro from "../utils/UsuarioSeguro.js";
 import jwt from "jsonwebtoken";
 import * as organizacaoModel from "../models/OrganizacaoModel.js";
+import pool from "../config/database.js";
 
 export async function listarUsuarios(req, res) {
   try {
