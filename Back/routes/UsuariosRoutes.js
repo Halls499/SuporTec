@@ -16,4 +16,7 @@ router.get("/", verificarToken, usuarioController.listarUsuarios);
 // GET /api/usuarios/:id -> Buscar usuário por ID (Protegido por Token)
 router.get("/:id", verificarToken, usuarioController.buscarUsuarioPorId);
 
+// PUT /api/usuarios/:id -> Atualizar perfil do usuário (Protegido por Token)
+router.put("/:id", verificarToken, usuarioController.atualizarPerfil);
+
 export default router;

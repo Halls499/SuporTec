@@ -166,3 +166,24 @@ export async function loginUsuario(req, res) {
     });
   }
 }
+
+export async function atualizarPerfil(req, res) {
+  try {
+    const { id } = req.params;
+    const { nome, email } = req.body; 
+
+    const [resultado] = await pool.query(
+      "UPDATE usuario SET nome = ?, email = ? WHERE id_usuario = ?",
+      [nome, email, id]
+    );
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({ erro: "Usuário não encontrado." });
+    }
+
+    return res.status(200).json({ mensagem: "Perfil atualizado com sucesso!" });
+  } catch (erro) {
+    console.error("Erro ao atualizar perfil:", erro);
+    return res.status(500).json({ erro: "Erro ao atualizar perfil." });
+  }
+}

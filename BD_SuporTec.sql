@@ -129,8 +129,41 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 
 --------------------------------------------------
+-- CONSULTAS
+--------------------------------------------------
+
+DESCRIBE chamado;
+SELECT * FROM chamado;
+SELECT * FROM mensagem;
+SELECT id_usuario, nome, fk_organizacao FROM usuario WHERE id_usuario = 8;
+SELECT id_chamado, titulo FROM chamado;
+
+--------------------------------------------------
+-- ALTERAÇÕES NAS TABELAS
+--------------------------------------------------
+
+ALTER TABLE usuario MODIFY COLUMN fk_organizacao INT NULL;
+ALTER TABLE chamado MODIFY COLUMN fk_organizacao INT NULL;
+ALTER TABLE mensagem ADD COLUMN fk_remetente INT NOT NULL;
+ALTER TABLE mensagem 
+ADD CONSTRAINT fk_mensagem_usuario_nova 
+FOREIGN KEY (fk_remetente) REFERENCES usuario(id_usuario);
+ALTER TABLE mensagem MODIFY COLUMN fk_remetente INT NULL;
+UPDATE chamado 
+SET situacao = 'Novo', fk_tecnico = NULL 
+WHERE id_chamado = 10;
+
+--------------------------------------------------
 -- INSERT DE DADOS INICIAIS (Utilizando INSERT IGNORE para evitar duplicidade)
 --------------------------------------------------
+INSERT INTO mensagem (fk_chamado, fk_usuario, mensagem, data_envio) 
+VALUES (8, 8, 'teste de inserção manual', NOW());
+
+INSERT INTO mensagem (fk_chamado, fk_usuario, fk_remetente, mensagem, data_envio) 
+VALUES (8, 8, 8, 'teste de inserção manual', NOW());
+
+INSERT INTO chamado (titulo, descricao, prioridade, situacao, fk_cliente, contato, data_abertura) 
+VALUES ('Chamado de Teste', 'Testando a listagem', 'Alta', 'Novo', 8, 'teste@email.com', NOW());
 
 INSERT IGNORE INTO categorias (id, nome) VALUES 
 (1, 'Volume e Produtividade'),
