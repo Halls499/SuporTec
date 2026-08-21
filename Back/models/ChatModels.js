@@ -16,7 +16,7 @@ export async function findByChamado(id_chamado) {
        JOIN usuario u ON m.fk_usuario = u.id_usuario
        WHERE m.fk_chamado = ? 
        ORDER BY m.data_envio ASC`,
-      [id_chamado]
+      [id_chamado],
     );
     return Array.isArray(rows) ? rows : [];
   } catch (error) {
@@ -30,7 +30,7 @@ export async function create({ mensagem, fk_usuario, fk_chamado }) {
   try {
     const [resultado] = await pool.query(
       "INSERT INTO mensagem (mensagem, fk_usuario, fk_chamado, data_envio) VALUES (?, ?, ?, NOW())",
-      [mensagem, fk_usuario, fk_chamado]
+      [mensagem, fk_usuario, fk_chamado],
     );
 
     const [rows] = await pool.query(
@@ -45,7 +45,7 @@ export async function create({ mensagem, fk_usuario, fk_chamado }) {
        FROM mensagem m
        JOIN usuario u ON m.fk_usuario = u.id_usuario
        WHERE m.id_mensagem = ?`,
-      [resultado.insertId]
+      [resultado.insertId],
     );
 
     return rows[0] || null;

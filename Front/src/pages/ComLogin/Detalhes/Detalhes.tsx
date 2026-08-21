@@ -83,7 +83,6 @@ function Detalhes() {
           setChamado(chamadoFinal || null);
         }
 
-        // Rota corrigida para bater no endpoint correto do back-end
         const responseMensagens = await fetch(
           `${baseUrl}/api/chamados/${id}/mensagens`,
           {
@@ -146,7 +145,6 @@ function Detalhes() {
       if (response.ok) {
         setTextoMensagem("");
 
-        // Atualiza a lista de mensagens na tela imediatamente após o envio
         const resMensagens = await fetch(
           `${baseUrl}/api/chamados/${id}/mensagens`,
           {
@@ -330,7 +328,7 @@ function Detalhes() {
                     className={classeItem}
                   >
                     <div className="chat-mensagem-header">
-                      <span>{rotuloUsuario}</span>
+                      <strong>{msg.nome_usuario || rotuloUsuario}</strong>
                       <span>{formatarData(dataMsg)}</span>
                     </div>
                     <p className="chat-mensagem-texto">{msg.mensagem || ""}</p>
