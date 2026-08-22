@@ -312,14 +312,23 @@ function Detalhes() {
               </p>
             ) : (
               mensagens.map((msg) => {
-                const tipoStr = String(msg.tipo_usuario || "").toLowerCase();
-                const isTecnico = tipoStr === "tecnico";
+                // Pega o ID de dentro do objeto "usuario" salvo no login
+                const usuarioSalvo = JSON.parse(
+                  localStorage.getItem("usuario") || "{}",
+                );
+                const meuIdUsuario = Number(
+                  usuarioSalvo.id_usuario || usuarioSalvo.id || 0,
+                );
 
-                const classeItem = isTecnico
-                  ? "chat-mensagem-item tecnico"
-                  : "chat-mensagem-item cliente";
+                const classeItem =
+                  msg.fk_usuario === meuIdUsuario
+                    ? "chat-mensagem-item cliente"
+                    : "chat-mensagem-item tecnico";
 
-                const rotuloUsuario = isTecnico ? "🔧 Técnico" : "👤 Cliente";
+                const rotuloUsuario =
+                  msg.fk_usuario === meuIdUsuario
+                    ? "👤 Você"
+                    : "🔧 Técnico ";
                 const dataMsg = msg.data_envio || msg.criado_em || msg.data;
 
                 return (

@@ -10,6 +10,7 @@ interface Mensagem {
   conteudo?: string;
   mensagem?: string;
   data_envio?: string;
+  fk_usuario?: number;
 }
 
 interface Chamado {
@@ -48,7 +49,7 @@ export default function DetalhesTecnico() {
   useEffect(() => {
     async function carregarDados() {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         // 1. Busca o chamado primeiro
@@ -57,7 +58,6 @@ export default function DetalhesTecnico() {
         });
 
         if (!resChamado.ok) {
-          // Se o chamado não existe (404), para por aqui para evitar erros em cadeia
           setChamado(null);
           setLoading(false);
           return;
@@ -74,7 +74,7 @@ export default function DetalhesTecnico() {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-        
+
         if (resMensagens.ok) {
           const dataMensagens = await resMensagens.json();
           setMensagens(Array.isArray(dataMensagens) ? dataMensagens : []);
@@ -219,17 +219,24 @@ export default function DetalhesTecnico() {
                   </p>
                 ) : (
                   mensagens.map((msg, index) => {
-                    const isTecnico =
-                      msg.tipo_usuario === "tecnico" ||
-                      msg.remetente?.toLowerCase().includes("técnico");
+                    // Pega o ID do técnico logado atualmente no navegador
+                    const usuarioSalvo = JSON.parse(
+                      localStorage.getItem("usuario") || "{}",
+                    );
+                    const meuIdUsuario = Number(
+                      usuarioSalvo.id_usuario || usuarioSalvo.id || 0,
+                    );
+
+                    const souEu = Number(msg.fk_usuario) === meuIdUsuario;
 
                     return (
                       <div
                         key={msg.id_mensagem || index}
-                        className={`mensagem ${isTecnico ? "tecnico" : "cliente"}`}
+                        className={`mensagem ${souEu ? "tecnico" : "cliente"}`}
                       >
                         <strong>
-                          {msg.remetente || (isTecnico ? "Técnico" : "Cliente")}
+                          {msg.remetente ||
+                            (souEu ? "🔧 Você (Técnico)" : "👤 Cliente")}
                         </strong>
                         <p>{msg.conteudo || msg.mensagem}</p>
                         {msg.data_envio && (
