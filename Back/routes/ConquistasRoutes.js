@@ -4,6 +4,7 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+// Rota para buscar conquistas do técnico
 router.get("/", verificarToken, async (req, res) => {
   const idTecnico = req.usuario?.id_usuario || req.usuario?.id || req.user?.id;
 

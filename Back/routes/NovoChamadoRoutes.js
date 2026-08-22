@@ -76,34 +76,41 @@ router.get("/", verificarToken, chamadoController.listarMeusChamados);
 // 2. ROTAS DINÂMICAS COM /:id (DEPOIS)
 // ==========================================
 
+// Buscar chamado específico por ID
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 
+// Cancelar chamado específico por ID
 router.patch(
   "/:id/cancelar",
   verificarToken,
   chamadoController.cancelarChamadoPorId,
 );
 
+// Aceitar chamado específico por ID
 router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);
 
+// Atualizar status do chamado específico por ID
 router.patch(
   "/:id/status",
   verificarToken,
   chamadoController.atualizarStatusChamado,
 );
 
+// Buscar mensagens de um chamado específico por ID
 router.get(
   "/:id/mensagens",
   verificarToken,
   chamadoController.buscarMensagensChamado,
 );
 
+// Enviar mensagem para um chamado específico por ID
 router.post(
   "/:id/mensagens",
   verificarToken,
   chamadoController.enviarMensagemChamado,
 );
 
+// Atualizar chamado específico por ID
 router.put("/:id", verificarToken, chamadoController.atualizarChamado);
 
 export default router;

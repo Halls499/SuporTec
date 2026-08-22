@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import * as organizacaoModel from "../models/OrganizacaoModel.js";
 import pool from "../config/database.js";
 
+// Função para listar todos os usuários
 export async function listarUsuarios(req, res) {
   try {
     let organizacao =
@@ -33,6 +34,7 @@ export async function listarUsuarios(req, res) {
   }
 }
 
+// Função para cadastrar um novo usuário
 export async function cadastrarUsuario(req, res) {
   try {
     const { nome, email, senha, tipo_usuario, organizacao } = req.body;
@@ -94,6 +96,7 @@ export async function cadastrarUsuario(req, res) {
   }
 }
 
+// Função para buscar um usuário por ID
 export async function buscarUsuarioPorId(req, res) {
   try {
     const { id } = req.params;
@@ -106,6 +109,7 @@ export async function buscarUsuarioPorId(req, res) {
       });
     }
 
+    // Retorna apenas os dados seguros do usuário, sem a senha
     const usuarioPublico = UsuarioSeguro(usuario[0]);
 
     return res.status(200).json(usuarioPublico);
@@ -117,6 +121,7 @@ export async function buscarUsuarioPorId(req, res) {
   }
 }
 
+// Função para login do usuário
 export async function loginUsuario(req, res) {
   try {
     const { email, senha } = req.body;
@@ -135,8 +140,10 @@ export async function loginUsuario(req, res) {
       });
     }
 
+    // Pega o primeiro usuário encontrado (deve ser único)
     const usuario = usuarioEncontrado[0];
 
+    // Verifica a senha fornecida com a senha armazenada no banco
     const senhaVerificada = await bcrypt.compare(senha, usuario.senha);
 
     if (!senhaVerificada) {
@@ -145,8 +152,10 @@ export async function loginUsuario(req, res) {
       });
     }
 
+    // Remove a senha do objeto antes de enviar a resposta
     const usuarioPublico = UsuarioSeguro(usuario);
 
+    // Gera o token JWT com os dados do usuário
     const token = jwt.sign(
       {
         id_usuario: usuario.id_usuario,
@@ -172,6 +181,7 @@ export async function loginUsuario(req, res) {
   }
 }
 
+// Função para atualizar o perfil do usuário
 export async function atualizarPerfil(req, res) {
   try {
     const { id } = req.params;

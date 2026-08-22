@@ -1,4 +1,4 @@
-import conexao from "../config/database.js"; // Ajuste o caminho para o seu arquivo de conexão com o banco se necessário
+import conexao from "../config/database.js";
 
 // Buscar uma organização pelo nome (evita duplicatas e procura case-insensitive)
 export async function buscarOrganizacaoPorNome(nome) {

@@ -1,5 +1,6 @@
 import pool from "../config/database.js";
 
+// Função para abrir um novo chamado
 export async function abrirChamado(chamado) {
   const {
     fk_organizacao,
@@ -50,6 +51,7 @@ export async function abrirChamado(chamado) {
   }
 }
 
+// Função para listar chamados por cliente e organização
 export async function listarChamadosPorClienteEOrganizacao(
   fk_cliente,
   fk_organizacao,
@@ -61,6 +63,7 @@ export async function listarChamadosPorClienteEOrganizacao(
        ORDER BY data_abertura DESC`,
       [fk_cliente, fk_organizacao, fk_organizacao],
     );
+    // Retorna os resultados como um array, mesmo que não haja registros encontrados
     return Array.isArray(rows) ? rows : [];
   } catch (error) {
     console.error("Erro no model listarChamadosPorClienteEOrganizacao:", error);
@@ -68,6 +71,7 @@ export async function listarChamadosPorClienteEOrganizacao(
   }
 }
 
+// Função para buscar um chamado específico por organização
 export async function listarChamadosPorOrganizacao(fk_organizacao) {
   try {
     console.log(
@@ -90,6 +94,7 @@ export async function listarChamadosPorOrganizacao(fk_organizacao) {
   }
 }
 
+// Função para buscar um chamado específico por ID do técnico
 export async function buscarChamadoPorIdTecnico(id) {
   try {
     const [rows] = await pool.query(
@@ -106,6 +111,7 @@ export async function buscarChamadoPorIdTecnico(id) {
   }
 }
 
+// Função para cancelar um chamado específico
 export async function cancelarChamadoSaaS(
   id_chamado,
   fk_cliente,
@@ -125,6 +131,7 @@ export async function cancelarChamadoSaaS(
   }
 }
 
+// Função para atualizar um chamado específico
 export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   const situacao = dados.situacao;
   const fk_tecnico = dados.fk_tecnico;
@@ -151,6 +158,7 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   }
 }
 
+// Função para buscar o cliente de um chamado específico
 export async function buscarClienteDoChamado(id_chamado) {
   try {
     const [rows] = await pool.query(
@@ -164,6 +172,7 @@ export async function buscarClienteDoChamado(id_chamado) {
   }
 }
 
+// Função para aceitar um chamado específico
 export async function aceitarChamadoModel(id_tecnico, id_chamado) {
   try {
     const query = `

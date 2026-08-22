@@ -2,6 +2,7 @@ import * as chamadoModel from "../models/NovoChamadoModels.js";
 import { enviarNotificacaoParaUsuario } from "../utils/emailService.js";
 import pool from "../config/database.js";
 
+// Função para abrir um novo chamado
 export async function AbrirNovoChamado(req, res) {
   const {
     titulo,
@@ -59,13 +60,14 @@ export async function AbrirNovoChamado(req, res) {
     try {
       const [usuarioResult] = await pool.query(
         "SELECT email FROM usuario WHERE id_usuario = ?",
-        [fk_cliente]
+        [fk_cliente],
       );
       if (usuarioResult.length > 0 && usuarioResult[0].email) {
+        // Enviar e-mail de notificação para o cliente
         await enviarNotificacaoParaUsuario(
           usuarioResult[0].email,
           "SuporTec - Chamado Aberto",
-          `Olá! Seu chamado "${titulo}" foi aberto com sucesso no sistema.`
+          `Olá! Seu chamado "${titulo}" foi aberto com sucesso no sistema.`,
         );
       }
     } catch (emailErr) {
@@ -83,6 +85,7 @@ export async function AbrirNovoChamado(req, res) {
   }
 }
 
+// Função para listar chamados do cliente
 export async function listarMeusChamados(req, res) {
   const fk_cliente = req.usuario?.id_usuario;
   const fk_organizacao = req.usuario?.fk_organizacao
@@ -107,6 +110,68 @@ export async function listarMeusChamados(req, res) {
   }
 }
 
+// Função para buscar detalhes de um chamado específico do cliente
+export async function buscarChamadoPorIdCliente(req, res) {
+  const { id } = req.params;
+  const fk_cliente = req.usuario?.id_usuario;
+  const fk_organizacao = req.usuario?.fk_organizacao
+    ? Number(req.usuario.fk_organizacao)
+    : null;
+
+  try {
+    const chamado = await chamadoModel.buscarChamadoPorIdClienteEOrganizacao(
+      id,
+      fk_cliente,
+      fk_organizacao,
+    );
+
+    if (!chamado) {
+      return res.status(404).json({
+        mensagem: "Chamado não encontrado ou sem permissão de acesso.",
+      });
+    }
+    return res.status(200).json(chamado);
+  } catch (error) {
+    console.error("Erro ao buscar detalhes do chamado:", error);
+    return res.status(500).json({
+      mensagem: "Erro interno no servidor ao buscar chamado.",
+      erro: error.message,
+    });
+  }
+}
+
+// Função para cancelar um chamado específico do cliente
+export async function cancelarChamadoPorIdCliente(req, res) {
+  const { id } = req.params;
+  const fk_cliente = req.usuario?.id_usuario;
+  const fk_organizacao = req.usuario?.fk_organizacao
+    ? Number(req.usuario.fk_organizacao)
+    : null;
+
+  try {
+    const canceladoComSucesso =
+      await chamadoModel.cancelarChamadoPorIdClienteEOrganizacao(
+        id,
+        fk_cliente,
+        fk_organizacao,
+      );
+
+    if (!canceladoComSucesso) {
+      return res.status(400).json({
+        mensagem: "Não foi possível cancelar o chamado.",
+      });
+    }
+    return res.status(200).json({ mensagem: "Chamado cancelado com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao cancelar chamado:", error);
+    return res.status(500).json({
+      mensagem: "Erro interno no servidor ao cancelar chamado.",
+      erro: error.message,
+    });
+  }
+}
+
+// Função para listar chamados da organização para o técnico
 export async function listarChamadosTecnico(req, res) {
   try {
     const listaChamados = await chamadoModel.listarChamadosPorOrganizacao();
@@ -117,6 +182,7 @@ export async function listarChamadosTecnico(req, res) {
   }
 }
 
+// Função para buscar detalhes de um chamado específico do técnico
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
@@ -138,6 +204,7 @@ export async function buscarChamadoPorId(req, res) {
   }
 }
 
+// Função para atualizar um chamado específico do técnico
 export async function atualizarChamado(req, res) {
   try {
     const { id } = req.params;
@@ -163,9 +230,10 @@ export async function atualizarChamado(req, res) {
     if (clienteDono && clienteDono.fk_cliente) {
       const [usuarioResult] = await pool.query(
         "SELECT email FROM usuario WHERE id_usuario = ?",
-        [clienteDono.fk_cliente]
+        [clienteDono.fk_cliente],
       );
       if (usuarioResult.length > 0 && usuarioResult[0].email) {
+        // Enviar e-mail de notificação para o cliente sobre a atualização do chamado
         await enviarNotificacaoParaUsuario(
           usuarioResult[0].email,
           "SuporTec - Chamado Atualizado",
@@ -186,6 +254,7 @@ export async function atualizarChamado(req, res) {
   }
 }
 
+// Função para cancelar um chamado específico do técnico
 export async function cancelarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
@@ -216,6 +285,7 @@ export async function cancelarChamadoPorId(req, res) {
   }
 }
 
+// Função para aceitar um chamado específico do técnico
 export async function aceitarChamado(req, res) {
   const { id } = req.params;
   const id_tecnico = req.usuario?.id_usuario || req.usuario?.id;
@@ -237,6 +307,7 @@ export async function aceitarChamado(req, res) {
   }
 }
 
+// Função para atualizar o status de um chamado específico do técnico
 export async function atualizarStatusChamado(req, res) {
   const { id } = req.params;
   const { situacao } = req.body;
@@ -284,9 +355,13 @@ export async function atualizarStatusChamado(req, res) {
             [novoXp, novoNivel, tecnicoId],
           );
         }
+        // Checar regras de conquistas após atualizar o status do chamado
         await checarRegrasDeConquistas(tecnicoId, id);
       } catch (xpError) {
-        console.warn("Aviso: Sistema de XP/Conquistas ignorado devido a erro.", xpError);
+        console.warn(
+          "Aviso: Sistema de XP/Conquistas ignorado devido a erro.",
+          xpError,
+        );
       }
     }
 
@@ -299,6 +374,22 @@ export async function atualizarStatusChamado(req, res) {
   }
 }
 
+// Função para listar chamados por técnico
+export async function listarChamadosPorTecnico(req, res) {
+  const id_tecnico = req.usuario?.id_usuario || req.usuario?.id;
+  try {
+    const [chamados] = await pool.query(
+      "SELECT * FROM chamado WHERE fk_tecnico = ?",
+      [id_tecnico],
+    );
+    return res.status(200).json(chamados);
+  } catch (error) {
+    console.error("Erro ao listar chamados:", error);
+    return res.status(500).json({ erro: "Erro interno no servidor" });
+  }
+}
+
+// Função para buscar as mensagens de um chamado específico
 export async function buscarMensagensChamado(req, res) {
   const { id } = req.params;
   try {
@@ -313,6 +404,7 @@ export async function buscarMensagensChamado(req, res) {
   }
 }
 
+// Função para enviar uma mensagem em um chamado específico
 export async function enviarMensagemChamado(req, res) {
   const { id } = req.params;
   const { mensagem, texto, conteudo } = req.body;
@@ -346,6 +438,7 @@ export async function enviarMensagemChamado(req, res) {
   }
 }
 
+// Função para checar regras de conquistas após a resolução de um chamado
 async function checarRegrasDeConquistas(idTecnico, idChamado) {
   try {
     const [totalChamadosResolvidos] = await pool.query(
@@ -361,6 +454,7 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
   }
 }
 
+// Função para desbloquear uma conquista para o técnico
 async function desbloquearConquista(idTecnico, idConquista) {
   try {
     const [jaTem] = await pool.query(

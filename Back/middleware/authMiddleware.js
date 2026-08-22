@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 
+// Middleware para verificar o token JWT
 export function verificarToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -18,6 +19,7 @@ export function verificarToken(req, res, next) {
     });
   }
 
+  // Extrai o token da segunda parte do header
   const token = parts[1];
 
   if (!process.env.JWT_SECRET) {

@@ -5,6 +5,9 @@ import pool from "../config/database.js";
 
 const router = Router();
 
+// ==========================================
+// 1. ROTAS ESPECÍFICAS / FIXAS (PRIMEIRO)
+// ==========================================
 router.get("/tecnicos/perfil", verificarToken, async (req, res) => {
   try {
     const idUsuario = req.usuario?.id_usuario || req.usuario?.id;
@@ -29,6 +32,9 @@ router.get("/tecnicos/perfil", verificarToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// 2. ROTAS DINÂMICAS COM /:id (DEPOIS)
+// ==========================================
 router.put("/tecnicos/perfil", verificarToken, async (req, res) => {
   try {
     const idUsuario = req.usuario?.id_usuario || req.usuario?.id;
@@ -58,10 +64,16 @@ router.put("/tecnicos/perfil", verificarToken, async (req, res) => {
   }
 });
 
+// ==========================================
+// 3. ROTAS DE CHAMADOS (DEPOIS)
+// ==========================================
 router.get("/tecnico", verificarToken, chamadoController.listarChamadosTecnico);
 router.post("/", verificarToken, chamadoController.AbrirNovoChamado);
 router.get("/", verificarToken, chamadoController.listarMeusChamados);
 
+// ==========================================
+// 4. ROTAS DINÂMICAS COM /:id (DEPOIS)
+// ==========================================
 router.get("/:id", verificarToken, chamadoController.buscarChamadoPorId);
 router.patch("/:id/cancelar", verificarToken, chamadoController.cancelarChamadoPorId);
 router.patch("/:id/aceitar", verificarToken, chamadoController.aceitarChamado);

@@ -49,6 +49,7 @@ export async function criarUsuario(
   }
 }
 
+// Função para verificar se o email já existe no banco de dados
 export async function verificarEmailExistente(email) {
   try {
     const [resultado] = await pool.query(
@@ -62,6 +63,7 @@ export async function verificarEmailExistente(email) {
   }
 }
 
+// Função para buscar um usuário específico por ID
 export async function buscarUsuarioPorId(id) {
   try {
     const [rows] = await pool.query(
@@ -75,6 +77,7 @@ export async function buscarUsuarioPorId(id) {
   }
 }
 
+// Função para buscar um usuário específico por email
 export async function buscarUsuarioPorEmail(email) {
   try {
     const [rows] = await pool.query("SELECT * FROM usuario WHERE email = ?", [

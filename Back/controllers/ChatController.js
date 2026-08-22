@@ -1,6 +1,7 @@
 import * as mensagemModel from "../models/ChatModels.js";
 
-export async function NovaMensagem(req, res) {
+// Função para criar uma nova mensagem
+export async function novaMensagem(req, res) {
   const { mensagem, texto, conteudo, fk_usuario, fk_chamado } = req.body;
   const textoMensagem = mensagem || texto || conteudo;
   const idUsuarioFinal =
@@ -15,32 +16,33 @@ export async function NovaMensagem(req, res) {
     ) {
       return res
         .status(400)
-        .json({ error: "Dados incompletos ou mensagem vazia para enviar." });
+        .json({ erro: "Dados incompletos ou mensagem vazia para enviar." });
     }
 
     // Passa o fk_usuario e o fk_remetente juntos para evitar o erro do banco
-    const novaMensagem = await mensagemModel.create({
+    const novaMensagemCriada = await mensagemModel.create({
       mensagem: String(textoMensagem).trim(),
       fk_usuario: Number(idUsuarioFinal),
       fk_remetente: Number(idUsuarioFinal),
       fk_chamado: Number(fk_chamado),
     });
 
-    return res.status(201).json(novaMensagem);
+    return res.status(201).json(novaMensagemCriada);
   } catch (error) {
     console.error("Erro ao criar nova mensagem:", error);
     return res
       .status(500)
-      .json({ error: "Erro ao criar nova mensagem", detalhes: error.message });
+      .json({ erro: "Erro ao criar nova mensagem", detalhes: error.message });
   }
 }
 
-export async function ListarMensagensPorChamado(req, res) {
+// Função para listar mensagens por chamado
+export async function listarMensagensPorChamado(req, res) {
   try {
     const id_chamado = req.params.id_chamado;
 
     if (!id_chamado) {
-      return res.status(400).json({ error: "ID do chamado não informado." });
+      return res.status(400).json({ erro: "ID do chamado não informado." });
     }
 
     const mensagens = await mensagemModel.findByChamado(id_chamado);
@@ -49,7 +51,7 @@ export async function ListarMensagensPorChamado(req, res) {
   } catch (error) {
     console.error("Erro ao listar mensagens:", error);
     return res.status(500).json({
-      error: "Não foi possível encontrar as mensagens desta conversa",
+      erro: "Não foi possível encontrar as mensagens desta conversa",
     });
   }
 }

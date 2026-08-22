@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 
+// Configuração do transporte de e-mail usando nodemailer
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.gmail.com",
   port: Number(process.env.EMAIL_PORT) || 587,
@@ -10,6 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Função para enviar e-mail de notificação
 export async function enviarNotificacaoParaUsuario(para, assunto, texto) {
   try {
     const info = await transporter.sendMail({

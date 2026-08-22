@@ -3,7 +3,7 @@ import pool from "../config/database.js";
 // Mostrar mensagens de um chamado específico trazendo explicitamente o tipo do usuário do banco
 export async function findByChamado(id_chamado) {
   console.log(
-    "🔥 RODANDO A NOVA QUERY COM JOIN NO BANCO PARA O CHAMADO:",
+    "RODANDO A NOVA QUERY COM JOIN NO BANCO PARA O CHAMADO:",
     id_chamado,
   );
   try {
