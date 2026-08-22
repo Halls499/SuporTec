@@ -1,5 +1,5 @@
 import * as chamadoModel from "../models/NovoChamadoModels.js";
-import { enviarNotificacaoParaUsuario } from "../config/transporter.js";
+import { enviarNotificacaoParaUsuario } from "../utils/emailService.js";
 import pool from "../config/database.js";
 
 export async function AbrirNovoChamado(req, res) {
