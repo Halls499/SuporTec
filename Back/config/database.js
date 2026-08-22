@@ -14,14 +14,23 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   
-  // Configurações de keep-alive e timeout
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0,
-  connectTimeout: 30000, // 30 segundos de timeout para conectar
+  keepAliveInitialDelay: 10000, // 10 segundos
+  connectTimeout: 30000,
 
   ssl: {
     rejectUnauthorized: false
   }
 });
+
+// Teste inicial de conexão
+pool.getConnection()
+  .then(connection => {
+    console.log("🚀 Conectado ao banco de dados com sucesso!");
+    connection.release();
+  })
+  .catch(err => {
+    console.error("❌ Erro ao conectar no banco de dados:", err.message);
+  });
 
 export default pool;
