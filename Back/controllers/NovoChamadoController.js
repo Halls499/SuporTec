@@ -56,23 +56,26 @@ export async function AbrirNovoChamado(req, res) {
 
     await chamadoModel.abrirChamado(dadosChamado);
 
-    // Buscar e-mail do cliente para notificação de abertura
-    try {
-      const [usuarioResult] = await pool.query(
-        "SELECT email FROM usuario WHERE id_usuario = ?",
-        [fk_cliente],
+    // Enviar e-mail em segundo plano (sem await) para não travar a resposta da API
+    pool
+      .query("SELECT email FROM usuario WHERE id_usuario = ?", [fk_cliente])
+      .then(([usuarioResult]) => {
+        if (usuarioResult.length > 0 && usuarioResult[0].email) {
+          enviarNotificacaoParaUsuario(
+            usuarioResult[0].email,
+            "SuporTec - Chamado Aberto",
+            `Olá! Seu chamado "${titulo}" foi aberto com sucesso no sistema.`,
+          ).catch((emailErr) => {
+            console.warn(
+              "Aviso: Falha ao enviar e-mail em segundo plano:",
+              emailErr.message,
+            );
+          });
+        }
+      })
+      .catch((err) =>
+        console.warn("Erro ao buscar email para notificação:", err),
       );
-      if (usuarioResult.length > 0 && usuarioResult[0].email) {
-        // Enviar e-mail de notificação para o cliente
-        await enviarNotificacaoParaUsuario(
-          usuarioResult[0].email,
-          "SuporTec - Chamado Aberto",
-          `Olá! Seu chamado "${titulo}" foi aberto com sucesso no sistema.`,
-        );
-      }
-    } catch (emailErr) {
-      console.error("Erro ao enviar e-mail de abertura:", emailErr);
-    }
 
     return res.status(201).json({
       mensagem: "Chamado criado com sucesso!",
@@ -225,22 +228,28 @@ export async function atualizarChamado(req, res) {
         .json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
-    // Buscar cliente dono do chamado e enviar e-mail
-    const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
-    if (clienteDono && clienteDono.fk_cliente) {
-      const [usuarioResult] = await pool.query(
-        "SELECT email FROM usuario WHERE id_usuario = ?",
-        [clienteDono.fk_cliente],
-      );
-      if (usuarioResult.length > 0 && usuarioResult[0].email) {
-        // Enviar e-mail de notificação para o cliente sobre a atualização do chamado
-        await enviarNotificacaoParaUsuario(
-          usuarioResult[0].email,
-          "SuporTec - Chamado Atualizado",
-          `O status do seu chamado #${id} foi alterado para: ${dadosAtualizacao.situacao || "Atualizado"}.`,
-        );
-      }
-    }
+    // Enviar e-mail de atualização em segundo plano
+    chamadoModel
+      .buscarClienteDoChamado(id)
+      .then((clienteDono) => {
+        if (clienteDono && clienteDono.fk_cliente) {
+          pool
+            .query("SELECT email FROM usuario WHERE id_usuario = ?", [
+              clienteDono.fk_cliente,
+            ])
+            .then(([usuarioResult]) => {
+              if (usuarioResult.length > 0 && usuarioResult[0].email) {
+                enviarNotificacaoParaUsuario(
+                  usuarioResult[0].email,
+                  "SuporTec - Chamado Atualizado",
+                  `O status do seu chamado #${id} foi alterado para: ${dadosAtualizacao.situacao || "Atualizado"}.`,
+                ).catch(() => {});
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     return res
       .status(200)
@@ -355,7 +364,6 @@ export async function atualizarStatusChamado(req, res) {
             [novoXp, novoNivel, tecnicoId],
           );
         }
-        // Checar regras de conquistas após atualizar o status do chamado
         await checarRegrasDeConquistas(tecnicoId, id);
       } catch (xpError) {
         console.warn(
@@ -370,7 +378,7 @@ export async function atualizarStatusChamado(req, res) {
     console.error("Erro ao atualizar status:", erro);
     return res
       .status(500)
-      .json({ erro: "Erro interno no servidor", detalhes: erro.message });
+      .json({ erro: "Erro interno no servidor", detalhes: error.message });
   }
 }
 
@@ -438,7 +446,6 @@ export async function enviarMensagemChamado(req, res) {
   }
 }
 
-// Função para checar regras de conquistas após a resolução de um chamado
 async function checarRegrasDeConquistas(idTecnico, idChamado) {
   try {
     const [totalChamadosResolvidos] = await pool.query(
@@ -454,7 +461,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
   }
 }
 
-// Função para desbloquear uma conquista para o técnico
 async function desbloquearConquista(idTecnico, idConquista) {
   try {
     const [jaTem] = await pool.query(
