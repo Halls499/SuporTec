@@ -59,7 +59,6 @@ const cardHover = {
   transition: { duration: 0.2 },
 };
 
-// Função auxiliar para pegar o ID do técnico logado
 function obterIdUsuarioDoToken(): number | null {
   try {
     const token = localStorage.getItem("token");
@@ -157,13 +156,11 @@ function DashboardTecnico() {
     }
   }
 
-  // Filtro: Separa apenas os chamados que pertencem ao técnico logado
   const chamadosDoTecnico = chamados.filter((c) => {
     const tecnicoId = Number(c.id_tecnico || c.fk_tecnico || 0);
     return tecnicoId === Number(idTecnicoLogado);
   });
 
-  // Contagens calculadas estritamente com base nos chamados do técnico logado
   const novos = chamadosDoTecnico.filter((c) => c.situacao === "Novo").length;
   const resolvidos = chamadosDoTecnico.filter(
     (c) => c.situacao === "Resolvido",
@@ -175,12 +172,10 @@ function DashboardTecnico() {
     (c) => c.situacao === "Aguardando cliente",
   ).length;
 
-  // Chamados disponíveis para aceitar (status Novo e sem técnico atribuído)
   const chamadosDisponiveis = chamados.filter(
     (c) => c.situacao === "Novo" && !c.id_tecnico && !c.fk_tecnico,
   );
 
-  // Cálculos de XP e Nível
   const nivelAtual = perfil?.nivel || 1;
   const xpAtual = perfil?.xp || 0;
   const xpNecessario = nivelAtual * 100;
@@ -191,22 +186,7 @@ function DashboardTecnico() {
 
   const listaConquistas = conquistasBanco.map((c) => {
     let ico = "🏅";
-    let categoria = "Suporte Geral";
     const tituloLower = c.titulo.toLowerCase();
-
-    if (
-      tituloLower.includes("hardware") ||
-      tituloLower.includes("software") ||
-      tituloLower.includes("redes")
-    ) {
-      categoria = "Especializações";
-    } else if (
-      tituloLower.includes("primeiro") ||
-      tituloLower.includes("qualidade") ||
-      tituloLower.includes("estrelas")
-    ) {
-      categoria = "Qualidade";
-    }
 
     if (tituloLower.includes("hardware")) ico = "💻";
     else if (tituloLower.includes("software")) ico = "🖥️";
@@ -221,7 +201,6 @@ function DashboardTecnico() {
 
     return {
       id: c.id_conquista,
-      categoria,
       ico,
       tit: c.titulo,
       desc: c.descricao,
@@ -232,11 +211,6 @@ function DashboardTecnico() {
   const totalDesbloqueadas = listaConquistas.filter(
     (c) => c.status === "desbloqueada",
   ).length;
-
-  // Extrai as categorias únicas dinamicamente
-  const categoriasUnicas = Array.from(
-    new Set(listaConquistas.map((c) => c.categoria))
-  );
 
   return (
     <main className="home-login-page">
@@ -249,10 +223,9 @@ function DashboardTecnico() {
         {/* Seção de Boas-vindas */}
         <motion.div className="welcome" variants={itemVariants}>
           <h1>Olá, {perfil?.nome || "Técnico"}! 🚀</h1>
-          <p>Bem-vindo ao seu painel de controle e evolução profissional.</p>
           <p>
-            🌟 Nível Atual: <strong>Nível {nivelAtual}</strong> | XP Total:{" "}
-            <strong>{xpAtual} pts</strong>
+            Gerencie os chamados atribuídos a você e acompanhe sua evolução
+            profissional.
           </p>
         </motion.div>
 
@@ -268,21 +241,17 @@ function DashboardTecnico() {
           </div>
         </motion.div>
 
-        <motion.div className="welcome" variants={itemVariants}>
-          <p>
-            Gerencie os chamados atribuídos a você e acompanhe o andamento dos
-            atendimentos.
-          </p>
-          {novos > 0 && (
+        {novos > 0 && (
+          <motion.div className="alerta-novos" variants={itemVariants}>
             <motion.p
               animate={{ x: [0, 5, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
             >
               ⚠️ Você possui {novos} chamado{novos === 1 ? "" : "s"} novo
-              {novos === 1 ? "" : "s"} em seu atendimento.
+              {novos === 1 ? "" : "s"} aguardando atendimento.
             </motion.p>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Cards de Resumo */}
         <motion.div className="summary-cards" variants={containerVariants}>
@@ -341,7 +310,7 @@ function DashboardTecnico() {
           </div>
         </motion.div>
 
-        {/* Seção de Conquistas Dinâmica por Categoria */}
+        {/* Seção de Conquistas (Sem Categorias) */}
         <motion.div className="conquistas" variants={containerVariants}>
           <motion.h2 variants={itemVariants}>🏆 Conquistas</motion.h2>
           <motion.h3 variants={itemVariants}>
@@ -349,24 +318,21 @@ function DashboardTecnico() {
             desbloqueadas
           </motion.h3>
 
-          {categoriasUnicas.map((cat) => (
-            <div key={cat} style={{ marginTop: "20px" }}>
-              <motion.h4 variants={itemVariants}>📋 {cat}</motion.h4>
-              <motion.div className="conquistas-grid" variants={containerVariants}>
-                {listaConquistas
-                  .filter((c) => c.categoria === cat)
-                  .map((conquista) => (
-                    <ConquistaCard
-                      key={conquista.id}
-                      ico={conquista.ico}
-                      tit={conquista.tit}
-                      desc={conquista.desc}
-                      status={conquista.status}
-                    />
-                  ))}
-              </motion.div>
-            </div>
-          ))}
+          <motion.div
+            className="conquistas-grid"
+            variants={containerVariants}
+            style={{ marginTop: "20px" }}
+          >
+            {listaConquistas.map((conquista) => (
+              <ConquistaCard
+                key={conquista.id}
+                ico={conquista.ico}
+                tit={conquista.tit}
+                desc={conquista.desc}
+                status={conquista.status}
+              />
+            ))}
+          </motion.div>
         </motion.div>
 
         <motion.div
