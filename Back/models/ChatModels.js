@@ -1,6 +1,6 @@
 import pool from "../config/database.js";
 
-// Mostrar mensagens de um chamado específico trazendo explicitamente o tipo do usuário do banco
+// Busca todas as mensagens de um chamado
 export async function findByChamado(id_chamado) {
   try {
     const [rows] = await pool.query(
@@ -25,14 +25,16 @@ export async function findByChamado(id_chamado) {
   }
 }
 
-// Criar uma nova mensagem e retornar imediatamente o objeto completo com o tipo do usuário correto
+// Cria uma nova mensagem e retorna APENAS ela, com o tipo_usuario
 export async function create({ mensagem, fk_usuario, fk_chamado }) {
   try {
+    // 1. Insere a mensagem
     const [resultado] = await pool.query(
       "INSERT INTO mensagem (mensagem, fk_usuario, fk_chamado, data_envio) VALUES (?, ?, ?, NOW())",
       [mensagem, fk_usuario, fk_chamado],
     );
 
+    // 2. Busca APENAS a mensagem inserida para incluir o tipo_usuario
     const [rows] = await pool.query(
       `SELECT 
         m.id_mensagem,
@@ -48,7 +50,7 @@ export async function create({ mensagem, fk_usuario, fk_chamado }) {
       [resultado.insertId],
     );
 
-    return rows[0] || null;
+    return rows[0] || null; // Retorna o objeto da mensagem criada
   } catch (error) {
     console.error("Erro no model create (chat):", error);
     throw error;
