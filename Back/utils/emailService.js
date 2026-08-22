@@ -1,0 +1,27 @@
+import nodemailer from "nodemailer";
+
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || "smtp.gmail.com",
+  port: Number(process.env.EMAIL_PORT) || 587,
+  secure: false, // true para 465, false para outras portas
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+export async function enviarEmail(para, assunto, texto) {
+  try {
+    const info = await transporter.sendMail({
+      from: '"SuporTec Sistema de Chamados" <no-reply@suportec.com>',
+      to: para,
+      subject: assunto,
+      text: texto,
+    });
+    console.log("E-mail enviado com sucesso: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Erro ao enviar e-mail:", error);
+    return false;
+  }
+}

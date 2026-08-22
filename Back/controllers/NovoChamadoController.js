@@ -95,11 +95,14 @@ export async function listarMeusChamados(req, res) {
 export async function listarChamadosTecnico(req, res) {
   try {
     const listaChamados = await chamadoModel.listarChamadosPorOrganizacao();
-    
+
     // LOG DE SEGURANÇA
-    console.log("LOG DE DEBUG: O total de chamados encontrado no banco foi:", listaChamados.length);
+    console.log(
+      "LOG DE DEBUG: O total de chamados encontrado no banco foi:",
+      listaChamados.length,
+    );
     console.log("LOG DE DEBUG: Conteúdo:", JSON.stringify(listaChamados));
-    
+
     return res.status(200).json(listaChamados);
   } catch (erro) {
     console.error("ERRO CRÍTICO NO CONTROLLER:", erro);
@@ -159,7 +162,7 @@ export async function atualizarChamado(req, res) {
       await enviarNotificacaoParaUsuario(
         clienteDono.fk_cliente,
         "SuporTec - Chamado Atualizado",
-        "O técnico alterou o status do seu chamado!",
+        `O status do seu chamado #${id} foi alterado para: ${dadosAtualizacao.situacao || "Atualizado"}.`,
       );
     }
 
@@ -330,7 +333,12 @@ export async function enviarMensagemChamado(req, res) {
     await pool.query(
       `INSERT INTO mensagem (fk_chamado, fk_usuario, fk_remetente, mensagem, data_envio) 
        VALUES (?, ?, ?, ?, NOW())`,
-      [Number(id), Number(id_usuario), Number(id_usuario), String(textoMensagem).trim()]
+      [
+        Number(id),
+        Number(id_usuario),
+        Number(id_usuario),
+        String(textoMensagem).trim(),
+      ],
     );
 
     return res.status(201).json({ mensagem: "Mensagem enviada com sucesso!" });

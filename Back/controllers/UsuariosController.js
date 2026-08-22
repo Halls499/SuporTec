@@ -155,7 +155,7 @@ export async function loginUsuario(req, res) {
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1d",
+        expiresIn: "30d", // Token válido por 30 dias
       },
     );
 
