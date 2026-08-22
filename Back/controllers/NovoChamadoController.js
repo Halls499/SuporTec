@@ -1,5 +1,5 @@
 import * as chamadoModel from "../models/NovoChamadoModels.js";
-import { enviarNotificacaoParaUsuario } from "../routes/PushRoutes.js";
+import { enviarNotificacaoParaUsuario } from "../config/transporter.js";
 import pool from "../config/database.js";
 
 export async function AbrirNovoChamado(req, res) {
@@ -55,6 +55,23 @@ export async function AbrirNovoChamado(req, res) {
 
     await chamadoModel.abrirChamado(dadosChamado);
 
+    // Buscar e-mail do cliente para notificação de abertura
+    try {
+      const [usuarioResult] = await pool.query(
+        "SELECT email FROM usuario WHERE id_usuario = ?",
+        [fk_cliente]
+      );
+      if (usuarioResult.length > 0 && usuarioResult[0].email) {
+        await enviarNotificacaoParaUsuario(
+          usuarioResult[0].email,
+          "SuporTec - Chamado Aberto",
+          `Olá! Seu chamado "${titulo}" foi aberto com sucesso no sistema.`
+        );
+      }
+    } catch (emailErr) {
+      console.error("Erro ao enviar e-mail de abertura:", emailErr);
+    }
+
     return res.status(201).json({
       mensagem: "Chamado criado com sucesso!",
     });
@@ -68,8 +85,6 @@ export async function AbrirNovoChamado(req, res) {
 
 export async function listarMeusChamados(req, res) {
   const fk_cliente = req.usuario?.id_usuario;
-
-  // Tratamento blindado para usar null se o usuário não tiver organização
   const fk_organizacao = req.usuario?.fk_organizacao
     ? Number(req.usuario.fk_organizacao)
     : null;
@@ -95,14 +110,6 @@ export async function listarMeusChamados(req, res) {
 export async function listarChamadosTecnico(req, res) {
   try {
     const listaChamados = await chamadoModel.listarChamadosPorOrganizacao();
-
-    // LOG DE SEGURANÇA
-    console.log(
-      "LOG DE DEBUG: O total de chamados encontrado no banco foi:",
-      listaChamados.length,
-    );
-    console.log("LOG DE DEBUG: Conteúdo:", JSON.stringify(listaChamados));
-
     return res.status(200).json(listaChamados);
   } catch (erro) {
     console.error("ERRO CRÍTICO NO CONTROLLER:", erro);
@@ -113,11 +120,6 @@ export async function listarChamadosTecnico(req, res) {
 export async function buscarChamadoPorId(req, res) {
   try {
     const { id } = req.params;
-
-    const fk_organizacao = req.usuario?.fk_organizacao
-      ? Number(req.usuario.fk_organizacao)
-      : null;
-
     const chamado = await chamadoModel.buscarChamadoPorIdTecnico(id);
 
     if (!chamado) {
@@ -156,14 +158,20 @@ export async function atualizarChamado(req, res) {
         .json({ mensagem: "Chamado não encontrado para atualização." });
     }
 
+    // Buscar cliente dono do chamado e enviar e-mail
     const clienteDono = await chamadoModel.buscarClienteDoChamado(id);
-
     if (clienteDono && clienteDono.fk_cliente) {
-      await enviarNotificacaoParaUsuario(
-        clienteDono.fk_cliente,
-        "SuporTec - Chamado Atualizado",
-        `O status do seu chamado #${id} foi alterado para: ${dadosAtualizacao.situacao || "Atualizado"}.`,
+      const [usuarioResult] = await pool.query(
+        "SELECT email FROM usuario WHERE id_usuario = ?",
+        [clienteDono.fk_cliente]
       );
+      if (usuarioResult.length > 0 && usuarioResult[0].email) {
+        await enviarNotificacaoParaUsuario(
+          usuarioResult[0].email,
+          "SuporTec - Chamado Atualizado",
+          `O status do seu chamado #${id} foi alterado para: ${dadosAtualizacao.situacao || "Atualizado"}.`,
+        );
+      }
     }
 
     return res
@@ -245,13 +253,11 @@ export async function atualizarStatusChamado(req, res) {
     const chamado = chamados[0];
     const tecnicoId = chamado.fk_tecnico;
 
-    // Atualiza apenas o status do chamado primeiro
     await pool.query("UPDATE chamado SET situacao = ? WHERE id_chamado = ?", [
       situacao,
       id,
     ]);
 
-    // Bloco de XP seguro e Verificação de Conquistas
     if (situacao === "Resolvido" && tecnicoId) {
       try {
         let xpGanho = 50;
@@ -280,10 +286,7 @@ export async function atualizarStatusChamado(req, res) {
         }
         await checarRegrasDeConquistas(tecnicoId, id);
       } catch (xpError) {
-        console.warn(
-          "Aviso: Sistema de XP/Conquistas ignorado devido a erro.",
-          xpError,
-        );
+        console.warn("Aviso: Sistema de XP/Conquistas ignorado devido a erro.", xpError);
       }
     }
 
@@ -295,10 +298,6 @@ export async function atualizarStatusChamado(req, res) {
       .json({ erro: "Erro interno no servidor", detalhes: erro.message });
   }
 }
-
-// ==========================================
-// FUNÇÕES DO CHAT
-// ==========================================
 
 export async function buscarMensagensChamado(req, res) {
   const { id } = req.params;
@@ -329,7 +328,6 @@ export async function enviarMensagemChamado(req, res) {
       return res.status(401).json({ erro: "Usuário não autenticado." });
     }
 
-    // <-- COLE O CÓDIGO AQUI DENTRO -->
     await pool.query(
       `INSERT INTO mensagem (fk_chamado, fk_usuario, fk_remetente, mensagem, data_envio) 
        VALUES (?, ?, ?, ?, NOW())`,
@@ -348,10 +346,6 @@ export async function enviarMensagemChamado(req, res) {
   }
 }
 
-// ==========================================
-// FUNÇÕES AUXILIARES DE CONQUISTAS
-// ==========================================
-
 async function checarRegrasDeConquistas(idTecnico, idChamado) {
   try {
     const [totalChamadosResolvidos] = await pool.query(
@@ -361,211 +355,6 @@ async function checarRegrasDeConquistas(idTecnico, idChamado) {
 
     if (totalChamadosResolvidos[0]?.total === 1) {
       await desbloquearConquista(idTecnico, 1);
-    }
-
-    const [chamadosAgeis] = await pool.query(
-      `SELECT COUNT(*) as total FROM chamado 
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
-       AND TIMESTAMPDIFF(HOUR, data_abertura, data_fechamento) < 5`,
-      [idTecnico],
-    );
-
-    if (chamadosAgeis[0]?.total >= 10) {
-      await desbloquearConquista(idTecnico, 2);
-    }
-
-    const [chamadosSemanais] = await pool.query(
-      `SELECT COUNT(*) as total FROM chamado 
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido' 
-       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 1 WEEK)`,
-      [idTecnico],
-    );
-
-    if (chamadosSemanais[0]?.total >= 10) {
-      await desbloquearConquista(idTecnico, 3);
-    }
-
-    if (totalChamadosResolvidos[0]?.total >= 100) {
-      await desbloquearConquista(idTecnico, 4);
-    }
-
-    const [chamadoRapidoAlta] = await pool.query(
-      `SELECT id_chamado FROM chamado 
-       WHERE id_chamado = ? AND fk_tecnico = ?  
-       AND TIMESTAMPDIFF(MINUTE, data_abertura, data_fechamento) <= 60`,
-      [idChamado, idTecnico],
-    );
-
-    if (chamadoRapidoAlta.length > 0) {
-      await desbloquearConquista(idTecnico, 5);
-    }
-
-    const [chamadosConsecutivos] = await pool.query(
-      `SELECT COUNT(DISTINCT DATE(data_fechamento)) as dias_consecutivos 
-       FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 7 DAY)`,
-      [idTecnico],
-    );
-
-    if (chamadosConsecutivos[0]?.dias_consecutivos >= 7) {
-      await desbloquearConquista(idTecnico, 6);
-    }
-
-    const [chamadosForaHorario] = await pool.query(
-      `SELECT id_chamado FROM chamado 
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       AND (HOUR(data_fechamento) < 8 OR HOUR(data_fechamento) >= 18 OR DAYOFWEEK(data_fechamento) IN (1, 7))`,
-      [idTecnico],
-    );
-
-    if (chamadosForaHorario.length > 0) {
-      await desbloquearConquista(idTecnico, 7);
-    }
-
-    const [chamadosAltaPrioridade] = await pool.query(
-      `SELECT id_chamado FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido' AND prioridade = 'Alta'
-       AND TIMESTAMPDIFF(MINUTE, data_abertura, data_fechamento) <= 15`,
-      [idTecnico],
-    );
-
-    if (chamadosAltaPrioridade.length > 0) {
-      await desbloquearConquista(idTecnico, 8);
-    }
-
-    const [chamadosPorCategoria] = await pool.query(
-      `SELECT categoria, COUNT(*) as total FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       GROUP BY categoria`,
-      [idTecnico],
-    );
-
-    if (chamadosPorCategoria.length > 0) {
-      for (const cat of chamadosPorCategoria) {
-        if (cat.total >= 50) {
-          switch (cat.categoria) {
-            case "Hardware":
-              await desbloquearConquista(idTecnico, 9);
-              break;
-            case "Software":
-              await desbloquearConquista(idTecnico, 10);
-              break;
-            case "Redes":
-              await desbloquearConquista(idTecnico, 11);
-              break;
-            case "Impressoras":
-              await desbloquearConquista(idTecnico, 12);
-              break;
-          }
-        }
-      }
-    }
-
-    const [chamadosSemana] = await pool.query(
-      `SELECT COUNT(DISTINCT categoria) as categorias_distintas
-       FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       AND data_fechamento >= DATE_SUB(NOW(), INTERVAL 1 WEEK)
-       GROUP BY YEARWEEK(data_fechamento)`,
-      [idTecnico],
-    );
-
-    if (chamadosSemana.some((semana) => semana.categorias_distintas >= 3)) {
-      await desbloquearConquista(idTecnico, 13);
-    }
-
-    const [chamadosPrioridades] = await pool.query(
-      `SELECT DISTINCT prioridade FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'`,
-      [idTecnico],
-    );
-
-    const prioridades = chamadosPrioridades.map((c) => c.prioridade);
-    if (
-      prioridades.includes("Baixa") &&
-      prioridades.includes("Media") &&
-      prioridades.includes("Alta")
-    ) {
-      await desbloquearConquista(idTecnico, 14);
-    }
-
-    const [chamadosMesmoDia] = await pool.query(
-      `SELECT DATE(data_fechamento) as dia, categoria
-       FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       GROUP BY DATE(data_fechamento), categoria`,
-      [idTecnico],
-    );
-
-    const diasCategorias = {};
-    for (const chamado of chamadosMesmoDia) {
-      if (!diasCategorias[chamado.dia]) diasCategorias[chamado.dia] = new Set();
-      diasCategorias[chamado.dia].add(chamado.categoria);
-    }
-
-    if (
-      Object.values(diasCategorias).some(
-        (set) => set.has("Hardware") && set.has("Software"),
-      )
-    ) {
-      await desbloquearConquista(idTecnico, 15);
-    }
-
-    const [chamadosTipoMesmoDia] = await pool.query(
-      `SELECT DATE(data_fechamento) as dia, tipo_atendimento
-       FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       GROUP BY DATE(data_fechamento), tipo_atendimento`,
-      [idTecnico],
-    );
-
-    const diasTipos = {};
-    for (const chamado of chamadosTipoMesmoDia) {
-      if (!diasTipos[chamado.dia]) diasTipos[chamado.dia] = new Set();
-      diasTipos[chamado.dia].add(chamado.tipo_atendimento);
-    }
-
-    if (
-      Object.values(diasTipos).some(
-        (set) => set.has("Presencial") && set.has("Remoto"),
-      )
-    ) {
-      await desbloquearConquista(idTecnico, 16);
-    }
-
-    const [usuario] = await pool.query(
-      "SELECT nivel FROM usuario WHERE id_usuario = ?",
-      [idTecnico],
-    );
-
-    if (usuario.length > 0 && usuario[0].nivel >= 5) {
-      await desbloquearConquista(idTecnico, 17);
-    }
-
-    const [chamadosSeguidos] = await pool.query(
-      `SELECT COUNT(*) as total FROM chamado
-       WHERE fk_tecnico = ? AND situacao = 'Resolvido'
-       GROUP BY categoria
-       HAVING total >= 7`,
-      [idTecnico],
-    );
-
-    if (chamadosSeguidos.length > 0) {
-      await desbloquearConquista(idTecnico, 18);
-    }
-
-    const [conquistasUsuario] = await pool.query(
-      "SELECT COUNT(*) as total FROM usuario_conquista WHERE fk_usuario = ?",
-      [idTecnico],
-    );
-
-    if (conquistasUsuario[0]?.total >= 3) {
-      await desbloquearConquista(idTecnico, 19);
-    }
-
-    if (usuario.length > 0 && usuario[0].nivel >= 250) {
-      await desbloquearConquista(idTecnico, 20);
     }
   } catch (erro) {
     console.error("Erro na verificação de regras de conquista: ", erro);
@@ -583,9 +372,6 @@ async function desbloquearConquista(idTecnico, idConquista) {
       await pool.query(
         "INSERT INTO usuario_conquista (fk_usuario, fk_conquista) VALUES (?, ?)",
         [idTecnico, idConquista],
-      );
-      console.log(
-        `Conquista ID ${idConquista} desbloqueada para o técnico ${idTecnico}!`,
       );
     }
   } catch (erro) {

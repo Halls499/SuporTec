@@ -10,8 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Essa é a função que estava faltando ser exportada!
-export async function enviarEmail(para, assunto, texto) {
+export async function enviarNotificacaoParaUsuario(para, assunto, texto) {
   try {
     const info = await transporter.sendMail({
       from: `"SuporTec" <${process.env.EMAIL_USER}>`,
