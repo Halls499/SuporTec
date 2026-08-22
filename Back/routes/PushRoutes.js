@@ -12,10 +12,10 @@ webpush.setVapidDetails(
   "dTKpsaf5-zl_3KrnjtByPjNC7aIMBgJyzJ1vlbkoq9U",
 );
 
+// Rota de salvar inscrição (mantida igualzinha você fez)
 router.post("/salvar-inscricao", verificarToken, async (req, res) => {
   const { endpoint, keys } = req.body;
 
-  // Ajustado para buscar de onde o middleware realmente injeta o usuário:
   const id_usuario =
     req.usuario?.id_usuario || req.usuario?.id || req.usuarioId;
 
@@ -40,31 +40,32 @@ router.post("/salvar-inscricao", verificarToken, async (req, res) => {
   }
 });
 
+// Função completa de notificação (E-mail + Web Push)
 export async function enviarNotificacaoParaUsuario(
   id_usuario,
   tituloMensagem,
   corpoMensagem,
 ) {
   try {
-    // 1. Busca os dados do usuário (incluindo o e-mail) direto na tabela usuario
+    // 1. Busca os dados do usuário para o e-mail
     const [usuarios] = await pool.query(
       `SELECT nome, email FROM usuario WHERE id_usuario = ?`,
-      [id_usuario]
+      [id_usuario],
     );
 
     if (usuarios && usuarios.length > 0) {
       const usuario = usuarios[0];
       if (usuario.email) {
-        // Envia o e-mail
+        console.log("Tentando enviar e-mail para:", usuario.email);
         await enviarEmail(
           usuario.email,
           tituloMensagem,
-          `Olá, ${usuario.nome || "Usuário"}.\n\n${corpoMensagem}`
+          `Olá, ${usuario.nome || "Usuário"}.\n\n${corpoMensagem}`,
         );
       }
     }
 
-    // 2. Dispara o Push Notification (caso o usuário tenha configurado)
+    // 2. Dispara o Web Push
     const [results] = await pool.query(
       `SELECT * FROM push_subscriptions WHERE id_usuario = ?`,
       [id_usuario],
@@ -88,7 +89,7 @@ export async function enviarNotificacaoParaUsuario(
       });
     }
   } catch (err) {
-    console.error("Erro ao enviar notificações:", err);
+    console.error("Erro geral na função de notificação:", err);
   }
 }
 
