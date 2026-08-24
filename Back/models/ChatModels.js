@@ -7,7 +7,7 @@ export async function findByChamado(id_chamado) {
     id_chamado,
   );
   try {
-    const [rows] = await pool.query(
+    const resultado = await pool.query(
       `SELECT 
         m.id_mensagem,
         m.mensagem,
@@ -19,11 +19,11 @@ export async function findByChamado(id_chamado) {
         u.tipo_usuario 
        FROM mensagem m
        JOIN usuario u ON m.fk_usuario = u.id_usuario
-       WHERE m.fk_chamado = ? 
+       WHERE m.fk_chamado = $1 
        ORDER BY m.data_envio ASC`,
       [id_chamado],
     );
-    return Array.isArray(rows) ? rows : [];
+    return Array.isArray(resultado.rows) ? resultado.rows : [];
   } catch (error) {
     console.error("Erro no model findByChamado:", error);
     throw error;
@@ -38,12 +38,17 @@ export async function create({
   fk_chamado,
 }) {
   try {
-    const [resultado] = await pool.query(
-      "INSERT INTO mensagem (mensagem, fk_usuario, fk_remetente, fk_chamado, data_envio) VALUES (?, ?, ?, ?, NOW())",
+    // No Postgres, usamos NOW() e RETURNING id_mensagem para pegar o ID gerado pelo SERIAL
+    const insertResultado = await pool.query(
+      `INSERT INTO mensagem (mensagem, fk_usuario, fk_remetente, fk_chamado, data_envio) 
+       VALUES ($1, $2, $3, $4, NOW()) 
+       RETURNING id_mensagem`,
       [mensagem, fk_usuario, fk_remetente, fk_chamado],
     );
 
-    const [rows] = await pool.query(
+    const novoId = insertResultado.rows[0].id_mensagem;
+
+    const resultadoSelect = await pool.query(
       `SELECT 
         m.id_mensagem,
         m.mensagem,
@@ -55,11 +60,11 @@ export async function create({
         u.tipo_usuario 
        FROM mensagem m
        JOIN usuario u ON m.fk_usuario = u.id_usuario
-       WHERE m.id_mensagem = ?`,
-      [resultado.insertId],
+       WHERE m.id_mensagem = $1`,
+      [novoId],
     );
 
-    return rows[0] || null;
+    return resultadoSelect.rows[0] || null;
   } catch (error) {
     console.error("Erro no model create (chat):", error);
     throw error;

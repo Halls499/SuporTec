@@ -19,8 +19,8 @@ app.use(express.json());
 // Rota de Healthcheck
 app.get("/health", async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    connection.release();
+    const client = await pool.connect();
+    client.release();
     return res.status(200).json({ status: "OK", message: "API e Banco rodando liso!" });
   } catch (error) {
     return res.status(500).json({ status: "ERROR", message: error.message });
@@ -39,12 +39,12 @@ app.use((req, res) => {
   return res.status(404).json({ mensagem: "Rota não encontrada." });
 });
 
-// Teste de conexão inicial com o MySQL
+// Teste de conexão inicial com o PostgreSQL
 pool
-  .getConnection()
-  .then((connection) => {
+  .connect()
+  .then((client) => {
     console.log("✅ Conectado ao banco de dados com sucesso!");
-    connection.release();
+    client.release();
   })
   .catch((err) => {
     console.error("❌ Erro ao conectar no banco de dados:", err.message);
