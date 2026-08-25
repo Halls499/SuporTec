@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS organizacao (
 -- 2. Tabela de Usuários (Clientes e Técnicos)
 CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    fk_organizacao INT NULL,
+    fk_organizacao INT NULL, -- Já ajustado para aceitar NULL
     nome VARCHAR(50) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS usuario (
 -- 3. Tabela de Chamados
 CREATE TABLE IF NOT EXISTS chamado (
     id_chamado INT AUTO_INCREMENT PRIMARY KEY,
-    fk_organizacao INT NOT NULL,
+    fk_organizacao INT NULL, -- Já ajustado para aceitar NULL
     titulo VARCHAR(100) NOT NULL,
     descricao TEXT NOT NULL,
     categoria ENUM('Hardware', 'Software', 'Rede', 'Acesso') NOT NULL,
@@ -103,19 +103,23 @@ CREATE TABLE IF NOT EXISTS historico_chamado (
         REFERENCES chamado(id_chamado) ON DELETE CASCADE
 );
 
--- 8. Tabela de Mensagens
+-- 8. Tabela de Mensagens (Já com fk_remetente inclusa e configurada como NULL)
 CREATE TABLE IF NOT EXISTS mensagem (
     id_mensagem INT AUTO_INCREMENT PRIMARY KEY,
     mensagem TEXT NOT NULL,
     data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
     fk_usuario INT NOT NULL,
     fk_chamado INT NOT NULL,
+    fk_remetente INT NULL, -- Criada direto aceitando NULL conforme o ajuste final
     CONSTRAINT fk_mensagem_usuario
         FOREIGN KEY (fk_usuario)
         REFERENCES usuario(id_usuario),
     CONSTRAINT fk_mensagem_chamado
         FOREIGN KEY (fk_chamado)
-        REFERENCES chamado(id_chamado) ON DELETE CASCADE
+        REFERENCES chamado(id_chamado) ON DELETE CASCADE,
+    CONSTRAINT fk_mensagem_usuario_nova
+        FOREIGN KEY (fk_remetente)
+        REFERENCES usuario(id_usuario)
 );
 
 -- 9. Tabela de Inscrições para Push Notifications
@@ -129,29 +133,18 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
 );
 
 --------------------------------------------------
--- CONSULTAS
+-- CONSULTAS DE APOIO
 --------------------------------------------------
 
-DESCRIBE chamado;
-SELECT * FROM chamado;
+SELECT * FROM organizacao;
+SELECT * FROM usuario;
 SELECT * FROM mensagem;
-SELECT id_usuario, nome, fk_organizacao FROM usuario WHERE id_usuario = 8;
-SELECT id_chamado, titulo FROM chamado;
-
---------------------------------------------------
--- ALTERAÇÕES NAS TABELAS
---------------------------------------------------
-
-ALTER TABLE usuario MODIFY COLUMN fk_organizacao INT NULL;
-ALTER TABLE chamado MODIFY COLUMN fk_organizacao INT NULL;
-ALTER TABLE mensagem ADD COLUMN fk_remetente INT NOT NULL;
-ALTER TABLE mensagem 
-ADD CONSTRAINT fk_mensagem_usuario_nova 
-FOREIGN KEY (fk_remetente) REFERENCES usuario(id_usuario);
-ALTER TABLE mensagem MODIFY COLUMN fk_remetente INT NULL;
-UPDATE chamado 
-SET situacao = 'Novo', fk_tecnico = NULL 
-WHERE id_chamado = 10;
+SELECT * FROM categorias;
+SELECT * FROM chamado;
+SELECT * FROM historico_chamado;
+SELECT * FROM conquista;
+SELECT * FROM push_subscriptions;
+SELECT * FROM usuario_conquista;
 
 --------------------------------------------------
 -- INSERT DE DADOS INICIAIS (Utilizando INSERT IGNORE para evitar duplicidade)
