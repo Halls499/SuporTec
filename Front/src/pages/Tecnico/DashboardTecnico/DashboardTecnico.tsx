@@ -236,8 +236,7 @@ function DashboardTecnico() {
             style={{ width: `${Math.max(porcentagemXp, 8)}%` }}
           />
           <div className="xp-text-overlay">
-            {porcentagemXp}% — {xpAtual} / {xpNecessario} XP (Nível {nivelAtual}
-            )
+            {porcentagemXp}% — {xpAtual} / {xpNecessario} XP (Nível {nivelAtual})
           </div>
         </motion.div>
 
