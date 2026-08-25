@@ -105,8 +105,6 @@ function AbrirChamado() {
           tipo_atendimento,
           tipo_contato,
           contato,
-          nome_solicitante: nomeSolicitante || null,
-          horario_contato: horarioContato || null,
           endereco: endereco || null,
           empresa: empresa || null,
           setor: setor || null,
