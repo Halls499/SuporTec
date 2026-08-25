@@ -35,10 +35,7 @@ export async function criarUsuario(
 ) {
   try {
     const [resultado] = await pool.query(
-      `
-      INSERT INTO usuario (nome, email, senha, tipo_usuario, fk_organizacao, xp, nivel, data_cadastro)
-      VALUES (?, ?, ?, ?, ?, 0, 1, NOW())
-      `,
+      `INSERT INTO usuario (nome, email, senha, tipo_usuario, fk_organizacao, xp, nivel, data_cadastro) VALUES (?, ?, ?, ?, ?, 0, 1, NOW())`,
       [nome, email, senha, tipo_usuario, fk_organizacao],
     );
 
@@ -94,11 +91,7 @@ export async function buscarUsuarioPorEmail(email) {
 export async function atualizarXpENivelTecnico(id_usuario, novoXp, novoNivel) {
   try {
     const [resultado] = await pool.query(
-      `
-      UPDATE usuario 
-      SET xp = ?, nivel = ? 
-      WHERE id_usuario = ? AND tipo_usuario = 'tecnico'
-      `,
+      `UPDATE usuario SET xp = ?, nivel = ? WHERE id_usuario = ? AND tipo_usuario = 'tecnico'`,
       [novoXp, novoNivel, id_usuario],
     );
     return resultado;
