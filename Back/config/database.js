@@ -3,6 +3,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+console.log("🔍 DEBUG VARIÁVEIS:");
+console.log("HOST:", process.env.DB_HOST);
+console.log("USER:", process.env.DB_USER);
+console.log("PORT:", process.env.DB_PORT);
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -10,9 +15,8 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
   ssl: {
-    rejectUnauthorized: false
+    rejectUnauthorized: false,
   },
-  connectTimeout: 30000 // Aumenta o tempo limite de conexão
 });
 
 export default pool;
