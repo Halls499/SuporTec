@@ -19,17 +19,16 @@ export async function abrirChamado(chamado) {
   } = chamado;
 
   try {
-    const resultado = await pool.query(
+    const [resultado] = await pool.query(
       `
-      INSERT INTO chamado (
-        fk_organizacao, titulo, descricao, categoria, prioridade, tipo_atendimento, 
-        endereco, empresa, setor, sala, tipo_contato, contato, fk_cliente
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      RETURNING id_chamado
-      `,
+      INSERT INTO chamado (
+        fk_organizacao, titulo, descricao, categoria, prioridade, tipo_atendimento, 
+        endereco, empresa, setor, sala, tipo_contato, contato, fk_cliente
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
       [
-        fk_organizacao !== undefined ? fk_organizacao : null,
+        fk_organizacao !== undefined ? fk_organizacao : null, // 🎯 Agora aceita null corretamente
         titulo,
         descricao || "",
         categoria,
@@ -45,8 +44,7 @@ export async function abrirChamado(chamado) {
       ],
     );
 
-    // Retorna o objeto simulando a estrutura que o controller espera, contendo o ID inserido
-    return { insertId: resultado.rows[0].id_chamado };
+    return resultado;
   } catch (error) {
     console.error("Erro no model abrirChamado:", error);
     throw error;
@@ -59,50 +57,50 @@ export async function listarChamadosPorClienteEOrganizacao(
   fk_organizacao,
 ) {
   try {
-    const resultado = await pool.query(
+    const [rows] = await pool.query(
       `SELECT * FROM chamado 
-       WHERE fk_cliente = $1 AND (fk_organizacao = $2 OR ($2 IS NULL AND fk_organizacao IS NULL))
-       ORDER BY data_abertura DESC`,
-      [fk_cliente, fk_organizacao],
-    );
-    return Array.isArray(resultado.rows) ? resultado.rows : [];
+       WHERE fk_cliente = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))
+       ORDER BY data_abertura DESC`,
+      [fk_cliente, fk_organizacao, fk_organizacao],
+    ); // Retorna os resultados como um array, mesmo que não haja registros encontrados
+    return Array.isArray(rows) ? rows : [];
   } catch (error) {
     console.error("Erro no model listarChamadosPorClienteEOrganizacao:", error);
     throw error;
   }
 }
 
-// Função para buscar chamados por organização
+// Função para buscar um chamado específico por organização
 export async function listarChamadosPorOrganizacao(fk_organizacao) {
   try {
-    console.log("DEBUG: Iniciando busca de todos os chamados...");
+    console.log(
+      "DEBUG: Iniciando busca de todos os chamados sem filtro de organização...",
+    ); // Query de teste: Traz TUDO sem filtros
 
-    const resultado = await pool.query(
-      `SELECT c.*, u.nome AS nome_solicitante 
-       FROM chamado c
-       LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
-       ORDER BY c.data_abertura DESC`,
-    );
+    const [rows] = await pool.query(`SELECT c.*, u.nome AS nome_solicitante 
+       FROM chamado c
+       LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
+       ORDER BY c.data_abertura DESC`);
 
-    console.log("DEBUG: Chamados encontrados:", resultado.rows.length);
-    return resultado.rows;
+    console.log("DEBUG: Chamados encontrados:", rows.length);
+    return rows;
   } catch (error) {
     console.error("ERRO NO MODEL:", error);
     throw error;
   }
 }
 
-// Função para buscar um chamado específico por ID
+// Função para buscar um chamado específico por ID do técnico
 export async function buscarChamadoPorIdTecnico(id) {
   try {
-    const resultado = await pool.query(
+    const [rows] = await pool.query(
       `SELECT c.*, u.nome AS nome_solicitante 
-       FROM chamado c
-       LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
-       WHERE c.id_chamado = $1`,
+       FROM chamado c
+       LEFT JOIN usuario u ON c.fk_cliente = u.id_usuario
+       WHERE c.id_chamado = ?`,
       [id],
     );
-    return resultado.rows[0] || null;
+    return rows[0] || null;
   } catch (error) {
     console.error("Erro no model buscarChamadoPorIdTecnico:", error);
     throw error;
@@ -116,14 +114,13 @@ export async function cancelarChamadoSaaS(
   fk_organizacao,
 ) {
   try {
-    const resultado = await pool.query(
+    const [resultado] = await pool.query(
       `UPDATE chamado 
-       SET situacao = 'Cancelado' 
-       WHERE id_chamado = $1 AND fk_cliente = $2 AND (fk_organizacao = $3 OR ($3 IS NULL AND fk_organizacao IS NULL)) AND situacao != 'Resolvido'`,
-      [id_chamado, fk_cliente, fk_organizacao],
+       SET situacao = 'Cancelado' 
+       WHERE id_chamado = ? AND fk_cliente = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL)) AND situacao != 'Resolvido'`,
+      [id_chamado, fk_cliente, fk_organizacao, fk_organizacao],
     );
-    // No Postgres, usamos rowCount para saber quantos registros foram afetados
-    return resultado.rowCount > 0;
+    return resultado.affectedRows > 0;
   } catch (error) {
     console.error("Erro no model cancelarChamadoSaaS:", error);
     throw error;
@@ -136,15 +133,21 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
   const fk_tecnico = dados.fk_tecnico;
 
   try {
-    const resultado = await pool.query(
+    const [resultado] = await pool.query(
       `UPDATE chamado 
-       SET situacao = $1, 
-           fk_tecnico = $2
-       WHERE id_chamado = $3 AND (fk_organizacao = $4 OR ($4 IS NULL AND fk_organizacao IS NULL))`,
-      [situacao, fk_tecnico || null, id_chamado, fk_organizacao],
+       SET situacao = ?, 
+           fk_tecnico = ?
+       WHERE id_chamado = ? AND (fk_organizacao = ? OR (? IS NULL AND fk_organizacao IS NULL))`,
+      [
+        situacao,
+        fk_tecnico || null,
+        id_chamado,
+        fk_organizacao,
+        fk_organizacao,
+      ],
     );
 
-    return resultado.rowCount > 0;
+    return resultado.affectedRows > 0;
   } catch (error) {
     console.error("Erro no model atualizarChamadoSaaS:", error);
     throw error;
@@ -154,11 +157,11 @@ export async function atualizarChamadoSaaS(id_chamado, fk_organizacao, dados) {
 // Função para buscar o cliente de um chamado específico
 export async function buscarClienteDoChamado(id_chamado) {
   try {
-    const resultado = await pool.query(
-      `SELECT fk_cliente FROM chamado WHERE id_chamado = $1`,
+    const [rows] = await pool.query(
+      `SELECT fk_cliente FROM chamado WHERE id_chamado = ?`,
       [id_chamado],
     );
-    return resultado.rows[0] || null;
+    return rows[0] || null;
   } catch (error) {
     console.error("Erro no model buscarClienteDoChamado:", error);
     throw error;
@@ -169,10 +172,10 @@ export async function buscarClienteDoChamado(id_chamado) {
 export async function aceitarChamadoModel(id_tecnico, id_chamado) {
   try {
     const query = `
-      UPDATE chamado 
-      SET fk_tecnico = $1, situacao = 'Em andamento' 
-      WHERE id_chamado = $2
-    `;
+      UPDATE chamado 
+      SET fk_tecnico = ?, situacao = 'Em andamento' 
+      WHERE id_chamado = ?
+    `;
     return await pool.query(query, [id_tecnico, id_chamado]);
   } catch (error) {
     console.error("Erro no model aceitarChamadoModel:", error);
