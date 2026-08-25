@@ -176,13 +176,17 @@ function DashboardTecnico() {
     (c) => c.situacao === "Novo" && !c.id_tecnico && !c.fk_tecnico,
   );
 
-  const nivelAtual = perfil?.nivel || 1;
-  const xpAtual = perfil?.xp || 0;
-  const xpNecessario = nivelAtual * 100;
-  const porcentagemXp = Math.min(
-    Math.round((xpAtual / xpNecessario) * 100),
-    100,
-  );
+  const nivelAtual = Number(perfil?.nivel) || 1;
+  const xpAtual = Number(perfil?.xp) || 0;
+
+  // Garante que o XP necessário nunca seja 0 para evitar divisão por zero
+  const xpNecessario = nivelAtual * 100 > 0 ? nivelAtual * 100 : 100;
+
+  // Cálculo seguro com proteção contra NaN
+  const porcentagemXp =
+    !isNaN(xpAtual) && !isNaN(xpNecessario) && xpNecessario > 0
+      ? Math.min(Math.max(Math.round((xpAtual / xpNecessario) * 100), 0), 100)
+      : 0;
 
   const listaConquistas = conquistasBanco.map((c) => {
     let ico = "🏅";
@@ -236,7 +240,8 @@ function DashboardTecnico() {
             style={{ width: `${Math.max(porcentagemXp, 8)}%` }}
           />
           <div className="xp-text-overlay">
-            {porcentagemXp}% — {xpAtual} / {xpNecessario} XP (Nível {nivelAtual})
+            {porcentagemXp}% — {xpAtual} / {xpNecessario} XP (Nível {nivelAtual}
+            )
           </div>
         </motion.div>
 
